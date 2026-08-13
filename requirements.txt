@@ -41,6 +41,7 @@ rich==15.0.0
 rsa==4.9.1
 six==1.17.0
 SQLAlchemy==2.0.51
+sqlmodel==0.0.39
 starlette==1.4.0
 typing-inspection==0.4.2
 typing_extensions==4.16.0

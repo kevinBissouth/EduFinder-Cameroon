@@ -1,0 +1,49 @@
+<mxfile host="app.diagrams.net" modified="2026-08-07T14:00:00.000Z" agent="EduFinder" version="24.0.0" type="device">
+  <diagram id="d_act2" name="Activité 2 — Soumission">
+    <mxGraphModel dx="1422" dy="794" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="1800" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+<mxCell id="title" value="Activité 2 — Soumission d'un établissement (Responsable)" style="text;html=1;align=center;fontSize=18;fontStyle=1;" vertex="1" parent="1"><mxGeometry x="250" y="10" width="400" height="40" as="geometry"/></mxCell>
+<mxCell id="n135" value="" style="ellipse;fillColor=#000000;strokeColor=#000000;html=1;" vertex="1" parent="1"><mxGeometry x="340" y="70" width="20" height="20" as="geometry"/></mxCell>
+<mxCell id="n136" value="Ouvrir la page de connexion" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;" vertex="1" parent="1"><mxGeometry x="190" y="120" width="320" height="50" as="geometry"/></mxCell>
+<mxCell id="n137" value="Saisir l'identifiant et le mot de passe" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;" vertex="1" parent="1"><mxGeometry x="190" y="200" width="320" height="50" as="geometry"/></mxCell>
+<mxCell id="n138" value="Vérifier les identifiants" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;" vertex="1" parent="1"><mxGeometry x="190" y="280" width="320" height="50" as="geometry"/></mxCell>
+<mxCell id="n139" value="Identifiants incorrects ?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FFE6CC;strokeColor=#D79B00;" vertex="1" parent="1"><mxGeometry x="230" y="370" width="240" height="90" as="geometry"/></mxCell>
+<mxCell id="n140" value="Si incorrects : retour à la saisie" style="whiteSpace=wrap;html=1;fillColor=#FFF2CC;strokeColor=#D6B656;align=left;spacing=8;" vertex="1" parent="1"><mxGeometry x="600" y="380" width="220" height="70" as="geometry"/></mxCell>
+<mxCell id="n141" value="Accéder à l'espace responsable" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;" vertex="1" parent="1"><mxGeometry x="190" y="500" width="320" height="50" as="geometry"/></mxCell>
+<mxCell id="n142" value="Ouvrir le formulaire « Soumettre un établissement »" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;" vertex="1" parent="1"><mxGeometry x="190" y="580" width="320" height="50" as="geometry"/></mxCell>
+<mxCell id="n143" value="Renseigner les informations (nom, type, région, ville, filières, frais, médias)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;" vertex="1" parent="1"><mxGeometry x="190" y="660" width="320" height="70" as="geometry"/></mxCell>
+<mxCell id="n144" value="Vérifier les champs obligatoires" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;" vertex="1" parent="1"><mxGeometry x="190" y="770" width="320" height="50" as="geometry"/></mxCell>
+<mxCell id="n145" value="Champs incomplets ?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FFE6CC;strokeColor=#D79B00;" vertex="1" parent="1"><mxGeometry x="230" y="860" width="240" height="90" as="geometry"/></mxCell>
+<mxCell id="n146" value="Mettre en évidence les champs manquants" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;" vertex="1" parent="1"><mxGeometry x="600" y="870" width="280" height="50" as="geometry"/></mxCell>
+<mxCell id="n147" value="Erreur E2 : retour à la saisie" style="whiteSpace=wrap;html=1;fillColor=#FFF2CC;strokeColor=#D6B656;align=left;spacing=8;" vertex="1" parent="1"><mxGeometry x="600" y="950" width="280" height="60" as="geometry"/></mxCell>
+<mxCell id="n148" value="Envoyer la soumission" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;" vertex="1" parent="1"><mxGeometry x="190" y="1000" width="320" height="50" as="geometry"/></mxCell>
+<mxCell id="n149" value="Enregistrer la soumission avec son auteur" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;" vertex="1" parent="1"><mxGeometry x="190" y="1080" width="320" height="50" as="geometry"/></mxCell>
+<mxCell id="n150" value="Affecter le statut « soumise »" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;" vertex="1" parent="1"><mxGeometry x="190" y="1160" width="320" height="50" as="geometry"/></mxCell>
+<mxCell id="n151" value="Afficher la confirmation de soumission" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;" vertex="1" parent="1"><mxGeometry x="190" y="1240" width="320" height="50" as="geometry"/></mxCell>
+<mxCell id="n152" value="Transmettre la soumission au super administrateur" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;" vertex="1" parent="1"><mxGeometry x="190" y="1320" width="320" height="50" as="geometry"/></mxCell>
+<mxCell id="n153" value="" style="ellipse;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=2;html=1;" vertex="1" parent="1"><mxGeometry x="335" y="1425" width="30" height="30" as="geometry"/></mxCell>
+<mxCell id="n154" value="" style="ellipse;fillColor=#000000;strokeColor=#000000;html=1;" vertex="1" parent="1"><mxGeometry x="345" y="1435" width="10" height="10" as="geometry"/></mxCell>
+<mxCell id="e155" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="n135" target="n136"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="e156" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="n136" target="n137"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="e157" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="n137" target="n138"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="e158" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="n138" target="n139"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="e159" value="oui — retour à la saisie" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;endArrow=block;" edge="1" parent="1" source="n139" target="n137"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="e160" value="non" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;endArrow=block;" edge="1" parent="1" source="n139" target="n141"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="e161" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="n141" target="n142"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="e162" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="n142" target="n143"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="e163" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="n143" target="n144"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="e164" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="n144" target="n145"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="e165" value="oui" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;endArrow=block;" edge="1" parent="1" source="n145" target="n146"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="e166" value="corriger" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;endArrow=block;" edge="1" parent="1" source="n146" target="n143"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="e167" value="non" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;endArrow=block;" edge="1" parent="1" source="n145" target="n148"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="e168" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="n148" target="n149"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="e169" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="n149" target="n150"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="e170" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="n150" target="n151"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="e171" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="n151" target="n152"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="e172" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="n152" target="n153"><mxGeometry relative="1" as="geometry"/></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
