@@ -1,34 +1,34 @@
 import enum
 
 
-class RoleUtilisateur(str, enum.Enum):
-    responsable = "responsable"
+class UserRole(str, enum.Enum):
+    manager = "manager"
     super_admin = "super_admin"
 
 
-class StatutEtablissement(str, enum.Enum):
-    en_attente = "en_attente"
-    publie = "publie"
-    rejetee = "rejetee"
-    suspendu = "suspendu"
+class EstablishmentStatus(str, enum.Enum):
+    pending = "pending"
+    published = "published"
+    rejected = "rejected"
+    suspended = "suspended"
 
 
-class StatutSoumission(str, enum.Enum):
-    en_attente = "en_attente"
-    validee = "validee"
-    rejetee = "rejetee"
+class SubmissionStatus(str, enum.Enum):
+    pending = "pending"
+    approved = "approved"
+    rejected = "rejected"
 
 
-class StatutDecision(str, enum.Enum):
-    validee = "validee"
-    rejetee = "rejetee"
+class DecisionStatus(str, enum.Enum):
+    approved = "approved"
+    rejected = "rejected"
 
 
-class TypeSoumission(str, enum.Enum):
+class SubmissionType(str, enum.Enum):
     creation = "creation"
     modification = "modification"
 
 
-class TypeMedia(str, enum.Enum):
+class MediaType(str, enum.Enum):
     image = "image"
     pdf = "pdf"

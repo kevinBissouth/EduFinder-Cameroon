@@ -11,12 +11,12 @@ from alembic import op
 import sqlalchemy as sa
 
 from app.models.enums import (
-    RoleUtilisateur,
-    StatutDecision,
-    StatutEtablissement,
-    StatutSoumission,
-    TypeMedia,
-    TypeSoumission,
+    DecisionStatus,
+    EstablishmentStatus,
+    MediaType,
+    SubmissionStatus,
+    SubmissionType,
+    UserRole,
 )
 
 
@@ -31,149 +31,149 @@ def upgrade() -> None:
     """Upgrade schema."""
     op.create_table('region',
     sa.Column('id_region', sa.Integer(), autoincrement=True, nullable=False),
-    sa.Column('nom', sa.String(length=100), nullable=False),
+    sa.Column('name', sa.String(length=100), nullable=False),
     sa.PrimaryKeyConstraint('id_region'),
-    sa.UniqueConstraint('nom', name='uq_region_nom')
+    sa.UniqueConstraint('name', name='uq_region_name')
     )
-    op.create_table('type_etablissement',
+    op.create_table('establishment_type',
     sa.Column('id_type', sa.Integer(), autoincrement=True, nullable=False),
-    sa.Column('libelle', sa.String(length=100), nullable=False),
+    sa.Column('label', sa.String(length=100), nullable=False),
     sa.PrimaryKeyConstraint('id_type')
     )
-    op.create_table('niveau_etude',
-    sa.Column('id_niveau', sa.Integer(), autoincrement=True, nullable=False),
-    sa.Column('libelle', sa.String(length=100), nullable=False),
-    sa.PrimaryKeyConstraint('id_niveau')
+    op.create_table('study_level',
+    sa.Column('id_level', sa.Integer(), autoincrement=True, nullable=False),
+    sa.Column('label', sa.String(length=100), nullable=False),
+    sa.PrimaryKeyConstraint('id_level')
     )
-    op.create_table('filiere',
-    sa.Column('id_filiere', sa.Integer(), autoincrement=True, nullable=False),
-    sa.Column('nom', sa.String(length=100), nullable=False),
-    sa.PrimaryKeyConstraint('id_filiere')
+    op.create_table('program',
+    sa.Column('id_program', sa.Integer(), autoincrement=True, nullable=False),
+    sa.Column('name', sa.String(length=100), nullable=False),
+    sa.PrimaryKeyConstraint('id_program')
     )
-    op.create_table('examen',
-    sa.Column('id_examen', sa.Integer(), autoincrement=True, nullable=False),
-    sa.Column('libelle', sa.String(length=100), nullable=False),
-    sa.PrimaryKeyConstraint('id_examen')
+    op.create_table('exam',
+    sa.Column('id_exam', sa.Integer(), autoincrement=True, nullable=False),
+    sa.Column('label', sa.String(length=100), nullable=False),
+    sa.PrimaryKeyConstraint('id_exam')
     )
-    op.create_table('modalite_paiement',
-    sa.Column('id_modalite', sa.Integer(), autoincrement=True, nullable=False),
-    sa.Column('libelle', sa.String(length=100), nullable=False),
-    sa.PrimaryKeyConstraint('id_modalite')
+    op.create_table('payment_method',
+    sa.Column('id_payment_method', sa.Integer(), autoincrement=True, nullable=False),
+    sa.Column('label', sa.String(length=100), nullable=False),
+    sa.PrimaryKeyConstraint('id_payment_method')
     )
-    op.create_table('ville',
-    sa.Column('id_ville', sa.Integer(), autoincrement=True, nullable=False),
+    op.create_table('city',
+    sa.Column('id_city', sa.Integer(), autoincrement=True, nullable=False),
     sa.Column('id_region', sa.Integer(), nullable=False),
-    sa.Column('nom', sa.String(length=100), nullable=False),
+    sa.Column('name', sa.String(length=100), nullable=False),
     sa.ForeignKeyConstraint(['id_region'], ['region.id_region'], ),
-    sa.PrimaryKeyConstraint('id_ville'),
-    sa.UniqueConstraint('nom', 'id_region', name='uq_ville_nom_region')
+    sa.PrimaryKeyConstraint('id_city'),
+    sa.UniqueConstraint('name', 'id_region', name='uq_city_name_region')
     )
-    op.create_table('utilisateur',
-    sa.Column('id_utilisateur', sa.Integer(), autoincrement=True, nullable=False),
-    sa.Column('nom', sa.String(length=255), nullable=False),
+    op.create_table('user',
+    sa.Column('id_user', sa.Integer(), autoincrement=True, nullable=False),
+    sa.Column('name', sa.String(length=255), nullable=False),
     sa.Column('email', sa.String(length=255), nullable=False),
-    sa.Column('mot_de_passe', sa.String(length=255), nullable=False),
-    sa.Column('role', sa.Enum(RoleUtilisateur, name='roleutilisateur'), nullable=False),
-    sa.Column('date_creation', sa.DateTime(), nullable=False),
-    sa.PrimaryKeyConstraint('id_utilisateur'),
+    sa.Column('password_hash', sa.String(length=255), nullable=False),
+    sa.Column('role', sa.Enum(UserRole, name='userrole'), nullable=False),
+    sa.Column('created_at', sa.DateTime(), nullable=False),
+    sa.PrimaryKeyConstraint('id_user'),
     sa.UniqueConstraint('email')
     )
-    op.create_table('etablissement',
-    sa.Column('id_etablissement', sa.Integer(), autoincrement=True, nullable=False),
-    sa.Column('id_ville', sa.Integer(), nullable=False),
+    op.create_table('establishment',
+    sa.Column('id_establishment', sa.Integer(), autoincrement=True, nullable=False),
+    sa.Column('id_city', sa.Integer(), nullable=False),
     sa.Column('id_type', sa.Integer(), nullable=False),
-    sa.Column('nom', sa.String(length=255), nullable=False),
+    sa.Column('name', sa.String(length=255), nullable=False),
     sa.Column('description', sa.Text(), nullable=True),
-    sa.Column('adresse', sa.String(length=255), nullable=True),
-    sa.Column('statut', sa.Enum(StatutEtablissement, name='statutetablissement'), nullable=False),
-    sa.Column('telephone', sa.String(length=20), nullable=True),
-    sa.Column('email_contact', sa.String(length=255), nullable=True),
-    sa.Column('site_web', sa.String(length=255), nullable=True),
-    sa.ForeignKeyConstraint(['id_type'], ['type_etablissement.id_type'], ),
-    sa.ForeignKeyConstraint(['id_ville'], ['ville.id_ville'], ),
-    sa.PrimaryKeyConstraint('id_etablissement')
+    sa.Column('address', sa.String(length=255), nullable=True),
+    sa.Column('status', sa.Enum(EstablishmentStatus, name='establishmentstatus'), nullable=False),
+    sa.Column('phone', sa.String(length=20), nullable=True),
+    sa.Column('contact_email', sa.String(length=255), nullable=True),
+    sa.Column('website', sa.String(length=255), nullable=True),
+    sa.ForeignKeyConstraint(['id_city'], ['city.id_city'], ),
+    sa.ForeignKeyConstraint(['id_type'], ['establishment_type.id_type'], ),
+    sa.PrimaryKeyConstraint('id_establishment')
     )
-    op.create_table('frais_scolarite',
-    sa.Column('id_frais', sa.Integer(), autoincrement=True, nullable=False),
-    sa.Column('id_etablissement', sa.Integer(), nullable=False),
-    sa.Column('id_niveau', sa.Integer(), nullable=False),
-    sa.Column('montant', sa.DECIMAL(precision=12, scale=2), nullable=False),
-    sa.Column('annee_scolaire', sa.String(length=9), nullable=False),
-    sa.ForeignKeyConstraint(['id_etablissement'], ['etablissement.id_etablissement'], ),
-    sa.ForeignKeyConstraint(['id_niveau'], ['niveau_etude.id_niveau'], ),
-    sa.PrimaryKeyConstraint('id_frais'),
-    sa.UniqueConstraint('id_etablissement', 'id_niveau', 'annee_scolaire', name='uq_frais_etab_niveau_annee')
+    op.create_table('school_fee',
+    sa.Column('id_fee', sa.Integer(), autoincrement=True, nullable=False),
+    sa.Column('id_establishment', sa.Integer(), nullable=False),
+    sa.Column('id_level', sa.Integer(), nullable=False),
+    sa.Column('amount', sa.DECIMAL(precision=12, scale=2), nullable=False),
+    sa.Column('school_year', sa.String(length=9), nullable=False),
+    sa.ForeignKeyConstraint(['id_establishment'], ['establishment.id_establishment'], ),
+    sa.ForeignKeyConstraint(['id_level'], ['study_level.id_level'], ),
+    sa.PrimaryKeyConstraint('id_fee'),
+    sa.UniqueConstraint('id_establishment', 'id_level', 'school_year', name='uq_fee_establishment_level_school_year')
     )
     op.create_table('service',
     sa.Column('id_service', sa.Integer(), autoincrement=True, nullable=False),
-    sa.Column('id_etablissement', sa.Integer(), nullable=False),
-    sa.Column('nom', sa.String(length=100), nullable=False),
+    sa.Column('id_establishment', sa.Integer(), nullable=False),
+    sa.Column('name', sa.String(length=100), nullable=False),
     sa.Column('description', sa.Text(), nullable=True),
-    sa.ForeignKeyConstraint(['id_etablissement'], ['etablissement.id_etablissement'], ),
+    sa.ForeignKeyConstraint(['id_establishment'], ['establishment.id_establishment'], ),
     sa.PrimaryKeyConstraint('id_service')
     )
-    op.create_table('resultat_examen',
-    sa.Column('id_resultat', sa.Integer(), autoincrement=True, nullable=False),
-    sa.Column('id_etablissement', sa.Integer(), nullable=False),
-    sa.Column('id_examen', sa.Integer(), nullable=False),
+    op.create_table('exam_result',
+    sa.Column('id_result', sa.Integer(), autoincrement=True, nullable=False),
+    sa.Column('id_establishment', sa.Integer(), nullable=False),
+    sa.Column('id_exam', sa.Integer(), nullable=False),
     sa.Column('session', sa.String(length=20), nullable=False),
-    sa.Column('taux_reussite', sa.DECIMAL(precision=5, scale=2), nullable=False),
-    sa.ForeignKeyConstraint(['id_etablissement'], ['etablissement.id_etablissement'], ),
-    sa.ForeignKeyConstraint(['id_examen'], ['examen.id_examen'], ),
-    sa.PrimaryKeyConstraint('id_resultat'),
-    sa.UniqueConstraint('id_etablissement', 'id_examen', 'session', name='uq_resultat_etab_examen_session')
+    sa.Column('pass_rate', sa.DECIMAL(precision=5, scale=2), nullable=False),
+    sa.ForeignKeyConstraint(['id_establishment'], ['establishment.id_establishment'], ),
+    sa.ForeignKeyConstraint(['id_exam'], ['exam.id_exam'], ),
+    sa.PrimaryKeyConstraint('id_result'),
+    sa.UniqueConstraint('id_establishment', 'id_exam', 'session', name='uq_exam_result_establishment_exam_session')
     )
     op.create_table('media',
     sa.Column('id_media', sa.Integer(), autoincrement=True, nullable=False),
-    sa.Column('id_etablissement', sa.Integer(), nullable=False),
-    sa.Column('type', sa.Enum(TypeMedia, name='typemedia'), nullable=False),
+    sa.Column('id_establishment', sa.Integer(), nullable=False),
+    sa.Column('type', sa.Enum(MediaType, name='mediatype'), nullable=False),
     sa.Column('url', sa.String(length=500), nullable=False),
-    sa.Column('legende', sa.String(length=255), nullable=True),
-    sa.ForeignKeyConstraint(['id_etablissement'], ['etablissement.id_etablissement'], ),
+    sa.Column('caption', sa.String(length=255), nullable=True),
+    sa.ForeignKeyConstraint(['id_establishment'], ['establishment.id_establishment'], ),
     sa.PrimaryKeyConstraint('id_media')
     )
-    op.create_table('propose',
-    sa.Column('id_etablissement', sa.Integer(), autoincrement=False, nullable=False),
-    sa.Column('id_filiere', sa.Integer(), autoincrement=False, nullable=False),
-    sa.ForeignKeyConstraint(['id_etablissement'], ['etablissement.id_etablissement'], ),
-    sa.ForeignKeyConstraint(['id_filiere'], ['filiere.id_filiere'], ),
-    sa.PrimaryKeyConstraint('id_etablissement', 'id_filiere')
+    op.create_table('program_offer',
+    sa.Column('id_establishment', sa.Integer(), autoincrement=False, nullable=False),
+    sa.Column('id_program', sa.Integer(), autoincrement=False, nullable=False),
+    sa.ForeignKeyConstraint(['id_establishment'], ['establishment.id_establishment'], ),
+    sa.ForeignKeyConstraint(['id_program'], ['program.id_program'], ),
+    sa.PrimaryKeyConstraint('id_establishment', 'id_program')
     )
-    op.create_table('se_paie_par',
-    sa.Column('id_frais', sa.Integer(), autoincrement=False, nullable=False),
-    sa.Column('id_modalite', sa.Integer(), autoincrement=False, nullable=False),
-    sa.ForeignKeyConstraint(['id_frais'], ['frais_scolarite.id_frais'], ),
-    sa.ForeignKeyConstraint(['id_modalite'], ['modalite_paiement.id_modalite'], ),
-    sa.PrimaryKeyConstraint('id_frais', 'id_modalite')
+    op.create_table('school_fee_payment_method',
+    sa.Column('id_fee', sa.Integer(), autoincrement=False, nullable=False),
+    sa.Column('id_payment_method', sa.Integer(), autoincrement=False, nullable=False),
+    sa.ForeignKeyConstraint(['id_fee'], ['school_fee.id_fee'], ),
+    sa.ForeignKeyConstraint(['id_payment_method'], ['payment_method.id_payment_method'], ),
+    sa.PrimaryKeyConstraint('id_fee', 'id_payment_method')
     )
-    op.create_table('gere',
-    sa.Column('id_utilisateur', sa.Integer(), autoincrement=False, nullable=False),
-    sa.Column('id_etablissement', sa.Integer(), autoincrement=False, nullable=False),
-    sa.ForeignKeyConstraint(['id_etablissement'], ['etablissement.id_etablissement'], ),
-    sa.ForeignKeyConstraint(['id_utilisateur'], ['utilisateur.id_utilisateur'], ),
-    sa.PrimaryKeyConstraint('id_utilisateur', 'id_etablissement')
+    op.create_table('user_establishment',
+    sa.Column('id_user', sa.Integer(), autoincrement=False, nullable=False),
+    sa.Column('id_establishment', sa.Integer(), autoincrement=False, nullable=False),
+    sa.ForeignKeyConstraint(['id_establishment'], ['establishment.id_establishment'], ),
+    sa.ForeignKeyConstraint(['id_user'], ['user.id_user'], ),
+    sa.PrimaryKeyConstraint('id_user', 'id_establishment')
     )
-    op.create_table('soumission',
-    sa.Column('id_soumission', sa.Integer(), autoincrement=True, nullable=False),
-    sa.Column('id_utilisateur', sa.Integer(), nullable=False),
-    sa.Column('id_etablissement', sa.Integer(), nullable=False),
-    sa.Column('date_soumission', sa.DateTime(), nullable=False),
-    sa.Column('type', sa.Enum(TypeSoumission, name='typesoumission'), nullable=False),
-    sa.Column('statut', sa.Enum(StatutSoumission, name='statutsoumission'), nullable=False),
-    sa.Column('contenu', sa.JSON(), nullable=True),
-    sa.ForeignKeyConstraint(['id_etablissement'], ['etablissement.id_etablissement'], ),
-    sa.ForeignKeyConstraint(['id_utilisateur'], ['utilisateur.id_utilisateur'], ),
-    sa.PrimaryKeyConstraint('id_soumission')
+    op.create_table('submission',
+    sa.Column('id_submission', sa.Integer(), autoincrement=True, nullable=False),
+    sa.Column('id_user', sa.Integer(), nullable=False),
+    sa.Column('id_establishment', sa.Integer(), nullable=False),
+    sa.Column('submitted_at', sa.DateTime(), nullable=False),
+    sa.Column('type', sa.Enum(SubmissionType, name='submissiontype'), nullable=False),
+    sa.Column('status', sa.Enum(SubmissionStatus, name='submissionstatus'), nullable=False),
+    sa.Column('content', sa.JSON(), nullable=True),
+    sa.ForeignKeyConstraint(['id_establishment'], ['establishment.id_establishment'], ),
+    sa.ForeignKeyConstraint(['id_user'], ['user.id_user'], ),
+    sa.PrimaryKeyConstraint('id_submission')
     )
-    op.create_table('decision_validation',
+    op.create_table('validation_decision',
     sa.Column('id_decision', sa.Integer(), autoincrement=True, nullable=False),
-    sa.Column('id_soumission', sa.Integer(), nullable=False),
-    sa.Column('id_utilisateur', sa.Integer(), nullable=False),
-    sa.Column('date_decision', sa.DateTime(), nullable=False),
-    sa.Column('statut', sa.Enum(StatutDecision, name='statutdecision'), nullable=False),
-    sa.Column('raison_rejet', sa.String(length=500), nullable=True),
-    sa.ForeignKeyConstraint(['id_soumission'], ['soumission.id_soumission'], ),
-    sa.ForeignKeyConstraint(['id_utilisateur'], ['utilisateur.id_utilisateur'], ),
+    sa.Column('id_submission', sa.Integer(), nullable=False),
+    sa.Column('id_user', sa.Integer(), nullable=False),
+    sa.Column('decided_at', sa.DateTime(), nullable=False),
+    sa.Column('status', sa.Enum(DecisionStatus, name='decisionstatus'), nullable=False),
+    sa.Column('rejection_reason', sa.String(length=500), nullable=True),
+    sa.ForeignKeyConstraint(['id_submission'], ['submission.id_submission'], ),
+    sa.ForeignKeyConstraint(['id_user'], ['user.id_user'], ),
     sa.PrimaryKeyConstraint('id_decision')
     )
     # ### end Alembic commands ###
@@ -181,22 +181,22 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     """Downgrade schema."""
-    op.drop_table('decision_validation')
-    op.drop_table('soumission')
-    op.drop_table('gere')
-    op.drop_table('se_paie_par')
-    op.drop_table('propose')
+    op.drop_table('validation_decision')
+    op.drop_table('submission')
+    op.drop_table('user_establishment')
+    op.drop_table('school_fee_payment_method')
+    op.drop_table('program_offer')
     op.drop_table('media')
-    op.drop_table('resultat_examen')
+    op.drop_table('exam_result')
     op.drop_table('service')
-    op.drop_table('frais_scolarite')
-    op.drop_table('etablissement')
-    op.drop_table('utilisateur')
-    op.drop_table('ville')
-    op.drop_table('modalite_paiement')
-    op.drop_table('examen')
-    op.drop_table('filiere')
-    op.drop_table('niveau_etude')
-    op.drop_table('type_etablissement')
+    op.drop_table('school_fee')
+    op.drop_table('establishment')
+    op.drop_table('user')
+    op.drop_table('city')
+    op.drop_table('payment_method')
+    op.drop_table('exam')
+    op.drop_table('program')
+    op.drop_table('study_level')
+    op.drop_table('establishment_type')
     op.drop_table('region')
     # ### end Alembic commands ###
