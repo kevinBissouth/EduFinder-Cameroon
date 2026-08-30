@@ -1,2 +1,32 @@
 @import "tailwindcss";
 @plugin "daisyui";
+
+/* Je pose les polices du thème ici plutôt que dans un tailwind.config.js :
+   Tailwind v4 est CSS-first, la config JS n'était d'ailleurs jamais
+   chargée (sans @config elle est ignorée), d'où les titres sans police.
+   DM Serif Display pour les titres (font-display), Manrope pour tout le
+   texte courant — même identité typographique que worldschoolfinder.com. */
+@font-face {
+  font-family: "DM Serif Display";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/dm-serif-display-400-latin.woff2") format("woff2");
+}
+
+/* Manrope est une police variable : un seul fichier couvre 200 à 800. */
+@font-face {
+  font-family: "Manrope";
+  font-style: normal;
+  font-weight: 200 800;
+  font-display: swap;
+  src: url("/fonts/manrope-var-latin.woff2") format("woff2");
+}
+
+@theme {
+  --font-display: "DM Serif Display", Georgia, "Times New Roman", serif;
+  --font-sans: "Manrope", system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  /* Couleur du texte courant, utilisée par la homepage (text-body). */
+  --color-body: #334155;
+}

@@ -11,6 +11,8 @@ if TYPE_CHECKING:
     from app.models.submission import Submission, ValidationDecision
 
 
+# Compte de connexion : manager ou super_admin. Le mot de passe n'est jamais
+# stocké en clair, seulement son hash bcrypt.
 class User(SQLModel, table=True):
     __tablename__ = "user"
 
