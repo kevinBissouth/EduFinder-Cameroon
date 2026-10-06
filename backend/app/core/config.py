@@ -4,9 +4,12 @@ import os
 
 # Dossier unique des fichiers téléversés : défini ici car il est utilisé à
 # la fois par main.py (montage StaticFiles) et par les routes d'upload.
-MEDIA_DIR = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "media"
+# Le seed écrit ses images dans media/ à la racine du projet (profil_*.jpg,
+# director_*.png) : je remonte donc jusqu'à la racine pour servir ce dossier.
+_MEDIA_PARENT = os.path.dirname(
+    os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
 )
+MEDIA_DIR = os.path.join(_MEDIA_PARENT, "media")
 
 
 class Settings(BaseSettings):

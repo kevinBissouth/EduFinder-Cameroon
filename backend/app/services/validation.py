@@ -8,6 +8,9 @@ from app.models import (
     DecisionStatus,
     Establishment,
     EstablishmentStatus,
+    ExamResult,
+    Media,
+    MediaType,
     PaymentMethod,
     ProgramOffer,
     SchoolFee,
@@ -16,6 +19,7 @@ from app.models import (
     Submission,
     SubmissionStatus,
     User,
+    UserEstablishment,
     ValidationDecision,
 )
 from app.services.workflow import ensure_transition
@@ -49,6 +53,8 @@ def _apply_scalar_fields(establishment: Establishment, content: dict) -> None:
         "id_sector",
         "id_linguistic_section",
         "phone",
+        "latitude",
+        "longitude",
         "contact_email",
         "website",
         "address",
@@ -60,6 +66,11 @@ def _apply_scalar_fields(establishment: Establishment, content: dict) -> None:
     for field_name in scalar_fields:
         if content.get(field_name) is not None:
             setattr(establishment, field_name, content[field_name])
+
+    # La proposition porte « director_photo », stocké côté modèle comme
+    # director_photo_url : je fais la correspondance explicitement.
+    if content.get("director_photo") is not None:
+        establishment.director_photo_url = content["director_photo"]
 
 
 def _replace_payment_methods(session: Session, school_fee: SchoolFee, payment_labels: list) -> None:
@@ -87,6 +98,11 @@ def _replace_payment_methods(session: Session, school_fee: SchoolFee, payment_la
 
 
 def _apply_fees(session: Session, establishment: Establishment, fees_payload: list) -> None:
+    # Incrémental, pas de remplacement : une modification portée sur un prix de
+    # classe ne touche que CETTE ligne (id_level, school_year). Toute ligne déjà
+    # enregistrée et absente du payload reste intacte — on n'écrase jamais les
+    # frais des autres classes/années. Supprimer volontairement un frais n'est
+    # pas possible via le payload pour l'instant.
     for fee_entry in fees_payload:
         existing_fee = session.exec(
             select(SchoolFee).where(
@@ -116,31 +132,51 @@ def _apply_fees(session: Session, establishment: Establishment, fees_payload: li
 
 
 def _apply_services(session: Session, establishment: Establishment, service_names: list) -> None:
-    existing_names = {service.name.lower() for service in establishment.services}
-    for service_name in service_names:
-        if service_name.lower() in existing_names:
-            continue
-        session.add(Service(
-            id_establishment=establishment.id_establishment,
-            name=service_name,
-        ))
-        existing_names.add(service_name.lower())
+    # Remplacement exact : les services soumis remplacent toute la liste, donc
+    # un service existant absent du payload est supprimé.
+    desired_names = [name.strip() for name in service_names]
+    desired_lower = {name.lower() for name in desired_names}
+    for existing_service in list(establishment.services):
+        if existing_service.name.lower() not in desired_lower:
+            session.delete(existing_service)
+    present_names = {
+        service.name.lower()
+        for service in establishment.services
+        if service.name.lower() in desired_lower
+    }
+    for name in desired_names:
+        if name.lower() not in present_names:
+            session.add(Service(
+                id_establishment=establishment.id_establishment,
+                name=name,
+            ))
+            present_names.add(name.lower())
 
 
 def _apply_program_offers(session: Session, establishment: Establishment, program_ids: list) -> None:
+    # Remplacement exact : seuls les programmes listés restent liés à
+    # l'établissement après validation de la proposition.
+    desired_program_ids = set(program_ids)
+    for offer in list(establishment.program_offers):
+        if offer.id_program not in desired_program_ids:
+            session.delete(offer)
     existing_program_ids = {
-        offer.id_program for offer in establishment.program_offers
+        offer.id_program
+        for offer in establishment.program_offers
+        if offer.id_program in desired_program_ids
     }
-    for program_id in program_ids:
-        if program_id in existing_program_ids:
-            continue
-        session.add(ProgramOffer(
-            id_establishment=establishment.id_establishment,
-            id_program=program_id,
-        ))
+    for program_id in desired_program_ids:
+        if program_id not in existing_program_ids:
+            session.add(ProgramOffer(
+                id_establishment=establishment.id_establishment,
+                id_program=program_id,
+            ))
 
 
 def _apply_exam_results(session: Session, establishment: Establishment, exam_results_payload: list) -> None:
+    # Incrémental, pas de remplacement : une proposition ne porte que sur les
+    # (id_exam, session) soumis. Les autres résultats déjà enregistrés restent
+    # intacts, une ligne envoyée est créée ou mise à jour.
     for entry in exam_results_payload:
         existing_result = session.exec(
             select(ExamResult).where(
@@ -161,6 +197,32 @@ def _apply_exam_results(session: Session, establishment: Establishment, exam_res
             existing_result.pass_rate = proposed_rate
 
 
+def _apply_media(
+    session: Session,
+    establishment: Establishment,
+    cover_photo: str | None,
+    videos: list[str],
+) -> None:
+    """Matérialise les médias soumises en proposition (création) en lignes Media.
+
+    Une URL déjà rattachée n'est pas dupliquée (idempotence). Couverture et
+    vidéos proviennent d'uploads préalables : seules des URLs valides/stables
+    arrivent ici via le contenu validé.
+    """
+    existing_urls = {media.url for media in establishment.media}
+    cover_items = [(cover_photo, MediaType.image)] if cover_photo else []
+    video_items = [(video_url, MediaType.video) for video_url in videos]
+    for url, media_type in cover_items + video_items:
+        if not url or url in existing_urls:
+            continue
+        establishment.media.append(Media(
+            id_establishment=establishment.id_establishment,
+            type=media_type,
+            url=url,
+        ))
+        existing_urls.add(url)
+
+
 def _apply_content_on_establishment(
     session: Session,
     submission: Submission,
@@ -168,14 +230,23 @@ def _apply_content_on_establishment(
     establishment = session.get(Establishment, submission.id_establishment)
     content = submission.content
     _apply_scalar_fields(establishment, content)
-    if content.get("fees"):
+    # Chaque clé présente (même une liste vide) force le remplacement exact :
+    # l'absence de clé laisse la donnée inchangée, l'envoi d'une liste vide
+    # demande la suppression complète de la catégorie.
+    if "fees" in content:
         _apply_fees(session, establishment, content["fees"])
-    if content.get("services"):
+    if "services" in content:
         _apply_services(session, establishment, content["services"])
-    if content.get("program_ids"):
+    if "program_ids" in content:
         _apply_program_offers(session, establishment, content["program_ids"])
-    if content.get("exam_results"):
+    if "exam_results" in content:
         _apply_exam_results(session, establishment, content["exam_results"])
+    _apply_media(
+        session,
+        establishment,
+        content.get("cover_photo"),
+        content.get("videos") or [],
+    )
     return establishment
 
 
@@ -248,3 +319,46 @@ def list_submissions_by_status(session: Session, status_value: str | None) -> li
             ),
         })
     return items
+
+
+def list_all_establishments_with_owners(session: Session) -> list[dict]:
+    """Vue super-admin : tous les établissements et leurs responsables.
+
+    Un établissement peut être géré par plusieurs comptes (user_establishment),
+    je remonte donc une liste de noms de propriétaires par établissement.
+    """
+    establishments = session.exec(
+        select(Establishment).order_by(Establishment.name)
+    ).all()
+    establishment_ids = [
+        establishment.id_establishment for establishment in establishments
+    ]
+
+    owners_by_establishment: dict[int, list[str]] = {}
+    if establishment_ids:
+        ownership_rows = session.exec(
+            select(UserEstablishment)
+            .where(UserEstablishment.id_establishment.in_(establishment_ids))
+        ).all()
+        for ownership_row in ownership_rows:
+            user = session.get(User, ownership_row.id_user)
+            if user is None:
+                continue
+            owners_by_establishment.setdefault(
+                ownership_row.id_establishment, []
+            ).append(user.name)
+
+    return [
+        {
+            "establishment_uuid": establishment.uuid,
+            "name": establishment.name,
+            "establishment_status": establishment.status.value,
+            "city": establishment.city.name,
+            "type": establishment.type.label,
+            "sector": establishment.sector.label,
+            "owners": owners_by_establishment.get(
+                establishment.id_establishment, []
+            ),
+        }
+        for establishment in establishments
+    ]

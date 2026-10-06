@@ -35,6 +35,12 @@ class InstitutionFilters(BaseModel):
         default_factory=list, alias="exam", max_length=5, description="exam_id:min_pass_rate pairs"
     )
     search_term: str | None = Field(default=None, max_length=100, alias="q")
+    # Pagination optionnelle : je la garde dans le modèle de filtres plutôt
+    # qu'en paramètres séparés, car FastAPI ne fusionne pas un modèle de query
+    # éclatable avec d'autres paramètres Query scalaires (il en ferait un
+    # paramètre « filters » unique et obligatoire).
+    limit: int | None = Field(default=None, ge=1, le=200, description="Max results")
+    offset: int | None = Field(default=None, ge=0, description="Skip first N results")
 
 
 

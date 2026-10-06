@@ -33,7 +33,7 @@ class UnknownReferenceError(ValueError):
 
 
 class DuplicatePendingSubmissionError(ValueError):
-    """Une soumission pending existe déjà pour cet établissement -> 409."""
+    """Une soumission pending entre en conflit avec la nouvelle -> 409."""
 
 
 def _to_json_safe(value: Any) -> Any:
@@ -123,17 +123,145 @@ def _ensure_references_exist(session: Session, payload: dict[str, Any]) -> None:
         )
 
 
-def _raise_if_pending_submission_exists(session: Session, establishment_internal_id: int) -> None:
-    existing_pending = session.exec(
-        select(Submission).where(
-            Submission.id_establishment == establishment_internal_id,
-            Submission.status == SubmissionStatus.pending,
+def _raise_if_exam_results_incoherent(
+    session: Session,
+    exam_results: list[dict[str, Any]],
+    *,
+    type_label: str,
+    section_label: str,
+) -> None:
+    # Cohérence examen / type / section (règle métier) : je refuse toute
+    # proposition dont un résultat d'examen contredirait le type ou la section
+    # linguistique de l'établissement. Un super admin ne doit pas pouvoir
+    # valider une fiche incohérente.
+    for entry in exam_results:
+        exam_label = session.get(Exam, entry["id_exam"]).label
+        reason = (
+            get_exam_type_violation(exam_label, type_label)
+            or get_exam_section_violation(exam_label, section_label)
         )
-    ).first()
-    if existing_pending is not None:
+        if reason is not None:
+            raise ValueError(f"Incoherent exam result: {reason}")
+
+
+# Champs scalaires d'une fiche : un conflit se déclare si la même clé est
+# modifiée par deux soumissions pending du même établissement.
+SCALAR_FIELDS = {
+    "name",
+    "phone",
+    "id_city",
+    "id_type",
+    "id_sector",
+    "id_linguistic_section",
+    "contact_email",
+    "website",
+    "address",
+    "description",
+    "director_name",
+    "director_title",
+    "director_bio",
+}
+
+
+def _content_keys(content: dict[str, Any]) -> set[str]:
+    """Clés réellement portées par un contenu de soumission (hors valeurs nulles)."""
+    return {
+        key
+        for key, value in content.items()
+        if value is not None and value != [] and value != {}
+    }
+
+
+def _find_fee_overlaps(pending_contents: list[dict[str, Any]], new_content: dict[str, Any]) -> set[tuple[int, str]]:
+    """Couples (id_level, school_year) déjà en attente et aussi modifiés ici."""
+
+    def fee_keys(content: dict[str, Any]) -> set[tuple[int, str]]:
+        return {(int(fee["id_level"]), fee["school_year"]) for fee in (content.get("fees") or [])}
+
+    new_keys = fee_keys(new_content)
+    overlaps: set[tuple[int, str]] = set()
+    for pending in pending_contents:
+        overlaps |= fee_keys(pending) & new_keys
+    return overlaps
+
+
+def _find_exam_overlaps(pending_contents: list[dict[str, Any]], new_content: dict[str, Any]) -> set[tuple[int, str]]:
+    """Couples (id_exam, session) déjà en attente et aussi modifiés ici."""
+
+    def exam_keys(content: dict[str, Any]) -> set[tuple[int, str]]:
+        return {(int(exam["id_exam"]), exam["session"]) for exam in (content.get("exam_results") or [])}
+
+    new_keys = exam_keys(new_content)
+    overlaps: set[tuple[int, str]] = set()
+    for pending in pending_contents:
+        overlaps |= exam_keys(pending) & new_keys
+    return overlaps
+
+
+def _find_category_overlaps(pending_contents: list[dict[str, Any]], new_content: dict[str, Any]) -> set[str]:
+    """Catégories « liste entière » déjà touchées par une soumission pending."""
+    overlaps: set[str] = set()
+    for category in ("services", "program_ids"):
+        new_present = new_content.get(category) not in (None, [])
+        if not new_present:
+            continue
+        if any(pending.get(category) not in (None, []) for pending in pending_contents):
+            overlaps.add(category)
+    return overlaps
+
+
+def _find_conflicts(
+    pending_contents: list[dict[str, Any]],
+    new_content: dict[str, Any],
+) -> tuple[set[str], set[tuple[int, str]], set[tuple[int, str]], set[str]]:
+    """Éléments en conflit entre une nouvelle soumission et les pending du même
+    établissement. Laisse passer une autre classe/année : seul l'élément précis
+    déjà en attente est bloqué, les autres catégories restent soumissibles."""
+
+    new_scalar_keys = _content_keys(new_content) & SCALAR_FIELDS
+    overlapping_scalars: set[str] = set()
+    for pending in pending_contents:
+        overlapping_scalars |= new_scalar_keys & _content_keys(pending)
+
+    return (
+        overlapping_scalars,
+        _find_fee_overlaps(pending_contents, new_content),
+        _find_exam_overlaps(pending_contents, new_content),
+        _find_category_overlaps(pending_contents, new_content),
+    )
+
+
+def _raise_if_submission_conflicts(session: Session, establishment_internal_id: int, new_content: dict[str, Any]) -> None:
+    pending_contents = [
+        submission.content
+        for submission in session.exec(
+            select(Submission).where(
+                Submission.id_establishment == establishment_internal_id,
+                Submission.status == SubmissionStatus.pending,
+            )
+        ).all()
+    ]
+    if not pending_contents:
+        return
+
+    scalars, fee_overlaps, exam_overlaps, categories = _find_conflicts(
+        pending_contents, new_content
+    )
+
+    descriptions: list[str] = []
+    descriptions += sorted(scalars)
+    for level_id, school_year in sorted(fee_overlaps):
+        level_label = session.get(StudyLevel, level_id).label
+        descriptions.append(f"fee: {level_label} ({school_year})")
+    for exam_id, exam_session in sorted(exam_overlaps):
+        exam_label = session.get(Exam, exam_id).label
+        descriptions.append(f"exam result: {exam_label} ({exam_session})")
+    descriptions += sorted(categories)
+
+    if descriptions:
         raise DuplicatePendingSubmissionError(
-            f"Submission {existing_pending.uuid} is already pending "
-            f"for establishment {establishment_internal_id}"
+            "Another submission is already pending for the same element(s): "
+            + ", ".join(descriptions)
         )
 
 
@@ -227,7 +355,7 @@ def create_modification_proposal(
             section_label=section_label,
         )
 
-    _raise_if_pending_submission_exists(session, establishment.id_establishment)
+    _raise_if_submission_conflicts(session, establishment.id_establishment, changed_fields)
 
     submission = Submission(
         id_user=current_user.id_user,
