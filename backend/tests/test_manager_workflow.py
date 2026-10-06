@@ -200,3 +200,46 @@ def test_my_establishments_lists_owned_only(client, database_session, manager_ac
     owned_uuids = [item["establishment_uuid"] for item in items]
     assert owned_uuids == [created["establishment_uuid"]]
     assert items[0]["has_pending_submission"] is True
+
+
+def test_pending_submission_blocks_same_element_only(client, database_session, manager_account, seed_ids):
+    # Alpha (200) devient gérée par le responsable : je teste que le blocage
+    # se fait par élément (classe + année scolaire), pas globalement.
+    database_session.add(UserEstablishmentLink(
+        id_user=manager_account["id_user"], id_establishment=200,
+    ))
+    database_session.commit()
+    alpha_uuid = database_session.get(Establishment, 200).uuid
+    headers = login(client, manager_account["email"], manager_account["password"])
+
+    # Première modification : le frais de la classe 80 pour 2025-2026.
+    first = client.post(
+        f"/my/establishments/{alpha_uuid}/modification-proposals",
+        json={"fees": [{"id_level": 80, "amount": "120000.00", "school_year": "2025-2026"}]},
+        headers=headers,
+    )
+    assert first.status_code == 201
+
+    # La même classe ET la même année : conflit -> 409.
+    duplicate = client.post(
+        f"/my/establishments/{alpha_uuid}/modification-proposals",
+        json={"fees": [{"id_level": 80, "amount": "130000.00", "school_year": "2025-2026"}]},
+        headers=headers,
+    )
+    assert duplicate.status_code == 409
+
+    # Même classe mais autre année : autorisé (granularité par année scolaire).
+    other_year = client.post(
+        f"/my/establishments/{alpha_uuid}/modification-proposals",
+        json={"fees": [{"id_level": 80, "amount": "90000.00", "school_year": "2024-2025"}]},
+        headers=headers,
+    )
+    assert other_year.status_code == 201
+
+    # Une catégorie différente (services) reste aussi soumissible.
+    other_category = client.post(
+        f"/my/establishments/{alpha_uuid}/modification-proposals",
+        json={"services": ["Library"]},
+        headers=headers,
+    )
+    assert other_category.status_code == 201

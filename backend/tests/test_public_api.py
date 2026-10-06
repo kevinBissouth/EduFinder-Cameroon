@@ -34,6 +34,20 @@ def test_list_orders_recommended_first(client, seed_ids):
     assert uuids[0] == seed_ids["published_alpha_uuid"]
 
 
+def test_list_pagination_limit_and_offset(client, seed_ids):
+    ordering = client.get("/institutions").json()
+    all_uuids = [item["uuid"] for item in ordering]
+
+    limited = client.get("/institutions?limit=2").json()
+    assert [item["uuid"] for item in limited] == all_uuids[:2]
+
+    offset = client.get("/institutions?offset=1&limit=2").json()
+    assert [item["uuid"] for item in offset] == all_uuids[1:]
+
+    invalid = client.get("/institutions?limit=0")
+    assert invalid.status_code == 422
+
+
 def test_summary_carries_aggregates(client, seed_ids):
     response = client.get("/institutions")
     by_uuid = {item["uuid"]: item for item in response.json()}
