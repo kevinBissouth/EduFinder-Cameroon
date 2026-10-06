@@ -39,6 +39,7 @@ from app.models import (
     UserRole,
 )
 from app.services.security import hash_password
+from app.services.tracking import TrackingEventDeduplicator, get_tracking_deduplicator
 
 
 @pytest.fixture(name="database_session")
@@ -61,6 +62,10 @@ def client_fixture(database_session):
         yield database_session
 
     app.dependency_overrides[get_db] = override_get_db
+    # Registre neuf à chaque test : sinon un événement compté dans un test
+    # serait vu comme un doublon dans le suivant.
+    tracking_deduplicator = TrackingEventDeduplicator()
+    app.dependency_overrides[get_tracking_deduplicator] = lambda: tracking_deduplicator
     with TestClient(app) as test_client:
         yield test_client
     app.dependency_overrides.clear()

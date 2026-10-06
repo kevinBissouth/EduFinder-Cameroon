@@ -7,7 +7,7 @@ recherche et la fiche publique.
 """
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy import func, text
 from sqlmodel import Session, select
 
@@ -40,8 +40,16 @@ from app.schemas.institution import (
     to_institution_detail,
     to_institution_summary,
 )
+from app.services.tracking import (
+    INQUIRY_EVENT,
+    VIEW_EVENT,
+    TrackingEventDeduplicator,
+    get_tracking_deduplicator,
+)
 
 public_router = APIRouter()
+
+UNKNOWN_CLIENT_ADDRESS = "unknown"
 
 
 @public_router.get("/health")
@@ -253,8 +261,9 @@ def get_filters_meta(session: Session = Depends(get_db)):
     )
 
 
-@public_router.get("/institutions/{institution_uuid}", response_model=InstitutionDetail)
-def get_institution(institution_uuid: str, session: Session = Depends(get_db)):
+def _get_published_establishment_or_404(
+    session: Session, institution_uuid: str
+) -> Establishment:
     establishment = session.exec(
         select(Establishment).where(
             Establishment.uuid == institution_uuid,
@@ -263,38 +272,56 @@ def get_institution(institution_uuid: str, session: Session = Depends(get_db)):
     ).first()
     if establishment is None:
         raise HTTPException(status_code=404, detail="Institution not found")
+    return establishment
+
+
+def _get_client_address(request: Request) -> str:
+    # Je lis l'adresse de la connexion et jamais l'en-tête X-Forwarded-For :
+    # le client peut le forger pour contourner le dédoublonnage. Derrière un
+    # reverse proxy, c'est uvicorn (--proxy-headers) qui doit rétablir la
+    # vraie adresse.
+    if request.client is None:
+        return UNKNOWN_CLIENT_ADDRESS
+    return request.client.host
+
+
+@public_router.get("/institutions/{institution_uuid}", response_model=InstitutionDetail)
+def get_institution(institution_uuid: str, session: Session = Depends(get_db)):
+    establishment = _get_published_establishment_or_404(session, institution_uuid)
     return to_institution_detail(establishment)
 
 
 @public_router.post("/institutions/{institution_uuid}/track-view")
-def track_institution_view(institution_uuid: str, session: Session = Depends(get_db)):
-    establishment = session.exec(
-        select(Establishment).where(
-            Establishment.uuid == institution_uuid,
-            Establishment.status == EstablishmentStatus.published,
-        )
-    ).first()
-    if establishment is None:
-        raise HTTPException(status_code=404, detail="Institution not found")
-    establishment.views_count = (establishment.views_count or 0) + 1
-    session.add(establishment)
-    session.commit()
+def track_institution_view(
+    institution_uuid: str,
+    request: Request,
+    session: Session = Depends(get_db),
+    deduplicator: TrackingEventDeduplicator = Depends(get_tracking_deduplicator),
+):
+    establishment = _get_published_establishment_or_404(session, institution_uuid)
+    # Un événement répété reçoit la même réponse 200 qu'un événement compté :
+    # je ne signale pas au client que sa requête a été ignorée.
+    if deduplicator.should_count(
+        _get_client_address(request), establishment.uuid, VIEW_EVENT
+    ):
+        establishment.views_count = (establishment.views_count or 0) + 1
+        session.add(establishment)
+        session.commit()
     return {"views_count": establishment.views_count}
 
 
 @public_router.post("/institutions/{institution_uuid}/track-inquiry")
 def track_institution_inquiry(
-    institution_uuid: str, session: Session = Depends(get_db)
+    institution_uuid: str,
+    request: Request,
+    session: Session = Depends(get_db),
+    deduplicator: TrackingEventDeduplicator = Depends(get_tracking_deduplicator),
 ):
-    establishment = session.exec(
-        select(Establishment).where(
-            Establishment.uuid == institution_uuid,
-            Establishment.status == EstablishmentStatus.published,
-        )
-    ).first()
-    if establishment is None:
-        raise HTTPException(status_code=404, detail="Institution not found")
-    establishment.inquiries_count = (establishment.inquiries_count or 0) + 1
-    session.add(establishment)
-    session.commit()
+    establishment = _get_published_establishment_or_404(session, institution_uuid)
+    if deduplicator.should_count(
+        _get_client_address(request), establishment.uuid, INQUIRY_EVENT
+    ):
+        establishment.inquiries_count = (establishment.inquiries_count or 0) + 1
+        session.add(establishment)
+        session.commit()
     return {"inquiries_count": establishment.inquiries_count}
