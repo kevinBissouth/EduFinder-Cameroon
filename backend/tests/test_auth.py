@@ -1,6 +1,8 @@
 """Tests de l'authentification minimale : login, /auth/me, refus 401."""
 from fastapi.testclient import TestClient
 
+from app.core.config import settings
+
 
 def login(client: TestClient, email: str, password: str):
     return client.post("/auth/login", data={"username": email, "password": password})
@@ -53,3 +55,26 @@ def test_me_with_manager_token_returns_profile(client, manager_account):
     assert profile["id_user"] == manager_account["id_user"]
     assert profile["email"] == manager_account["email"]
     assert profile["role"] == "manager"
+
+
+def test_login_cookie_is_http_only_and_not_secure_by_default(client, manager_account):
+    response = login(client, manager_account["email"], manager_account["password"])
+
+    cookie_attributes = response.headers["set-cookie"].lower()
+    assert "httponly" in cookie_attributes
+    assert "secure" not in cookie_attributes
+
+
+def test_login_cookie_is_secure_when_enabled(client, manager_account, monkeypatch):
+    monkeypatch.setattr(settings, "cookie_secure", True)
+
+    response = login(client, manager_account["email"], manager_account["password"])
+
+    assert "secure" in response.headers["set-cookie"].lower()
+
+
+def test_login_cookie_lifetime_matches_token_lifetime(client, manager_account):
+    response = login(client, manager_account["email"], manager_account["password"])
+
+    expected_max_age = settings.access_token_expire_minutes * 60
+    assert f"max-age={expected_max_age}" in response.headers["set-cookie"].lower()

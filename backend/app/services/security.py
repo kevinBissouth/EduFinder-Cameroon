@@ -28,11 +28,12 @@ def create_access_token(user_id: int, role_value: str) -> str:
 def set_token_cookie(response, token: str) -> None:
     # SameSite=Lax fonctionne en dev (localhost:5173 -> localhost:8000, même
     # site car les ports sont ignorés). En production sur des domaines
-    # séparés, il faudra SameSite=None + secure=True (HTTPS obligatoire).
+    # séparés, il faudra SameSite=None, qui exige le flag secure.
     response.set_cookie(
         key="token",
         value=token,
         httponly=True,
+        secure=settings.cookie_secure,
         max_age=settings.access_token_expire_minutes * 60,
         samesite="lax",
         path="/",

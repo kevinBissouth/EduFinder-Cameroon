@@ -26,7 +26,13 @@ class Settings(BaseSettings):
     database_url: str = "mysql+pymysql://user:password@localhost:3306/edufinder_db"
 
     secret_key: str
-    access_token_expire_minutes: int = 480
+    # Le JWT n'est pas révocable : un token volé reste valable jusqu'à son
+    # expiration, donc je garde une durée courte.
+    access_token_expire_minutes: int = 120
+    # À passer à true en production (HTTPS) : le navigateur n'envoie alors
+    # jamais le cookie de session sur une connexion non chiffrée. Reste à
+    # false en développement, servi en HTTP.
+    cookie_secure: bool = False
 
 
 settings = Settings()
