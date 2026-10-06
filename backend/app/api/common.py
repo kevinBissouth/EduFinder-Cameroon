@@ -1,44 +1,13 @@
 """Helpers partagés entre les routers publics, responsable et administrateur.
 
-Je regroupe ici la logique de filtrage de recherche, de calcul des extra
-(résumés de liste, benchmarks) et la traduction des erreurs métier en codes
-HTTP, pour éviter de la réimplémenter dans chaque espace de l'API.
+Je regroupe ici le calcul des extra (résumés de liste, benchmarks) et la
+traduction des erreurs métier en codes HTTP, pour éviter de les réimplémenter
+dans chaque espace de l'API.
 """
-from decimal import Decimal
-
-from fastapi import HTTPException
 from sqlalchemy import func
 from sqlmodel import Session, select
 
 from app.models import ExamResult, Media, MediaType, SchoolFee
-
-
-def parse_exam_requirement(raw_requirement: str) -> tuple[int, Decimal]:
-    """Décompose « exam_id:taux_min » en couple typé pour le filtre de recherche.
-
-    Le schéma Pydantic garantit déjà un seul séparateur, mais je refuse
-    explicitement un taux au-dessus de 100 (incohérence de données).
-    """
-    raw_exam_id, raw_pass_rate = raw_requirement.split(":")
-    minimum_rate = Decimal(raw_pass_rate)
-    if minimum_rate > 100:
-        raise HTTPException(
-            status_code=422,
-            detail=f"Pass rate must be <= 100 in '{raw_requirement}'",
-        )
-    return int(raw_exam_id), minimum_rate
-
-
-def minimum_fee_subquery():
-    """Sous-requête du frais annuel minimal par établissement (filtre budget)."""
-    return (
-        select(
-            SchoolFee.id_establishment,
-            func.min(SchoolFee.amount).label("min_amount"),
-        )
-        .group_by(SchoolFee.id_establishment)
-        .subquery()
-    )
 
 
 def collect_summary_extras(session: Session, establishment_ids: list[int]):

@@ -11,7 +11,8 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy import func, text
 from sqlmodel import Session, select
 
-from app.api.common import collect_summary_extras, minimum_fee_subquery, parse_exam_requirement
+from app.api.common import collect_summary_extras
+from app.api.search import build_institution_search_stmt
 from app.db.session import get_db
 from app.models import (
     City,
@@ -23,7 +24,6 @@ from app.models import (
     LinguisticSection,
     PaymentMethod,
     Program,
-    ProgramOffer,
     Region,
     SchoolFee,
     Sector,
@@ -63,98 +63,9 @@ def list_institutions(
     filters: Annotated[InstitutionFilters, Query()],
     session: Session = Depends(get_db),
 ):
-    # Je construis la requête de recherche sur les seuls établissements
-    # publiés (règle d'or) puis j'applique l'ensemble des filtres.
-    published_establishments_stmt = select(Establishment).where(
-        Establishment.status == EstablishmentStatus.published
-    )
-    if filters.city_id is not None:
-        published_establishments_stmt = published_establishments_stmt.where(
-            Establishment.id_city == filters.city_id
-        )
-    if filters.type_id is not None:
-        published_establishments_stmt = published_establishments_stmt.where(
-            Establishment.id_type == filters.type_id
-        )
-    if filters.linguistic_section_id is not None:
-        published_establishments_stmt = published_establishments_stmt.where(
-            Establishment.id_linguistic_section == filters.linguistic_section_id
-        )
-    if filters.sector_id is not None:
-        selected_sector = session.get(Sector, filters.sector_id)
-        if selected_sector is None:
-            matched_ids = [filters.sector_id]
-        else:
-            same_group_stmt = select(Sector.id_sector).where(
-                Sector.is_public == selected_sector.is_public
-            )
-            matched_ids = session.exec(same_group_stmt).all()
-        published_establishments_stmt = published_establishments_stmt.where(
-            Establishment.id_sector.in_(matched_ids)
-        )
-    if filters.region_id is not None:
-        published_establishments_stmt = published_establishments_stmt.join(City).where(
-            City.id_region == filters.region_id
-        )
-    if filters.program_id is not None:
-        published_establishments_stmt = published_establishments_stmt.join(
-            ProgramOffer
-        ).where(ProgramOffer.id_program == filters.program_id)
-    if filters.search_term:
-        published_establishments_stmt = published_establishments_stmt.where(
-            Establishment.name.contains(filters.search_term)
-        )
-
-    if filters.min_fee is not None or filters.max_fee is not None:
-        fee_floor_subq = minimum_fee_subquery()
-        published_establishments_stmt = published_establishments_stmt.join(
-            fee_floor_subq,
-            Establishment.id_establishment == fee_floor_subq.c.id_establishment,
-        )
-        if filters.min_fee is not None:
-            published_establishments_stmt = published_establishments_stmt.where(
-                fee_floor_subq.c.min_amount >= filters.min_fee
-            )
-        if filters.max_fee is not None:
-            published_establishments_stmt = published_establishments_stmt.where(
-                fee_floor_subq.c.min_amount <= filters.max_fee
-            )
-
-    for service_name in filters.service_names:
-        published_establishments_stmt = published_establishments_stmt.where(
-            select(Service.id_service)
-            .where(
-                Service.id_establishment == Establishment.id_establishment,
-                func.lower(Service.name) == service_name.lower(),
-            )
-            .exists()
-        )
-    for exam_id, minimum_rate in [
-        parse_exam_requirement(requirement) for requirement in filters.exam_requirements
-    ]:
-        published_establishments_stmt = published_establishments_stmt.where(
-            select(ExamResult.id_result)
-            .where(
-                ExamResult.id_establishment == Establishment.id_establishment,
-                ExamResult.id_exam == exam_id,
-                ExamResult.pass_rate >= minimum_rate,
-            )
-            .exists()
-        )
-
-    published_establishments_stmt = published_establishments_stmt.order_by(
-        Establishment.recommended.desc(), Establishment.id_establishment
-    )
-
-    # Pagination optionnelle : si le client demande limit/offset, je limite la
-    # sélection en base au lieu de tout charger. Sans limit, comportement
-    # inchangé (l'interface actuelle n'utilise pas encore la pagination).
-    if filters.limit is not None:
-        published_establishments_stmt = published_establishments_stmt.limit(filters.limit)
-    if filters.offset is not None:
-        published_establishments_stmt = published_establishments_stmt.offset(filters.offset)
-
-    establishments = session.exec(published_establishments_stmt).all()
+    establishments = session.exec(
+        build_institution_search_stmt(session, filters)
+    ).all()
     fee_minimums, best_pass_rates, cover_urls = collect_summary_extras(
         session, [item.id_establishment for item in establishments]
     )
