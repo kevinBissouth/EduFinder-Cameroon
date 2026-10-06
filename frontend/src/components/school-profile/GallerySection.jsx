@@ -1,7 +1,7 @@
 import { useState } from 'react'
 
 import { API_URL } from '../../constants'
-import { Image as ImageIcon } from 'lucide-react'
+import { Image as ImageIcon, Video } from 'lucide-react'
 
 // Une tuile photo : cliquable (vue plein écran), et en cas d'échec de
 // chargement on affiche une pastille décorative plutôt que de masquer la
@@ -50,13 +50,15 @@ function PhotoTile({ image, featured, onClick }) {
   )
 }
 
-// Galerie photo : uniquement les médias de type image, photo à la une en
-// grand puis grille. Chaque photo est cliquable (liée à une vue agrandie).
+// Galerie : la partie photo ne montre que les médias de type image (photo à la
+// une en grand puis grille, chacune cliquable). Une sous-partie Vidéos affiche
+// les vidéos téléversées quand il y en a — même en l'absence de photos.
 function GallerySection({ media = [] }) {
   const images = media.filter((item) => item.type === 'image')
+  const videos = media.filter((item) => item.type === 'video')
   const [lightboxUrl, setLightboxUrl] = useState(null)
 
-  if (images.length === 0) {
+  if (images.length === 0 && videos.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-[#cfe0d7] bg-white/50 py-14 text-center">
         <ImageIcon className="h-8 w-8 text-[#0d7a4f]/50" />
@@ -69,40 +71,64 @@ function GallerySection({ media = [] }) {
 
   return (
     <section id="gallery" className="scroll-mt-40">
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-        {featured && (
-          <div className="md:col-span-2">
-            <PhotoTile
-              image={featured}
-              featured
-              onClick={() => setLightboxUrl(featured.url)}
-            />
+      {images.length > 0 && (
+        <>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+            {featured && (
+              <div className="md:col-span-2">
+                <PhotoTile
+                  image={featured}
+                  featured
+                  onClick={() => setLightboxUrl(featured.url)}
+                />
+              </div>
+            )}
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-1">
+              {rest.slice(0, 2).map((image) => (
+                <PhotoTile
+                  key={image.id_media}
+                  image={image}
+                  onClick={() => setLightboxUrl(image.url)}
+                />
+              ))}
+              {rest.length === 0 && (
+                <div className="hidden md:block" aria-hidden="true" />
+              )}
+            </div>
           </div>
-        )}
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-1">
-          {rest.slice(0, 2).map((image) => (
-            <PhotoTile
-              key={image.id_media}
-              image={image}
-              onClick={() => setLightboxUrl(image.url)}
-            />
-          ))}
-          {rest.length === 0 && (
-            <div className="hidden md:block" aria-hidden="true" />
-          )}
-        </div>
-      </div>
 
-      {/* Grille complète si plus de 3 photos */}
-      {rest.length > 2 && (
-        <div className="mt-4 grid grid-cols-2 gap-4 md:grid-cols-4">
-          {rest.slice(2).map((image) => (
-            <PhotoTile
-              key={image.id_media}
-              image={image}
-              onClick={() => setLightboxUrl(image.url)}
-            />
-          ))}
+          {/* Grille complète si plus de 3 photos */}
+          {rest.length > 2 && (
+            <div className="mt-4 grid grid-cols-2 gap-4 md:grid-cols-4">
+              {rest.slice(2).map((image) => (
+                <PhotoTile
+                  key={image.id_media}
+                  image={image}
+                  onClick={() => setLightboxUrl(image.url)}
+                />
+              ))}
+            </div>
+          )}
+        </>
+      )}
+
+      {/* Vidéos téléversées par l'établissement */}
+      {videos.length > 0 && (
+        <div className="mt-8">
+          <h3 className="mb-3 flex items-center gap-2 text-sm font-bold uppercase tracking-[0.14em] text-[#0d7a4f]">
+            <Video size={16} /> Videos
+          </h3>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            {videos.map((video) => (
+              <video
+                key={video.id_media}
+                src={`${API_URL}${video.url}`}
+                controls
+                preload="metadata"
+                className="aspect-video w-full rounded-2xl border border-[#e7ece9] bg-black"
+              />
+            ))}
+          </div>
         </div>
       )}
 

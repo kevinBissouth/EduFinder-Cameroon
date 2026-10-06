@@ -220,6 +220,11 @@ export default function ManagerDashboard({
     (submission) => submission.submission_status === 'rejected',
   ).length
 
+  // Aperçu limité sur la dashboard : 2 établissements, 2 soumissions récentes
+  // (le reste reste accessible via « View all »).
+  const recentEstablishments = establishments.slice(0, 2)
+  const recentSubmissions = submissions.slice(0, 2)
+
   return (
     <div>
       {/* Quatre tuiles KPI */}
@@ -252,7 +257,7 @@ export default function ManagerDashboard({
           </div>
           <div className="overflow-x-auto">
             <EstablishmentsTable
-              establishments={establishments}
+              establishments={recentEstablishments}
               onViewDetail={onViewDetail}
             />
           </div>
@@ -306,7 +311,7 @@ export default function ManagerDashboard({
             Track the review status of your establishment and update submissions.
           </p>
           <div className="mt-3">
-            <SubmissionTimeline submissions={submissions} />
+            <SubmissionTimeline submissions={recentSubmissions} />
           </div>
           <div className="mt-3 border-t border-[#e7ece9] pt-2.5 text-center">
             <button

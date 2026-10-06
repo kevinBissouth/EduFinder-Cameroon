@@ -107,14 +107,10 @@ function SchoolProfilePage({ schoolId }) {
             <ServicesSection services={institution.services || []} />
             <GallerySection media={institution.media || []} />
             <ContactSection
-              name={institution.name}
               address={institution.address}
               phone={institution.phone}
               contactEmail={institution.contact_email}
               website={institution.website}
-              latitude={institution.latitude}
-              longitude={institution.longitude}
-              locationText={locationText}
             />
           </div>
 

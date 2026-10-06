@@ -15,6 +15,7 @@ import {
   Eye,
   ArrowLeft,
   X,
+  Video,
 } from 'lucide-react'
 import { useState } from 'react'
 import { typeSupportsPrograms, typeSupportsExamResults } from '../../utils/establishmentType'
@@ -110,6 +111,19 @@ export default function ManagerSchoolDetail({
       setFieldNotice('Deletion failed.')
     }
   }
+  // Photo du directeur : écriture directe sur la fiche (sans validation), à
+  // l'image des médias de la galerie gérés par le responsable.
+  const handleDirectorPhotoUpload = async (file) => {
+    const form = new FormData()
+    form.append('file', file)
+    try {
+      await authedRequest('put', `/my/establishments/${detail.uuid}/director-photo`, form)
+      setFieldNotice('Director photo updated.')
+      reloadDetail()
+    } catch {
+      setFieldNotice('Photo upload failed (type or size).')
+    }
+  }
 
   if (detailStatus === 'loading' && !detail) {
     return (
@@ -129,6 +143,7 @@ export default function ManagerSchoolDetail({
   const cover = resolveMediaUrl(detail.media.find((media) => media.type === 'image')?.url)
   const isPublished = detail.status === 'published'
   const imageCount = detail.media.filter((media) => media.type === 'image').length
+  const videos = detail.media.filter((media) => media.type === 'video')
   const bestPassRate = detail.exam_results.length
     ? Math.max(...detail.exam_results.map((result) => Number(result.pass_rate)))
     : null
@@ -271,11 +286,13 @@ export default function ManagerSchoolDetail({
       </Section>
 
       {/* Responsable de l'établissement (directeur / proviseur) : présenté
-          comme une courte bio éditable, distinct du compte du gestionnaire. */}
+          comme une courte bio éditable, distinct du compte du gestionnaire.
+          La photo est gérée en direct (sans validation), le texte repasse
+          par une proposition de modification. */}
       <Section id="leadership" eyebrow="Leadership" title="School leadership">
-        {(detail.director_name || detail.director_title || detail.director_bio || detail.director_photo_url) && (
-          <div className="flex flex-col gap-5 rounded-2xl border border-[#eef1f8] bg-white p-6 sm:flex-row sm:items-center">
-            {detail.director_photo_url && (
+        <div className="flex flex-col gap-5 rounded-2xl border border-[#eef1f8] bg-white p-6 sm:flex-row sm:items-center">
+          <div className="flex shrink-0 items-center gap-4">
+            {detail.director_photo_url ? (
               <img
                 src={`${API_URL}${detail.director_photo_url}`}
                 alt={detail.director_name || 'Director'}
@@ -284,22 +301,47 @@ export default function ManagerSchoolDetail({
                   event.currentTarget.style.display = 'none'
                 }}
               />
+            ) : (
+              <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full border-4 border-white bg-[#eef4f0] text-[#0d7a4f]">
+                <GraduationCap size={30} />
+              </div>
             )}
-            <div>
-              {detail.director_name && (
-                <p className="text-lg font-semibold text-[#081220]">{detail.director_name}</p>
-              )}
-              {detail.director_title && (
-                <p className="text-sm text-[#5b6670]">{detail.director_title}</p>
-              )}
-              {detail.director_bio && (
-                <p className="mt-3 whitespace-pre-line text-[15px] leading-7 text-[#343a44]">
-                  {detail.director_bio}
-                </p>
-              )}
-            </div>
+            <label className="flex cursor-pointer items-center gap-1.5 rounded-xl border border-dashed border-[#cfe2d8] bg-[#f3faf6] px-3 py-2 text-[12px] font-semibold text-[#0d7a4f] hover:bg-[#e9f5ef]">
+              <Upload size={14} />
+              {detail.director_photo_url ? 'Change photo' : 'Add photo'}
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(event) => {
+                  if (event.target.files?.[0]) handleDirectorPhotoUpload(event.target.files[0])
+                  event.target.value = ''
+                }}
+              />
+            </label>
           </div>
-        )}
+          <div>
+            {(detail.director_name || detail.director_title || detail.director_bio) ? (
+              <>
+                {detail.director_name && (
+                  <p className="text-lg font-semibold text-[#081220]">{detail.director_name}</p>
+                )}
+                {detail.director_title && (
+                  <p className="text-sm text-[#5b6670]">{detail.director_title}</p>
+                )}
+                {detail.director_bio && (
+                  <p className="mt-3 whitespace-pre-line text-[15px] leading-7 text-[#343a44]">
+                    {detail.director_bio}
+                  </p>
+                )}
+              </>
+            ) : (
+              <p className="text-[13px] text-[#8a90a0]">
+                No director details yet — add them via Edit profile.
+              </p>
+            )}
+          </div>
+        </div>
       </Section>
 
       {/* Services et filières : pastilles cliquables / informatives */}
@@ -409,34 +451,11 @@ export default function ManagerSchoolDetail({
         )}
       </Section>
 
-      {/* Localisation : mini-carte OpenStreetMap + lien d'itinéraire */}
+      {/* Localisation : adresse textuelle (la mini-carte a été retirée pour
+          l'instant, voir perspectives) */}
       <Section id="location" eyebrow="Where to find us" title="Location">
-        {detail.latitude && detail.longitude ? (
-          <>
-            <div className="h-56 w-full overflow-hidden rounded-2xl border border-[#dcebe3]">
-              <iframe
-                title="school-location"
-                loading="lazy"
-                className="h-full w-full"
-                src={`https://www.openstreetmap.org/export/embed.html?bbox=${detail.longitude - 0.01},${detail.latitude - 0.01},${detail.longitude + 0.01},${detail.latitude + 0.01}&layer=mapnik&marker=${detail.latitude},${detail.longitude}`}
-              />
-            </div>
-            <a
-              href={`https://www.openstreetmap.org/directions?to=${detail.latitude},${detail.longitude}`}
-              target="_blank"
-              rel="noreferrer"
-              className="mt-2 inline-flex items-center gap-1 text-[13px] font-medium text-[#0d7a4f] hover:text-[#0a5e3d]"
-            >
-              <MapPin size={13} /> Get directions
-            </a>
-          </>
-        ) : (
-          <p className="rounded-2xl bg-[#f6faf8] px-4 py-4 text-[13px] text-[#8a90a0]">
-            Location not set yet — add it on the map to help families find you.
-          </p>
-        )}
-        {detail.address && <p className="mt-2 text-[13px] text-[#6e6e6e]">{detail.address}</p>}
-        <p className="text-[13px] text-[#6e6e6e]">{detail.city}, {detail.region}</p>
+        {detail.address && <p className="text-[13px] text-[#6e6e6e]">{detail.address}</p>}
+        <p className="mt-2 text-[13px] text-[#6e6e6e]">{detail.city}, {detail.region}</p>
       </Section>
 
       {/* Galerie photo : gestion en ligne (ajout / suppression) */}
@@ -488,6 +507,42 @@ export default function ManagerSchoolDetail({
               }}
             />
             <Upload size={18} />
+          </label>
+        </div>
+        {videos.length > 0 && (
+          <ul className="mt-5 flex flex-wrap gap-2">
+            {videos.map((media) => (
+              <li
+                key={media.id_media ?? media.url}
+                className="flex items-center gap-2 rounded-xl border border-[#e3e9e6] bg-white px-3 py-2 text-[13px] text-[#334155]"
+              >
+                <Video size={15} className="text-[#0d7a4f]" />
+                <span className="max-w-[200px] truncate">{media.caption || media.url.split('/').pop()}</span>
+                <button
+                  type="button"
+                  onClick={() => handleDeleteMedia(media.id_media)}
+                  title="Delete video"
+                  className="text-[#8a90a0] hover:text-red-600"
+                >
+                  <Trash2 size={14} />
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+        <div className="mt-3 flex items-center gap-2">
+          <label className="flex cursor-pointer items-center gap-1.5 rounded-xl border border-dashed border-[#cfe2d8] bg-[#f3faf6] px-3 py-2 text-[12px] font-semibold text-[#0d7a4f] hover:bg-[#e9f5ef]">
+            <Video size={14} />
+            Add video
+            <input
+              type="file"
+              accept="video/mp4,video/webm"
+              className="hidden"
+              onChange={(event) => {
+                if (event.target.files?.[0]) handleUploadMedia(event.target.files[0])
+                event.target.value = ''
+              }}
+            />
           </label>
         </div>
         {isPublished && (

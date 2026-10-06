@@ -49,6 +49,7 @@ function ManagerHomePage({ profile, onSignOut }) {
   const [formState, setFormState] = useState(null)
   const [submitting, setSubmitting] = useState(false)
   const [serverError, setServerError] = useState('')
+  const [preparing, setPreparing] = useState(false)
   const [successMessage, setSuccessMessage] = useState('')
   const [selectedUuid, setSelectedUuid] = useState(null)
   const { detail: establishmentDetail, status: detailStatus, reload: reloadDetail } =
@@ -80,12 +81,28 @@ function ManagerHomePage({ profile, onSignOut }) {
     }
   }, [selectedUuid, managerData.establishments])
 
-  function handleEditSchool(school) {
-    openModificationForm({
-      establishment_uuid: school.uuid,
+  async function handleEditSchool(school) {
+    setPreparing(true)
+    setServerError('')
+    const establishmentUuid = school.establishment_uuid ?? school.uuid
+    const baseSchool = {
+      establishment_uuid: establishmentUuid,
       name: school.name,
-      establishment_status: school.status,
-    })
+      establishment_status: school.establishment_status ?? school.status,
+    }
+    try {
+      // Je pré-charge le détail de l'établissement pour pré-remplir le
+      // formulaire de modification (frais, services, programmes actuels) :
+      // l'envoi d'une liste vide signifiera « tout retirer ».
+      const detail = await authedRequest('get', `/my/establishments/${establishmentUuid}`)
+      openModificationForm({ ...baseSchool, detail })
+    } catch {
+      // En cas d'échec du détail, j'ouvre quand même le formulaire, sans
+      // pré-remplissage : mieux vaut un formulaire vierge qu'une page bloquée.
+      openModificationForm(baseSchool)
+    } finally {
+      setPreparing(false)
+    }
   }
 
   function openCreationForm() {
@@ -292,7 +309,7 @@ function ManagerHomePage({ profile, onSignOut }) {
                 establishments={managerData.establishments}
                 loading={managerData.status === 'loading'}
                 onOpenSchool={navigateToDetail}
-                onProposeModification={openModificationForm}
+                onProposeModification={handleEditSchool}
               />
             ) : managerData.establishments.length === 1 ? (
               <ManagerSchoolDetail
@@ -411,6 +428,13 @@ function ManagerHomePage({ profile, onSignOut }) {
             />
           )}
         </div>
+        {preparing && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/70">
+            <p className="rounded-xl border border-[#dcebe3] bg-white px-5 py-3 text-sm font-semibold text-[#0d7a4f] shadow-sm">
+              Loading school details…
+            </p>
+          </div>
+        )}
       </main>
     </div>
   )

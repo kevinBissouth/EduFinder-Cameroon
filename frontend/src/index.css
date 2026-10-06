@@ -29,4 +29,50 @@
 
   /* Couleur du texte courant, utilisée par la homepage (text-body). */
   --color-body: #334155;
+
+  /* Animation des orbes flottants de l'espace super admin (template Glass). */
+  --animate-float: float 20s ease-in-out infinite;
+
+  @keyframes float {
+    0%,
+    100% {
+      transform: translate(0, 0) scale(1);
+    }
+    25% {
+      transform: translate(30px, -30px) scale(1.05);
+    }
+    50% {
+      transform: translate(-20px, 20px) scale(0.95);
+    }
+    75% {
+      transform: translate(20px, 10px) scale(1.02);
+    }
+  }
+
+  /* Entrée/sortie du carrousel « Recent actions » de la dashboard : l'action
+     qui part glisse vers le haut et s'efface, la suivante monte avec fondu. */
+  --animate-action-in: action-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-action-out: action-out 0.5s ease-in both;
+
+  @keyframes action-in {
+    from {
+      opacity: 0;
+      transform: translateY(24px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes action-out {
+    from {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    to {
+      opacity: 0;
+      transform: translateY(-24px);
+    }
+  }
 }
