@@ -32,3 +32,4 @@ class SubmissionType(str, enum.Enum):
 class MediaType(str, enum.Enum):
     image = "image"
     pdf = "pdf"
+    video = "video"
