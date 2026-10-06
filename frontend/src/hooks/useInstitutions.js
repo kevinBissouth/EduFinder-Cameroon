@@ -62,21 +62,21 @@ export function useInstitutions() {
         const response = await axios.get(`${API_URL}/institutions`, { params })
         setInstitutions(response.data)
         setStatus('success')
+        return response.data
       } catch {
         setInstitutions([])
         setStatus('error')
+        return []
       }
     },
     [],
   )
 
   useEffect(() => {
-    fetchInstitutions()
-
-    axios
-      .get(`${API_URL}/institutions`)
-      .then((response) => setAllInstitutions(response.data))
-      .catch(() => {})
+    // Au montage aucun filtre n'est actif : la liste affichée et la liste
+    // complète (compteurs par ville, destinations) sont identiques, donc une
+    // seule requête alimente les deux.
+    fetchInstitutions().then(setAllInstitutions)
   }, [fetchInstitutions])
 
   
