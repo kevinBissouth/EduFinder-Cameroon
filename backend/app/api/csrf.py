@@ -17,26 +17,33 @@ from app.core.config import settings
 _SAFE_METHODS = {"GET", "HEAD", "OPTIONS"}
 
 
-class CsrfOriginMiddleware(BaseHTTPMiddleware):
-    """Refuse toute requête mutante d'origine non autorisée.
+def _is_allowed_origin(request: Request) -> bool:
+    request_origin = request.headers.get("origin")
+    # Pas d'Origin = requête de même origine ou client non navigateur (curl,
+    # tests) : un navigateur attaquant envoie toujours Origin en cross-site.
+    if request_origin is None:
+        return True
+    if request_origin in settings.cors_origins:
+        return True
+    # Même origine que l'API (Swagger sur /docs). Je la reconstruis depuis
+    # l'en-tête Host, qu'un site attaquant ne peut pas choisir dans le
+    # navigateur de la victime : il désigne toujours le serveur visé.
+    own_origin = f"{request.url.scheme}://{request.url.netloc}"
+    return request_origin == own_origin
 
-    Règle : si un en-tête Origin est présent et qu'il n'appartient pas à la
-    liste blanche CORS, la requête est rejetée (403). L'absence d'Origin
-    désigne une requête de même origine ou un client non navigateur (curl,
-    tests) : elle est laissée passer, car un navigateur attaquant envoie
-    toujours Origin sur une requête cross-site.
+
+class CsrfOriginMiddleware(BaseHTTPMiddleware):
+    """Refuse toute requête mutante d'origine non autorisée (403).
+
+    /auth/ est contrôlé comme le reste : sans cela, un site tiers pourrait
+    connecter la victime sur le compte de l'attaquant (login CSRF) ou la
+    déconnecter.
     """
 
     async def dispatch(self, request: Request, call_next) -> Response:
-        if (
-            request.method in _SAFE_METHODS
-            or request.url.path.startswith("/media")
-            or request.url.path.startswith("/auth/")
-        ):
+        if request.method in _SAFE_METHODS or request.url.path.startswith("/media"):
             return await call_next(request)
-
-        request_origin = request.headers.get("origin")
-        if request_origin and request_origin not in settings.cors_origins:
+        if not _is_allowed_origin(request):
             return Response(
                 status_code=403,
                 content="Forbidden: cross-site request without valid origin",
