@@ -1,36 +1,8 @@
 
-from sqlmodel import Session, select
+from sqlmodel import Session
 
 from app.db.session import engine
-from app.models.establishment import Establishment, Media
-from app.models.enums import MediaType
-
-
-PUBLISHED_IDS = list(range(17, 28))
-
-
-def seed_profile_media() -> None:
-    with Session(engine) as session:
-        for establishment_id in PUBLISHED_IDS:
-            establishment = session.get(Establishment, establishment_id)
-            if establishment is None:
-                continue
-            for media in session.exec(
-                select(Media).where(Media.id_establishment == establishment_id)
-            ).all():
-                session.delete(media)
-            session.add(
-                Media(
-                    id_establishment=establishment_id,
-                    type=MediaType.image,
-                    url=f"/media/profil_{establishment_id}.jpg",
-                    caption=establishment.name,
-                )
-            )
-            print(f"profil {establishment_id} -> {establishment.name}")
-        session.commit()
-    print("Médias de profil enregistrés.")
-
+from app.models.establishment import Establishment
 
 
 ESTABLISHMENT_DESCRIPTIONS = {
