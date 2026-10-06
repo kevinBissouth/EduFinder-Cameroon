@@ -1,0 +1,266 @@
+# CLAUDE.md — EduFinder Cameroon
+
+Guide de travail pour toute personne (humaine ou agent IA) intervenant sur ce projet.
+À lire intégralement avant chaque tâche, quelle que soit sa taille.
+
+---
+
+## 1. Le projet en une page
+
+EduFinder Cameroon est une plateforme web publique qui permet aux parents, élèves,
+étudiants et visiteurs de **rechercher et comparer des établissements scolaires et
+universitaires au Cameroun** : frais par classe/filière, tranches de paiement, résultats
+aux examens, services, contacts, localisation, galerie.
+
+Trois rôles :
+- **Visiteur public** : consulte et recherche sans compte.
+- **Administrateur d'établissement** : gère UNIQUEMENT les établissements qui lui sont
+  confiés et soumet ses modifications pour validation.
+- **Super administrateur** : valide/refuse/suspend les publications, gère les catégories
+  et les comptes.
+
+Principe fondamental (issu du cahier des besoins) : la plateforme n'affirme jamais qu'un
+établissement est « le meilleur » — elle aide chaque utilisateur à trouver celui qui
+correspond à SES critères.
+
+## 2. Architecture et stack technique
+
+```
+EduFinder-Cameroon/
+├── backend/                  # API FastAPI
+│   ├── app/
+│   │   ├── main.py           # App FastAPI, CORS, CSRF, montage des routeurs, /media statique
+│   │   ├── api/              # Un routeur par espace :
+│   │   │   ├── routes.py     #   public (recherche, fiche, stats, filtres)
+│   │   │   ├── auth.py       #   connexion, déconnexion, profil courant
+│   │   │   ├── manager.py    #   espace responsable (propositions, médias)
+│   │   │   ├── admin.py      #   espace super admin (décision des soumissions)
+│   │   │   ├── dependencies.py  # get_current_user, require_admin…
+│   │   │   ├── common.py     #   helpers partagés entre routeurs
+│   │   │   └── csrf.py       #   middleware de contrôle de l'en-tête Origin
+│   │   ├── core/config.py    # Settings pydantic (lecture .env) + MEDIA_DIR
+│   │   ├── db/session.py     # Engine SQLModel + get_db
+│   │   ├── models/           # SQLModel : reference, establishment, user,
+│   │   │                     #   submission, enums (tous exportés dans __init__)
+│   │   ├── schemas/          # Schémas Pydantic (institution.py, proposal.py, auth.py)
+│   │   └── services/         # Logique métier : data_rules (cohérence examens/langues),
+│   │                         #   proposals, validation, workflow, security
+│   ├── alembic/versions/     # Migrations (head : e5f6a7b8c9d0)
+│   ├── scripts/              # Scripts de données hors API (mots de passe, soumissions de démo)
+│   ├── tests/                # Tests pytest de l'API publique, responsable et admin
+│   │                         #   (SQLite en mémoire, la base MySQL de démo n'est jamais touchée)
+│   └── .env                  # Secrets — JAMAIS commité
+├── frontend/                 # React + Vite
+│   └── src/
+│       ├── pages/            # HomePage (recherche), SchoolProfilePage (fiche), LoginPage,
+│       │                     #   ManagerHomePage, AdminHomePage
+│       ├── components/       # Blocs d'interface ; school-profile/ = sections de la fiche,
+│       │                     #   manager/ et admin/ = espaces privés
+│       ├── hooks/            # État et appels API (useInstitutions, usePlatformStats…)
+│       ├── utils/auth.js     # Appels authentifiés (cookie httpOnly, withCredentials)
+│       └── routes.js         # Routage minimal par hash (#/school/:id, #/login,
+│                             #   #/manager, #/school-admin), sans dépendance
+├── media/                    # Fichiers téléversés et images de démo, servis sur /media
+├── requirements.txt          # Dépendances backend épinglées
+└── docs/                     # Documents du sujet
+```
+
+- **Backend** : Python 3.12, FastAPI, SQLModel (SQLAlchemy + Pydantic), MySQL, Alembic.
+- **Frontend** : React 19, Vite, Tailwind CSS 4, DaisyUI, axios (le seul client HTTP).
+- **Base** : MySQL `edufinder_db` ; `DATABASE_URL` dans `backend/.env`
+  (ne jamais afficher ni modifier ce fichier, ne jamais le committer).
+
+
+Règle d'or API publique : **seuls les établissements `published` sont visibles**
+(pending, rejected, suspended, draft = invisibles).
+
+## 3. Conventions de code
+
+### Langues
+- **Le site et tout le code sont en anglais** : identifiants, fonctions, messages API,
+  libellés UI, routes, noms de fichiers.
+- **Les données textuelles suivent la langue de l'établissement** : français pour les
+  établissements francophones ou bilingues, anglais pour les anglophones.
+- **Les commentaires sont en français**, à la première personne du singulier, comme si
+  le développeur les écrivait pour lui-même.
+
+### Commentaires (règle stricte)
+- Uniquement sur les **parties importantes ou non évidentes** : logique métier délicate,
+  choix de conception, pièges, contraintes de sécurité, migrations manuelles.
+- **Jamais** de commentaire trivial (« incrémente i »), jamais de commentaire sur du
+  code évident, jamais de commentaires générés en masse.
+- Style : notes personnelles naturelles. **Interdit** : « on aurait pu… », « je te
+  montre… », « nous allons… », « ce code fait… » (redondant avec le code).
+- Exemple accepté :
+  ```python
+  # Ici je garde l'historique complet des anciens frais : la règle 4 du cahier des
+  # besoins impose de conserver les montants passés tout en identifiant clairement
+  # l'année en cours, donc je ne supprime jamais une ligne school_fee.
+  ```
+
+### Nommage explicite (règle stricte)
+- Chaque variable, fonction, classe, paramètre porte un nom qui décrit son rôle :
+  lire le nom doit suffire à deviner ce que contient ou fait la chose.
+- Interdit : abréviations ambiguës (`est`, `pm`, `qry`), monogrammes, noms génériques
+  (`query`, `data`, `tmp`) dès qu'un nom précis existe. Exemple : `est` →
+  `establishment`, `pm` → `payment_method`, `query` → `select_stmt`.
+- La session de base de données se nomme toujours `session` (jamais `db`).
+- Tolérance : `i`/`j` pour les index de boucle triviale ; la boucle `for x in ...`
+  où `x` est le nom complet du type de l'élément.
+- Les noms de colonnes SQL suivent le modèle (`id_fee`, `label`…) : on ne les
+  renomme jamais sans migration ; les noms explicites s'appliquent au code Python.
+
+### Principes de qualité du code
+Règles à respecter dans TOUTE construction de notre projet :
+- **KISS** : la solution la plus simple qui fonctionne ; pas de couche, de
+  classe ou de dépendance superflue (ex. : pas de service pour un simple
+  SELECT).
+- **DRY** : pas de duplication ; une logique partagée existe en un seul
+  endroit (filtres, mappings, vérifications) et est réutilisée.
+- **YAGNI** : pas de code pour un besoin hypothétique ; on construit ce qui
+  est demandé, quand c'est demandé.
+- **SOLID**, appliqué avec bon sens :
+  - *S* : une classe/une fonction = un seul rôle (routes = exposer, schémas =
+    formater, services = métier) ;
+  - *O* : ouvert à l'extension, fermé à la modification (ajouter un filtre
+    sans réécrire la fonction) ;
+  - *D* : dépendre des abstractions (Session), jamais d'un détail
+    d'implémentation.
+- **Lisibilité** : fonctions courtes (une seule chose par fonction), code qui
+  se lit comme une phrase, commentaires pour le *pourquoi* jamais pour le
+  *quoi*.
+- **Robustesse** : échouer tôt et clairement (404/422 explicites), valider
+  toute entrée, n'exposer que le périmètre nécessaire (response_model),
+  supprimer le code mort.
+- **Structure (9 règles anti-flèche)** : sortir tôt au lieu d'empiler les
+  `else` (`if condition: return/raise`, jamais `else` quand un return tôt
+  existe) ; un seul niveau d'indentation par fonction (des `if` imbriqués =
+  à extraire) ; pas de `switch` (dictionnaire de correspondance ou
+  polymorphisme) ; pas de conditions inutiles (`if x: return True else:
+  return False` → `return x`) ; fonctions courtes (une seule responsabilité,
+  ~10 lignes max) ; peu de paramètres (au-delà de 3-4, regrouper dans un
+  objet). Ces règles s'arbitrent : un `else` est acceptable si le `return`
+  tôt est moins lisible.
+- **Règle d'or** : le code est écrit une fois mais lu cent fois — toute
+  construction doit être compréhensible sans effort par son auteur dans
+  6 mois.
+
+## 4. Démarche professionnelle — à suivre pour CHAQUE tâche
+
+Le travail se fait dans l'ordre, sans sauter d'étape :
+
+1. **Comprendre la demande** : reformuler ce qui est demandé, lever les ambiguïtés
+   AVANT d'écrire du code. En cas de doute : poser la question.
+2. **Explorer l'existant** : lire les fichiers concernés, vérifier les modèles, l'état
+   des migrations (`alembic current`), l'état git, les données en base. Ne jamais
+   réécrire ce qui existe déjà.
+3. **Plan + alternatives + justification** : présenter le plan d'action, les approches
+   possibles, puis **expliquer pourquoi la solution retenue** a été choisie (simplicité,
+   cohérence avec l'existant, sécurité, maintenabilité). Cette explication fait partie
+   du livrable.
+4. **Implémenter** : code propre, conventions respectées, pas de code mort, pas de
+   dépendance ajoutée sans justification.
+5. **Vérification absolue** (voir section 6) : ne jamais annoncer « c'est fait » sans
+   avoir testé.
+6. **Récapitulatif** : résumer ce qui a été fait, les tests passés, les choix retenus
+   et ce qui reste à faire.
+
+## 5. Sécurité — priorité absolue
+
+La plateforme expose des données publiques mais protège des espaces privés. Chaque
+fonctionnalité doit être pensée sécurité d'abord :
+
+1. **Secrets** : jamais de secret dans le code ni dans les messages ; `.env` jamais
+   commité, jamais affiché, jamais loggé.
+2. **Mots de passe** : hachés avec bcrypt uniquement (jamais en clair, jamais loggés,
+   jamais renvoyés par l'API). Rappel : passlib 1.7.4 est incompatible avec bcrypt 5+
+   — utiliser bcrypt directement.
+3. **Authentification** : JWT signé avec secret d'environnement, posé dans un cookie
+   httpOnly (jamais lisible en JavaScript) ; durée de vie courte ; déconnexion par
+   expiration du cookie côté serveur (`/auth/logout`).
+4. **Autorisations (règle du cahier des besoins)** : un administrateur ne peut
+   consulter/modifier QUE les établissements associés dans `user_establishment` —
+   vérifier cette appartenance sur chaque requête privée, côté serveur, jamais côté
+   client. Refus clair (403) sinon.
+5. **Validation des entrées** : tout ce qui entre par l'API passe par des schémas
+   Pydantic ; aucun SQL construit par concaténation côté API ; paramétrer les requêtes
+   (requêtes SQL brutes réservées aux scripts de données hors API).
+6. **CORS** : en production, `cors_origins` = liste blanche explicite du domaine du
+   site, jamais `*` avec les cookies.
+7. **Visibilité publique** : les données non validées ou suspendues ne doivent JAMAIS
+   sortir des endpoints publics ; les coordonnées privées des administrateurs ne sont
+   jamais publiques.
+8. **Workflow de validation** : toute modification importante passe par
+   brouillon → soumission → validation → publication ; l'API publique ne voit que
+   l'état publié.
+9. **Actions destructives** : confirmation obligatoire côté UI ; suppression logique
+   privilégiée (historique conservé).
+10. **Fichiers** : téléversement limité en types et en taille, noms de fichiers
+    générés côté serveur, jamais d'exécutable.
+11. **Journalisation** : actions importantes (validations, refus, suspensions)
+    enregistrées sans données sensibles.
+
+### Contrôle sécurité continu (à chaque tâche, quelle que soit sa taille)
+Avant de déclarer une tâche terminée, répondre explicitement à ces trois questions :
+1. **Secrets** : cette modification expose-t-elle un secret (`.env`, mot de passe,
+   token) dans le code, un log ou une réponse API ?
+2. **Visibilité** : cette modification peut-elle faire sortir une donnée non publiée
+   ou suspendue d'un endpoint public, ou des coordonnées privées d'un administrateur ?
+3. **Autorisations** : toute route privée vérifie-t-elle l'appartenance
+   `user_establishment` côté serveur (403 sinon) — jamais côté client ?
+Toute réponse « oui » à une question de fuite bloque la fin de la tâche.
+
+## 6. Vérification absolue
+
+Aucune tâche n'est terminée sans vérification réelle. Commandes de référence
+(à adapter au contexte) :
+
+```bash
+# Backend — lancer depuis le dossier backend/ (sinon import échoue)
+cd backend && uvicorn app.main:app --reload --port 8000
+
+# Backend — migrations
+cd backend && alembic current          # état réel
+cd backend && alembic upgrade head     # appliquer
+
+# Backend — tests manuels des endpoints
+curl -s http://127.0.0.1:8000/health
+curl -s "http://127.0.0.1:8000/institutions?city_id=19&type_id=30"
+curl -s http://127.0.0.1:8000/institutions/999   # attendu : 404
+
+# Frontend
+cd frontend && npm run lint
+cd frontend && npm run build
+```
+
+À vérifier systématiquement :
+- **Backend** : chaque endpoint en succès ET en échec (404, 422 sur entrée invalide,
+  filtres sans résultat, combinaisons de filtres) ; l'API ne renvoie jamais un
+  établissement non publié.
+- **Frontend** : les 4 états de l'interface (chargement, données, aucun résultat,
+  erreur) ; filtres qui envoient de vraies requêtes ; responsive (largeur mobile) ;
+  `npm run lint` et `npm run build` passent.
+- **Données** : compter les lignes (par exemple par tables) après toute opération de
+  seed ; vérifier les IDs réels en base avant de coder des filtres en dur.
+- **Sécurité** : vérifier qu'aucun secret ne sort dans les logs/réponses ; vérifier
+  qu'une route privée refuse un utilisateur non autorisé.
+
+## 7. Règles de travail
+
+- **Ne jamais committer ni pousser sans demande explicite.**
+- Ne jamais modifier `backend/.env` ni en exposer le contenu.
+- Ne jamais installer une dépendance sans explication et accord.
+- Si une tâche semble ambiguë ou dangereuse : s'arrêter et demander.
+- Le projet évolue par étapes validées ; une étape terminée = démontrée et expliquée.
+- L'utilisateur dirige : on ne part pas en avance sur une fonctionnalité non demandée.
+
+## 8. Rappels spécifiques au projet
+
+- Les IDs des tables de référence ne suivent pas 1,2,3… (compteurs AUTO_INCREMENT
+  non réinitialisés après les purges) : toujours vérifier les valeurs réelles en base.
+- Les inserts SQL bruts doivent fournir `created_at`/`submitted_at`/`decided_at`
+  explicitement (les défauts ne sont définis que côté Python).
+- La base contient des données fictives de démonstration (11 établissements,
+  399 lignes au total) : à préserver pour les démos et les tests de recherche.
+- L'interface et les libellés du site seront en anglais ; les données de chaque
+  établissement restent dans la langue de l'établissement.
