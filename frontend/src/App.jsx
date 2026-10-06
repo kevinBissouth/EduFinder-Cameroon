@@ -3,6 +3,7 @@ import HomePage from './pages/HomePage'
 import SchoolProfilePage from './pages/SchoolProfilePage'
 import LoginPage from './pages/LoginPage'
 import ManagerHomePage from './pages/ManagerHomePage'
+import AdminHomePage from './pages/AdminHomePage'
 import { parseCurrentRoute } from './routes'
 import { clearAuthToken, fetchAuthenticatedProfile } from './utils/auth'
 
@@ -59,6 +60,15 @@ function App() {
     if (!profile) {
       window.location.hash = '#/login'
       return <LoginPage onAuthenticated={handleAuthenticated} />
+    }
+    // L'espace super admin n'est accessible qu'au rôle super_admin ; tout
+    // autre compte authentifié est redirigé vers l'espace responsable.
+    if (route.page === 'school-admin' && profile.role === 'super_admin') {
+      return <AdminHomePage profile={profile} onSignOut={handleSignOut} />
+    }
+    if (route.page === 'school-admin') {
+      window.location.hash = '#/manager'
+      return <ManagerHomePage profile={profile} onSignOut={handleSignOut} />
     }
     return <ManagerHomePage profile={profile} onSignOut={handleSignOut} />
   }
