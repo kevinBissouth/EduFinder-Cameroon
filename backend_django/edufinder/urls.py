@@ -1,5 +1,6 @@
 from django.urls import path
 
+from edufinder.services.tracking import TrackedEvent
 from edufinder.views import public
 
 urlpatterns = [
@@ -10,5 +11,17 @@ urlpatterns = [
         "institutions/<str:institution_uuid>",
         public.institution_detail,
         name="institution-detail",
+    ),
+    path(
+        "institutions/<str:institution_uuid>/track-view",
+        public.track_institution_event,
+        {"tracked_event": TrackedEvent.VIEW},
+        name="institution-track-view",
+    ),
+    path(
+        "institutions/<str:institution_uuid>/track-inquiry",
+        public.track_institution_event,
+        {"tracked_event": TrackedEvent.INQUIRY},
+        name="institution-track-inquiry",
     ),
 ]

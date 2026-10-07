@@ -15,6 +15,10 @@ from edufinder.services.data_rules import (
 )
 
 
+def find_published_establishment(institution_uuid: str) -> Establishment | None:
+    return Establishment.objects.published().filter(uuid=institution_uuid).first()
+
+
 def find_published_establishment_profile(institution_uuid: str) -> Establishment | None:
     return (
         with_profile_relations(Establishment.objects.published())

@@ -55,6 +55,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
+    "edufinder.middleware.csrf_origin_middleware",
     "django.middleware.security.SecurityMiddleware",
     "django.middleware.common.CommonMiddleware",
 ]
@@ -64,6 +65,16 @@ WSGI_APPLICATION = "config.wsgi.application"
 
 DATABASES = {"default": _parse_database_url(os.environ["DATABASE_URL"])}
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
+
+# Le cache sert au dédoublonnage des événements de suivi. MAX_ENTRIES borne la
+# mémoire : au-delà, Django évince des entrées au lieu de grossir sans limite.
+CACHE_MAX_ENTRIES = 10_000
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "OPTIONS": {"MAX_ENTRIES": CACHE_MAX_ENTRIES},
+    }
+}
 
 # Les dates existantes sont stockées en UTC sans fuseau : Django fait la même
 # chose avec MySQL quand USE_TZ est actif.

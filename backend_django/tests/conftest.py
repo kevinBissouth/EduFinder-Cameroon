@@ -1,6 +1,7 @@
 from collections.abc import Callable
 
 import pytest
+from django.core.cache import cache
 from rest_framework.test import APIClient
 
 from edufinder.models import (
@@ -14,6 +15,13 @@ from edufinder.models import (
     User,
     UserRole,
 )
+
+
+# Le cache vit dans la mémoire du processus : sans cette remise à zéro, un
+# événement de suivi dédoublonné dans un test le resterait dans le suivant.
+@pytest.fixture(autouse=True)
+def clear_cache_between_tests():
+    cache.clear()
 
 
 @pytest.fixture(name="client")

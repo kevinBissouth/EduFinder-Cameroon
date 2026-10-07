@@ -1,5 +1,6 @@
 """Endpoints publics : aucune authentification, lecture seule des données
 publiées."""
+from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.exceptions import NotFound
 from rest_framework.response import Response
@@ -20,10 +21,13 @@ from edufinder.services.public_catalog import (
     collect_platform_stats,
 )
 from edufinder.services.public_institutions import (
+    find_published_establishment,
     find_published_establishment_profile,
 )
+from edufinder.services.tracking import TrackedEvent, count_event_once
 
 INSTITUTION_NOT_FOUND_MESSAGE = "Institution not found"
+UNKNOWN_CLIENT_ADDRESS = "unknown"
 
 
 @api_view(["GET"])
@@ -54,3 +58,23 @@ def institution_detail(request, institution_uuid: str):
     if establishment is None:
         raise NotFound(INSTITUTION_NOT_FOUND_MESSAGE)
     return Response(InstitutionDetailSerializer(establishment).data)
+
+
+# Une seule vue pour les deux événements : chaque route lui passe le sien.
+@api_view(["POST"])
+def track_institution_event(request, institution_uuid: str, tracked_event: TrackedEvent):
+    establishment = find_published_establishment(institution_uuid)
+    if establishment is None:
+        raise NotFound(INSTITUTION_NOT_FOUND_MESSAGE)
+    count_event_once(establishment, _get_client_address(request), tracked_event)
+    # Réponse vide, identique que l'événement soit compté ou ignoré : les
+    # compteurs sont réservés au responsable et je ne signale pas au client
+    # que sa requête a été dédoublonnée.
+    return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+# Je lis l'adresse de la connexion et jamais l'en-tête X-Forwarded-For : le
+# client peut le forger pour contourner le dédoublonnage. Derrière un reverse
+# proxy, c'est le serveur d'application qui doit rétablir la vraie adresse.
+def _get_client_address(request) -> str:
+    return request.META.get("REMOTE_ADDR") or UNKNOWN_CLIENT_ADDRESS
