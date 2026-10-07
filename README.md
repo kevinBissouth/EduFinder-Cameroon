@@ -36,49 +36,52 @@ Concevoir une plateforme centralisée permettant de rechercher, consulter et com
 ## Technologies & Outils
 
 ### Backend
-- **FastAPI** (Python 3.12) - API REST
-- **SQLModel** / SQLAlchemy - ORM pour MySQL
-- **Alembic** - Gestion des migrations de base de données
-- **bcrypt** - Hashage des mots de passe
-- **JWT** - Authentification par token
-- **Pydantic** - Validation des schémas
+- **Django 5.2** et **Django REST Framework** (Python 3.12) - API REST
+- **MySQL** via PyMySQL - Base de données
+- **Migrations Django** - Évolution du schéma
+- **bcrypt** - Hachage des mots de passe
+- **JWT** dans un cookie httpOnly - Authentification
+- **Sérialiseurs DRF** - Validation des entrées et format des sorties
+- **pytest** et pytest-django - Tests
 
 ### Frontend
-- **React** - Interface utilisateur
-- **Vite** - Build tool et développement
-- **Tailwind CSS 4** - Mise en forme
-- **DaisyUI** - Composants UI prêts à l'emploi
+- **React 19** - Interface utilisateur
+- **Vite** - Outil de build et serveur de développement
+- **Tailwind CSS 4** - Mise en forme, avec les jetons de design du projet
+- **Recharts** - Graphiques des tableaux de bord
+- **Leaflet** - Carte de localisation
 - **Axios** - Client HTTP
+- **lucide-react** - Pictogrammes
 
 ### Base de données
-- **POSTGret** `edufinder_db` - Stockage des données
-- **19 tables** conformes au MLD (Modèle Logique de Données)
+- **MySQL** `edufinder_db` - Stockage des données
 
 ### Outils de développement
 - **Git & GitHub** - Gestion des versions
 - **DBeaver** - Administration de la base de données
 - **Draw.io** - Diagrammes
-- **Vs Code** - Environnement de debeloppement
+- **VS Code** - Environnement de développement
 
 ## Pré-requis
 
 ### Backend
 - Python 3.12 installé
-- POstgres server running
-- Variable d'environnement `.env` dans `backend/` avec :
-  - `DATABASE_URL=mysql+pymysql://user:password@localhost:3306/edufinder_db`
-  - `SECRET_KEY` pour JWT
-  - `CORS_ORIGINS` (ex: http://localhost:5173)
+- Serveur MySQL démarré, avec une base `edufinder_db`
+- Fichier `.env` dans `backend_django/` (modèle : `.env.example`) avec :
+  - `SECRET_KEY` - clé de signature des jetons
+  - `DATABASE_URL` - par exemple `mysql+pymysql://user:password@localhost:3306/edufinder_db`
+  - `CORS_ORIGINS` - origines autorisées, par exemple `["http://localhost:5173"]`
+  - `ALLOWED_HOSTS` - hôtes servis, par exemple `["localhost", "127.0.0.1"]`
+  - `DEBUG`, `ACCESS_TOKEN_EXPIRE_MINUTES`, `COOKIE_SECURE` - optionnels
 
 ### Frontend
 - Node.js et npm installés
-- Vite configuration
 
 ## Installation
 
 ### Backend
 ```bash
-cd backend
+cd backend_django
 python -m venv .venv
 source .venv/bin/activate  # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
@@ -87,10 +90,9 @@ cp .env.example .env  # Éditer les valeurs
 
 ### Base de données
 ```bash
-# Créer la base edufinder_db sur PostGres
-# Appliquer les migrations
-cd backend
-alembic upgrade head
+# Créer la base edufinder_db sur MySQL, puis appliquer les migrations
+cd backend_django
+python manage.py migrate
 ```
 
 ### Frontend
@@ -105,23 +107,33 @@ npm install
 
 ```bash
 # Terminal 1 : Backend
-cd backend
-uvicorn app.main:app --reload --port 8000
+cd backend_django
+DEBUG=true python manage.py runserver 8000
 
-# Terminal 2 : Frontend  
+# Terminal 2 : Frontend
 cd frontend
 npm run dev
 ```
 
 L'application sera accessible sur :
 - Frontend : http://localhost:5173
-- Backend API : http://127.0.0.1:8000
-- Documentation API : http://127.0.0.1:8000/docs
+- Backend API : http://localhost:8000
+
+Sans variable `VITE_API_URL`, le site appelle l'API sur la machine qui sert la page,
+port 8000. Pour l'ouvrir depuis un téléphone du même réseau, lancer `npm run dev -- --host`
+et `python manage.py runserver 0.0.0.0:8000`, en ajoutant l'adresse de la machine à
+`ALLOWED_HOSTS` et `CORS_ORIGINS`.
 
 ### Tests backend
 ```bash
-cd backend
-pytest
+cd backend_django
+python -m pytest
+```
+
+### Définir le mot de passe d'un compte
+```bash
+cd backend_django
+python manage.py set_account_password <email>   # le mot de passe est demandé, jamais affiché
 ```
 
 ## Fonctionnalités V1 (terminées)
@@ -165,30 +177,46 @@ pytest
 ## Endpoints API principaux
 
 ### Public
-- `GET /health` - Vérification connexion DB
+- `GET /health` - Vérification de la connexion à la base
 - `GET /institutions` - Liste avec filtres
 - `GET /institutions/{uuid}` - Fiche détaillée
-- `GET /stats` - Statistiques plateforme
+- `GET /stats` - Statistiques de la plateforme
 - `GET /filters-meta` - Métadonnées pour les filtres
-- `POST /institutions/{uuid}/track-view` - Compteur de vues
-- `POST /institutions/{uuid}/track-inquiry` - Compteur de demandes
+- `POST /institutions/{uuid}/track-view` - Compte une visite
+- `POST /institutions/{uuid}/track-inquiry` - Compte une demande de contact
 
 ### Authentification
-- `POST /auth/login` - Connexion
-- `GET /auth/me` - Profil utilisateur
+- `POST /auth/login` - Connexion (pose le cookie de session)
+- `POST /auth/logout` - Déconnexion
+- `GET /auth/me` - Profil du compte connecté
 
-### Manager (administrateur établissement)
-- `POST /establishments/proposals` - Soumettre création/modification
+### Responsable d'établissement
 - `GET /my/establishments` - Mes établissements
+- `GET /my/establishments/{uuid}` - Détail d'un établissement géré
+- `GET /my/establishments/{uuid}/benchmarks` - Comparaison avec les établissements du même type
+- `GET /my/establishments/{uuid}/activity` - Visites et demandes de contact, jour par jour
 - `GET /my/submissions` - Mes soumissions
-- `PUT /my/establishments/{uuid}/media` - Upload médias (5MB max)
-- `GET /my/establishments/{establishment_uuid}/benchmarks` - Comparaisons
+- `POST /establishments/proposals` - Proposer un nouvel établissement
+- `POST /my/establishments/{uuid}/modification-proposals` - Proposer une modification
+- `POST /my/uploads/media` - Téléverser un fichier avant une proposition
+- `POST /my/establishments/{uuid}/media` - Proposer l'ajout d'un média
+- `DELETE /my/establishments/{uuid}/media/{id}` - Proposer le retrait d'un média
+- `PUT /my/establishments/{uuid}/director-photo` - Proposer une photo du responsable
 
-### Admin (super administrateur)
-- `GET /admin/submissions` - Liste soumissions en attente
-- `POST /admin/submissions/{id}/approve` - Valider
-- `POST /admin/submissions/{id}/reject` - Refuser (motif requis)
-- `PATCH /establishments/{id}/statut` - Suspendre/réactiver
+### Super administrateur
+- `GET /admin/submissions` - Soumissions, filtrées par état
+- `GET /admin/submissions/{uuid}` - Détail d'une soumission
+- `POST /admin/submissions/{uuid}/approve` - Approuver
+- `POST /admin/submissions/{uuid}/reject` - Refuser (motif requis)
+- `GET /admin/establishments` - Tous les établissements
+- `POST /admin/establishments/{uuid}/suspend` - Suspendre (motif requis)
+- `POST /admin/establishments/{uuid}/reactivate` - Réactiver
+- `GET /admin/activity` - Visites et demandes de contact de la plateforme
+
+### Notifications (responsable et super administrateur)
+- `GET /notifications` - Mes notifications et le nombre de non lues
+- `POST /notifications/{uuid}/read` - Marquer une notification comme lue
+- `POST /notifications/read-all` - Tout marquer comme lu
 
 ## Données de démonstration
 
@@ -222,28 +250,30 @@ La base contient des données fictives de démonstration :
 
 ```
 EduFinder-Cameroon/
-├── backend/                  # API FastAPI
-│   ├── app/
-│   │   ├── main.py           # Point d'entrée FastAPI
-│   │   ├── api/routes.py     # Endpoints (public, auth, manager, admin)
-│   │   ├── core/config.py    # Settings (.env)
-│   │   ├── db/session.py     # Engine SQLModel + get_db
-│   │   ├── models/           # Tables SQLModel (19 tables)
-│   │   ├── schemas/          # Schémas Pydantic
-│   │   └── services/         # Logique métier
+├── backend_django/           # API Django REST Framework
+│   ├── manage.py
+│   ├── config/               # Réglages (.env), routes racine, vue de santé
+│   ├── edufinder/
+│   │   ├── models/           # Modèles de la base
+│   │   ├── migrations/       # Migrations Django
+│   │   ├── serializers/      # Validation des entrées, format des sorties
+│   │   ├── services/         # Logique métier
+│   │   ├── views/            # Vues par espace (public, auth, manager, admin…)
+│   │   └── urls.py           # Routes de l'API
 │   ├── tests/                # Tests pytest
-│   └── .env                  # Secrets (JAMAIS committed)
+│   ├── requirements.txt
+│   └── .env                  # Secrets (JAMAIS commité)
 ├── frontend/                 # React + Vite
 │   ├── src/
-│   │   ├── pages/            # HomePage, SchoolProfilePage, etc.
-│   │   ├── components/       # Filters, Results, School-profile sections
-│   │   ├── hooks/            # useInstitutions, usePlatformStats
-│   │   └── routes.js         # Routage hash-based
+│   │   ├── pages/            # Accueil, fiche, connexion, espaces privés
+│   │   ├── components/       # ui, school-profile, workspace, charts, manager, admin
+│   │   ├── hooks/            # État et appels API
+│   │   ├── utils/            # Authentification, formats, médias
+│   │   └── routes.js         # Routage par hash
 │   └── package.json
-├── media/                    # Fichiers uploadés (images, PDFs)
-├── alembic/                  # Migrations database
-├── tests/                    # Tests backend (racine)
-└── README.md                # Ce fichier
+├── media/                    # Fichiers téléversés (images, vidéos, PDF)
+├── docs/                     # Documents du sujet
+└── README.md                 # Ce fichier
 ```
 
 ## Notes importantes

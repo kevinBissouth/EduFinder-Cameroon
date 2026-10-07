@@ -27,48 +27,55 @@ correspond à SES critères.
 
 ```
 EduFinder-Cameroon/
-├── backend/                  # API FastAPI
-│   ├── app/
-│   │   ├── main.py           # App FastAPI, CORS, CSRF, montage des routeurs, /media statique
-│   │   ├── api/              # Un routeur par espace :
-│   │   │   ├── routes.py     #   public (recherche, fiche, stats, filtres)
-│   │   │   ├── auth.py       #   connexion, déconnexion, profil courant
-│   │   │   ├── manager.py    #   espace responsable (propositions, médias)
-│   │   │   ├── admin.py      #   espace super admin (décision des soumissions)
-│   │   │   ├── dependencies.py  # get_current_user, require_admin…
-│   │   │   ├── common.py     #   helpers partagés entre routeurs
-│   │   │   └── csrf.py       #   middleware de contrôle de l'en-tête Origin
-│   │   ├── core/config.py    # Settings pydantic (lecture .env) + MEDIA_DIR
-│   │   ├── db/session.py     # Engine SQLModel + get_db
-│   │   ├── models/           # SQLModel : reference, establishment, user,
-│   │   │                     #   submission, enums (tous exportés dans __init__)
-│   │   ├── schemas/          # Schémas Pydantic (institution.py, proposal.py, auth.py)
-│   │   └── services/         # Logique métier : data_rules (cohérence examens/langues),
-│   │                         #   proposals, validation, workflow, security
-│   ├── alembic/versions/     # Migrations (head : a1b2c3d4e5f7)
-│   ├── scripts/              # Scripts de données hors API (mots de passe, soumissions de démo)
+├── backend_django/           # API Django REST Framework
+│   ├── manage.py
+│   ├── config/               # Projet : settings (lecture .env), urls (/health, /media
+│   │                         #   servi seulement si DEBUG), vue de santé
+│   ├── edufinder/            # L'application
+│   │   ├── models/           # Modèles : reference, establishment, user, submission,
+│   │   │                     #   notification, enums (tous exportés dans __init__)
+│   │   ├── migrations/       # Migrations Django (head : 0003_daily_activity)
+│   │   ├── serializers/      # Sérialiseurs DRF : entrées validées et sorties exposées
+│   │   ├── services/         # Logique métier : recherche, propositions, validation,
+│   │   │                     #   suspension, notifications, activité, médias, sécurité
+│   │   ├── views/            # Une vue par espace : public, auth, manager,
+│   │   │                     #   manager_media, admin, notifications, activity
+│   │   │                     #   (access.py regroupe les contrôles d'accès)
+│   │   ├── urls.py           # Toutes les routes de l'API
+│   │   ├── authentication.py # Jeton JWT lu dans le cookie httpOnly
+│   │   ├── permissions.py    # Rôles : responsable ou super admin, super admin seul
+│   │   ├── middleware.py     # Contrôle de l'en-tête Origin (protection CSRF)
+│   │   ├── throttling.py     # Limite des tentatives de connexion
+│   │   └── management/commands/  # set_account_password
 │   ├── tests/                # Tests pytest de l'API publique, responsable et admin
 │   │                         #   (SQLite en mémoire, la base MySQL de démo n'est jamais touchée)
+│   ├── requirements.txt      # Dépendances backend épinglées
 │   └── .env                  # Secrets — JAMAIS commité
 ├── frontend/                 # React + Vite
 │   └── src/
 │       ├── pages/            # HomePage (recherche), SchoolProfilePage (fiche), LoginPage,
 │       │                     #   ManagerHomePage, AdminHomePage
-│       ├── components/       # Blocs d'interface ; school-profile/ = sections de la fiche,
-│       │                     #   manager/ et admin/ = espaces privés
-│       ├── hooks/            # État et appels API (useInstitutions, usePlatformStats…)
-│       ├── utils/auth.js     # Appels authentifiés (cookie httpOnly, withCredentials)
+│       ├── components/       # ui/ = briques de base ; school-profile/ = fiche publique ;
+│       │                     #   workspace/ = commun aux espaces privés ; charts/ =
+│       │                     #   graphiques ; manager/ et admin/ = espaces privés
+│       ├── hooks/            # État et appels API (useInstitutions, useNotifications…)
+│       ├── utils/            # auth.js (appels authentifiés par cookie httpOnly),
+│       │                     #   format, media, tracking…
+│       ├── index.css         # Jetons du design : couleurs, rayons, ombres, polices
 │       └── routes.js         # Routage minimal par hash (#/school/:id, #/login,
 │                             #   #/manager, #/school-admin), sans dépendance
 ├── media/                    # Fichiers téléversés et images de démo, servis sur /media
-├── requirements.txt          # Dépendances backend épinglées
 └── docs/                     # Documents du sujet
 ```
 
-- **Backend** : Python 3.12, FastAPI, SQLModel (SQLAlchemy + Pydantic), MySQL, Alembic.
-- **Frontend** : React 19, Vite, Tailwind CSS 4, DaisyUI, axios (le seul client HTTP).
-- **Base** : MySQL `edufinder_db` ; `DATABASE_URL` dans `backend/.env`
+- **Backend** : Python 3.12, Django 5.2, Django REST Framework, MySQL.
+- **Frontend** : React 19, Vite, Tailwind CSS 4, Recharts (graphiques), Leaflet (carte),
+  axios (le seul client HTTP).
+- **Base** : MySQL `edufinder_db` ; `DATABASE_URL` dans `backend_django/.env`
   (ne jamais afficher ni modifier ce fichier, ne jamais le committer).
+- Le schéma a d'abord été créé par Alembic (ancien backend FastAPI, supprimé) : la
+  migration `0001_initial` le reprend tel quel et a été appliquée avec `--fake-initial`
+  sur la base de démo.
 
 
 Règle d'or API publique : **seuls les établissements `published` sont visibles**
@@ -104,7 +111,6 @@ Règle d'or API publique : **seuls les établissements `published` sont visibles
 - Interdit : abréviations ambiguës (`est`, `pm`, `qry`), monogrammes, noms génériques
   (`query`, `data`, `tmp`) dès qu'un nom précis existe. Exemple : `est` →
   `establishment`, `pm` → `payment_method`, `query` → `select_stmt`.
-- La session de base de données se nomme toujours `session` (jamais `db`).
 - Tolérance : `i`/`j` pour les index de boucle triviale ; la boucle `for x in ...`
   où `x` est le nom complet du type de l'élément.
 - Les noms de colonnes SQL suivent le modèle (`id_fee`, `label`…) : on ne les
@@ -120,17 +126,17 @@ Règles à respecter dans TOUTE construction de notre projet :
 - **YAGNI** : pas de code pour un besoin hypothétique ; on construit ce qui
   est demandé, quand c'est demandé.
 - **SOLID**, appliqué avec bon sens :
-  - *S* : une classe/une fonction = un seul rôle (routes = exposer, schémas =
+  - *S* : une classe/une fonction = un seul rôle (vues = exposer, sérialiseurs =
     formater, services = métier) ;
   - *O* : ouvert à l'extension, fermé à la modification (ajouter un filtre
     sans réécrire la fonction) ;
-  - *D* : dépendre des abstractions (Session), jamais d'un détail
+  - *D* : dépendre des abstractions (services, QuerySet), jamais d'un détail
     d'implémentation.
 - **Lisibilité** : fonctions courtes (une seule chose par fonction), code qui
   se lit comme une phrase, commentaires pour le *pourquoi* jamais pour le
   *quoi*.
 - **Robustesse** : échouer tôt et clairement (404/422 explicites), valider
-  toute entrée, n'exposer que le périmètre nécessaire (response_model),
+  toute entrée, n'exposer que le périmètre nécessaire (sérialiseur de sortie),
   supprimer le code mort.
 - **Structure (9 règles anti-flèche)** : sortir tôt au lieu d'empiler les
   `else` (`if condition: return/raise`, jamais `else` quand un return tôt
@@ -152,7 +158,7 @@ Le travail se fait dans l'ordre, sans sauter d'étape :
 1. **Comprendre la demande** : reformuler ce qui est demandé, lever les ambiguïtés
    AVANT d'écrire du code. En cas de doute : poser la question.
 2. **Explorer l'existant** : lire les fichiers concernés, vérifier les modèles, l'état
-   des migrations (`alembic current`), l'état git, les données en base. Ne jamais
+   des migrations (`python manage.py showmigrations`), l'état git, les données en base. Ne jamais
    réécrire ce qui existe déjà.
 3. **Plan + alternatives + justification** : présenter le plan d'action, les approches
    possibles, puis **expliquer pourquoi la solution retenue** a été choisie (simplicité,
@@ -182,8 +188,8 @@ fonctionnalité doit être pensée sécurité d'abord :
    consulter/modifier QUE les établissements associés dans `user_establishment` —
    vérifier cette appartenance sur chaque requête privée, côté serveur, jamais côté
    client. Refus clair (403) sinon.
-5. **Validation des entrées** : tout ce qui entre par l'API passe par des schémas
-   Pydantic ; aucun SQL construit par concaténation côté API ; paramétrer les requêtes
+5. **Validation des entrées** : tout ce qui entre par l'API passe par des sérialiseurs
+   DRF ; aucun SQL construit par concaténation côté API ; paramétrer les requêtes
    (requêtes SQL brutes réservées aux scripts de données hors API).
 6. **CORS** : en production, `cors_origins` = liste blanche explicite du domaine du
    site, jamais `*` avec les cookies.
@@ -216,12 +222,15 @@ Aucune tâche n'est terminée sans vérification réelle. Commandes de référen
 (à adapter au contexte) :
 
 ```bash
-# Backend — lancer depuis le dossier backend/ (sinon import échoue)
-cd backend && uvicorn app.main:app --reload --port 8000
+# Backend — lancer depuis le dossier backend_django/
+cd backend_django && python manage.py runserver 8000
 
 # Backend — migrations
-cd backend && alembic current          # état réel
-cd backend && alembic upgrade head     # appliquer
+cd backend_django && python manage.py showmigrations   # état réel
+cd backend_django && python manage.py migrate          # appliquer
+
+# Backend — tests (SQLite en mémoire)
+cd backend_django && python -m pytest
 
 # Backend — tests manuels des endpoints
 curl -s http://127.0.0.1:8000/health
@@ -248,7 +257,7 @@ cd frontend && npm run build
 ## 7. Règles de travail
 
 - **Ne jamais committer ni pousser sans demande explicite.**
-- Ne jamais modifier `backend/.env` ni en exposer le contenu.
+- Ne jamais modifier `backend_django/.env` ni en exposer le contenu.
 - Ne jamais installer une dépendance sans explication et accord.
 - Si une tâche semble ambiguë ou dangereuse : s'arrêter et demander.
 - Le projet évolue par étapes validées ; une étape terminée = démontrée et expliquée.
