@@ -1,180 +1,153 @@
 import { useState } from 'react'
-import { createPortal } from 'react-dom'
-import { X, Building2, MapPin, UserRound, GraduationCap, Compass } from 'lucide-react'
+import { MapPin, UserRound } from 'lucide-react'
 
-import { AdminGlassCard, AdminStatusBadge } from './AdminShared'
+import Button from '../ui/Button'
+import Modal from '../workspace/Modal'
+import PagedCards from '../workspace/PagedCards'
+import SchoolCover from '../workspace/SchoolCover'
+import ViewHero from '../workspace/ViewHero'
+import StatusBadge from '../workspace/StatusBadge'
 import EstablishmentStatusActions from './EstablishmentStatusActions'
 
-// Vue super admin de tous les établissements sous forme de cartes : chaque
-// carte résume l'établissement (nom, ville, statut) et s'ouvre au clic sur une
-// fenêtre qui détaille tout (type, secteur, manager(s)). Un établissement
-// peut être géré par plusieurs comptes.
-const firstLetterOf = (name) => (name || '?').trim().charAt(0).toUpperCase()
+function describeManagers(owners) {
+  if (owners.length === 0) return 'No manager assigned'
+  return owners.join(', ')
+}
 
-function FieldRow({ icon: Icon, label, value, capitalize = false }) {
+function EstablishmentCard({ establishment, onOpen }) {
+  const tags = [establishment.type, establishment.sector].filter(Boolean)
+
   return (
-    <div className="flex items-start gap-3">
-      <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/5 text-[#34d399]">
-        <Icon size={15} />
-      </span>
-      <div className="min-w-0">
-        <p className="text-[10px] font-bold uppercase tracking-wider text-white/40">{label}</p>
-        <p className={`break-words font-medium text-white/85 ${capitalize ? 'capitalize' : ''}`}>
-          {value || '—'}
+    <li className="group flex h-full flex-col overflow-hidden rounded-panel border border-line bg-surface shadow-soft transition-shadow hover:shadow-raised">
+      <SchoolCover
+        name={establishment.name}
+        coverUrl={establishment.cover_url}
+        status={establishment.establishment_status}
+      />
+      <div className="flex flex-1 flex-col p-5">
+        <p className="flex items-center gap-1.5 text-sm font-medium text-navy">
+          <MapPin aria-hidden="true" className="size-4 shrink-0 text-primary" />
+          {establishment.city}
         </p>
-      </div>
-    </div>
-  )
-}
-
-// Fenêtre de détail d'un établissement : le clic sur une carte l'ouvre, on y
-// voit tout l'établissement et ses responsables dans une modale défilable.
-function EstablishmentDetailModal({ item, onClose, onStatusChanged }) {
-  return (
-    <div
-      className="fixed inset-0 z-[60] flex items-center justify-center overflow-y-auto bg-black/70 p-4 backdrop-blur-sm"
-      onClick={onClose}
-    >
-      <div
-        className="relative my-8 w-full max-w-lg overflow-hidden rounded-[20px] border border-white/10 bg-[#0d1a14] shadow-[0_20px_60px_rgba(0,0,0,0.6)]"
-        onClick={(event) => event.stopPropagation()}
-      >
-        <div className="h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-
-        <div className="flex items-start justify-between gap-3 border-b border-white/10 px-5 py-4">
-          <div className="flex min-w-0 items-center gap-3">
-            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#059669,#0d7a4f)] font-display text-[18px] font-bold text-white shadow-[0_8px_20px_rgba(5,150,105,0.35)]">
-              {firstLetterOf(item.name)}
-            </span>
-            <div className="min-w-0">
-              <h2 className="truncate text-[16px] font-bold text-[#f5f5f4]">{item.name}</h2>
-              <div className="mt-0.5 flex items-center gap-1.5 text-[12px] text-white/50">
-                <MapPin size={12} /> {item.city}
-              </div>
-            </div>
-          </div>
-          <button
-            onClick={onClose}
-            aria-label="Close"
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-white/50 transition-colors hover:bg-white/10 hover:text-white"
+        <ul className="mt-3 flex flex-wrap gap-2">
+          {tags.map((tag) => (
+            <li
+              key={tag}
+              className="rounded-full bg-primary-soft px-3 py-1 text-xs font-semibold capitalize text-primary-deep"
+            >
+              {tag}
+            </li>
+          ))}
+        </ul>
+        <p className="mt-3 flex items-start gap-1.5 text-sm text-ink">
+          <UserRound aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-primary" />
+          <span className="line-clamp-2">{describeManagers(establishment.owners)}</span>
+        </p>
+        <div className="mt-auto pt-5">
+          <Button
+            variant="secondary"
+            className="w-full"
+            aria-label={`Open ${establishment.name}`}
+            onClick={() => onOpen(establishment)}
           >
-            <X size={18} />
-          </button>
-        </div>
-
-        <div className="space-y-5 px-5 py-5">
-          <div className="flex flex-wrap items-center gap-2">
-            <AdminStatusBadge status={item.establishment_status} />
-          </div>
-
-          <FieldRow icon={GraduationCap} label="Type" value={item.type} capitalize />
-          <FieldRow icon={Compass} label="Sector" value={item.sector} capitalize />
-          <FieldRow icon={MapPin} label="City" value={item.city} capitalize />
-
-          <div className="border-t border-white/10 pt-4">
-            <FieldRow
-              icon={UserRound}
-              label="Manager(s)"
-              value={item.owners.length > 0 ? item.owners.join(', ') : '—'}
-            />
-          </div>
-
-          <EstablishmentStatusActions item={item} onStatusChanged={onStatusChanged} />
+            Open
+          </Button>
         </div>
       </div>
-    </div>
+    </li>
   )
 }
 
-export default function AdminEstablishmentsView({ establishments, onStatusChanged }) {
-  const [selectedItem, setSelectedItem] = useState(null)
+function countByStatus(establishments, establishmentStatus) {
+  return establishments.filter(
+    (establishment) => establishment.establishment_status === establishmentStatus,
+  ).length
+}
 
-  // La fenêtre affiche l'ancien statut : je la ferme avant de recharger la
-  // liste, pour ne jamais laisser à l'écran un état périmé.
-  async function handleStatusChanged() {
-    setSelectedItem(null)
+function EstablishmentModal({ establishment, onClose, onStatusChanged }) {
+  const facts = [
+    { label: 'City', value: establishment.city },
+    { label: 'School type', value: establishment.type },
+    { label: 'Sector', value: establishment.sector },
+    { label: 'Managers', value: describeManagers(establishment.owners) },
+    { label: 'Suspension reason', value: establishment.suspension_reason },
+  ].filter((fact) => fact.value)
+
+  return (
+    <Modal
+      title={establishment.name}
+      headerExtra={
+        <p className="mt-2">
+          <StatusBadge status={establishment.establishment_status} />
+        </p>
+      }
+      onClose={onClose}
+    >
+      <dl className="space-y-4">
+        {facts.map((fact) => (
+          <div key={fact.label}>
+            <dt className="text-sm font-semibold text-ink-soft">{fact.label}</dt>
+            <dd className="mt-1 break-words text-sm text-navy">{fact.value}</dd>
+          </div>
+        ))}
+      </dl>
+      <div className="mt-6">
+        <EstablishmentStatusActions
+          establishment={establishment}
+          onStatusChanged={onStatusChanged}
+        />
+      </div>
+    </Modal>
+  )
+}
+
+// Tous les établissements de la plateforme, quel que soit leur état.
+function AdminEstablishmentsView({ establishments, onStatusChanged }) {
+  const [openedEstablishment, setOpenedEstablishment] = useState(null)
+
+  // La fenêtre montre l'ancien état : je la ferme avant de recharger la
+  // liste, pour ne jamais laisser un état périmé à l'écran.
+  async function closeThenReload() {
+    setOpenedEstablishment(null)
     await onStatusChanged()
   }
 
   return (
-    <AdminGlassCard className="p-6">
-      <div className="mb-6">
-        <h3 className="flex items-center gap-2 text-[18px] font-semibold text-[#f5f5f4]">
-          <Building2 size={18} className="text-[#34d399]" /> Establishments
-        </h3>
-        <p className="mt-1 text-[13px] text-white/40">
-          All schools on the platform, with their manager(s).
-        </p>
-      </div>
-
+    <>
+      <ViewHero
+        title="Schools"
+        description="Every school on the platform. Only published schools are visible to the public."
+        figures={[
+          { value: countByStatus(establishments, 'published'), label: 'published' },
+          { value: countByStatus(establishments, 'pending'), label: 'awaiting review' },
+          { value: countByStatus(establishments, 'suspended'), label: 'suspended' },
+        ]}
+      />
       {establishments.length === 0 ? (
-        <p className="py-8 text-center text-sm text-white/40">No establishments found.</p>
+        <p className="rounded-panel border border-dashed border-line bg-surface p-8 text-center text-sm text-ink-soft">
+          No school has been proposed yet.
+        </p>
       ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {establishments.map((item) => (
-            <button
-              key={item.establishment_uuid}
-              type="button"
-              onClick={() => setSelectedItem(item)}
-              className="flex cursor-pointer flex-col rounded-[18px] border border-white/10 bg-white/5 p-5 text-left backdrop-blur-[10px] transition-all duration-300 hover:border-white/15 hover:bg-white/8 hover:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.3),0_0_40px_rgba(52,211,153,0.08)]"
-            >
-              <div className="flex w-full items-start gap-3">
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#059669,#0d7a4f)] font-display text-[18px] font-bold text-white shadow-[0_8px_20px_rgba(5,150,105,0.35)]">
-                  {firstLetterOf(item.name)}
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-[15px] font-semibold text-[#f5f5f4]">{item.name}</p>
-                  <p className="mt-0.5 flex items-center gap-1 text-[12px] text-white/45">
-                    <MapPin size={12} className="shrink-0" /> {item.city}
-                  </p>
-                </div>
-              </div>
-
-              <div className="mt-4 flex flex-wrap items-center gap-2">
-                <AdminStatusBadge status={item.establishment_status} />
-              </div>
-
-              <div className="mt-4 space-y-2 border-t border-white/8 pt-4">
-                <div className="flex items-center justify-between gap-3">
-                  <span className="text-[11px] uppercase tracking-wider text-white/40">Type</span>
-                  <span className="truncate text-[13px] capitalize text-white/80">{item.type}</span>
-                </div>
-                <div className="flex items-center justify-between gap-3">
-                  <span className="shrink-0 text-[11px] uppercase tracking-wider text-white/40">
-                    Sector
-                  </span>
-                  <span className="truncate text-[13px] capitalize text-white/80">
-                    {item.sector}
-                  </span>
-                </div>
-              </div>
-
-              <div className="mt-4 flex items-center justify-between gap-3 border-t border-white/8 pt-3.5">
-                <span className="text-[11px] uppercase tracking-wider text-white/40">
-                  Manager(s)
-                </span>
-                {item.owners.length > 0 ? (
-                  <span className="truncate text-[13px] font-medium text-[#d4a574]">
-                    {item.owners.length} {item.owners.length === 1 ? 'person' : 'people'}
-                  </span>
-                ) : (
-                  <span className="text-[13px] text-white/40">—</span>
-                )}
-              </div>
-            </button>
-          ))}
-        </div>
+        <PagedCards
+          items={establishments}
+          renderCard={(establishment) => (
+            <EstablishmentCard
+              key={establishment.establishment_uuid}
+              establishment={establishment}
+              onOpen={setOpenedEstablishment}
+            />
+          )}
+        />
       )}
-
-      {selectedItem &&
-        createPortal(
-          <EstablishmentDetailModal
-            item={selectedItem}
-            onClose={() => setSelectedItem(null)}
-            onStatusChanged={handleStatusChanged}
-          />,
-          document.body,
-        )}
-    </AdminGlassCard>
+      {openedEstablishment && (
+        <EstablishmentModal
+          establishment={openedEstablishment}
+          onClose={() => setOpenedEstablishment(null)}
+          onStatusChanged={closeThenReload}
+        />
+      )}
+    </>
   )
 }
+
+export default AdminEstablishmentsView
