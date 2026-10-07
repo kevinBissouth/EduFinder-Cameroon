@@ -1,51 +1,43 @@
 import { useState } from 'react'
+import { ChevronDown, X } from 'lucide-react'
 
-import { ChevronDownIcon } from './icons'
+import Button from './ui/Button'
+import { CONTROL_CLASSES, SelectField, TextField } from './ui/Field'
 
-function SelectFilter({ label, value, onChange, options, placeholder }) {
+const EMPTY_EXAM_REQUIREMENT = { examId: '', minRate: '' }
+
+// Critère dont la saisie demande plus qu'une liste : le bouton ouvre un
+// panneau de la même largeur que lui, qui se referme au clic extérieur ou
+// avec la touche Échap.
+function PopoverFilter({ label, activeCount, children }) {
+  const [isOpen, setIsOpen] = useState(false)
+  const close = () => setIsOpen(false)
+
   return (
-    <label className="flex w-full flex-col gap-1">
-      <span className="text-[11px] font-semibold uppercase tracking-wider text-[#4b5566]">{label}</span>
-      <div className="relative">
-        <select
-          value={value}
-          onChange={(event) => onChange(event.target.value)}
-          className="h-11 w-full appearance-none rounded-xl border border-[#dcebe3] bg-white px-3 pr-9 text-sm text-[#081220] outline-none transition-colors hover:border-[#0d7a4f]/40 focus:border-[#0d7a4f]"
-        >
-          <option value="">{placeholder}</option>
-          {options.map((option) => (
-            <option key={option.id} value={option.id}>{option.label}</option>
-          ))}
-        </select>
-        <ChevronDownIcon className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#4b5566]" />
-      </div>
-    </label>
-  )
-}
-
-
-function DropdownFilter({ label, count, children }) {
-  const [open, setOpen] = useState(false)
-  return (
-    <div className="relative w-full">
+    <div
+      className="relative flex w-full flex-col gap-1.5"
+      onKeyDown={(event) => {
+        if (event.key === 'Escape') close()
+      }}
+    >
+      <span className="text-sm font-semibold text-navy">{label}</span>
       <button
         type="button"
-        onClick={() => setOpen(!open)}
-        className="flex h-11 w-full items-center justify-between gap-2 rounded-xl border border-[#dcebe3] bg-white px-4 text-sm font-medium text-[#081220] transition-colors hover:border-[#0d7a4f]/40"
+        aria-expanded={isOpen}
+        onClick={() => setIsOpen(!isOpen)}
+        className={`${CONTROL_CLASSES} flex cursor-pointer items-center justify-between gap-2 text-left`}
       >
-        <span>{label}</span>
-        <span className="flex items-center gap-2">
-          {count > 0 && (
-            <span className="rounded-full bg-[#0d7a4f] px-2 py-0.5 text-[11px] font-semibold text-white">{count}</span>
-          )}
-          <ChevronDownIcon className={`h-4 w-4 transition-transform ${open ? 'rotate-180' : ''}`} />
-        </span>
+        <span>{activeCount > 0 ? `${activeCount} selected` : 'Any'}</span>
+        <ChevronDown
+          aria-hidden="true"
+          className={`size-4 text-ink-soft transition-transform ${isOpen ? 'rotate-180' : ''}`}
+        />
       </button>
-      {open && (
+      {isOpen && (
         <>
-          <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-          <div className="absolute left-1/2 top-full z-20 mt-2 max-h-[70vh] w-72 max-w-[90vw] -translate-x-1/2 overflow-y-auto rounded-2xl border border-[#dcebe3] bg-white p-4 shadow-[0_22px_54px_rgba(8,18,32,0.16)]">
-            {children({ close: () => setOpen(false) })}
+          <div className="fixed inset-0 z-10" onClick={close} />
+          <div className="absolute inset-x-0 top-full z-20 mt-2 max-h-[70vh] overflow-y-auto rounded-panel border border-line bg-surface p-4 shadow-raised">
+            {children({ close })}
           </div>
         </>
       )}
@@ -54,143 +46,146 @@ function DropdownFilter({ label, count, children }) {
 }
 
 function BudgetPanel({ minFee, maxFee, onApply }) {
-  const [minimum, setMinimum] = useState(minFee || '')
-  const [maximum, setMaximum] = useState(maxFee || '')
+  const [minimumFee, setMinimumFee] = useState(minFee || '')
+  const [maximumFee, setMaximumFee] = useState(maxFee || '')
 
   return (
     <div>
-      <div className="flex items-center gap-3">
-        <label className="flex-1">
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-[#4b5566]">Min (FCFA)</span>
-          <input
-            type="number"
-            min="0"
-            step="1000"
-            value={minimum}
-            onChange={(event) => setMinimum(event.target.value)}
-            className="mt-1 h-10 w-full rounded-lg border border-[#dcebe3] bg-white px-3 text-sm text-[#081220] outline-none focus:border-[#0d7a4f]"
-            placeholder="0"
-          />
-        </label>
-        <label className="flex-1">
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-[#4b5566]">Max (FCFA)</span>
-          <input
-            type="number"
-            min="0"
-            step="1000"
-            value={maximum}
-            onChange={(event) => setMaximum(event.target.value)}
-            className="mt-1 h-10 w-full rounded-lg border border-[#dcebe3] bg-white px-3 text-sm text-[#081220] outline-none focus:border-[#0d7a4f]"
-            placeholder="∞"
-          />
-        </label>
+      <div className="grid gap-3">
+        <TextField
+          label="Minimum per year (FCFA)"
+          type="number"
+          min="0"
+          step="1000"
+          value={minimumFee}
+          onChange={(event) => setMinimumFee(event.target.value)}
+          placeholder="0"
+        />
+        <TextField
+          label="Maximum per year (FCFA)"
+          type="number"
+          min="0"
+          step="1000"
+          value={maximumFee}
+          onChange={(event) => setMaximumFee(event.target.value)}
+          placeholder="No limit"
+        />
       </div>
       <div className="mt-4 flex justify-end gap-2">
-        <button
-          type="button"
-          onClick={() => onApply('', '')}
-          className="rounded-lg px-3 py-2 text-sm font-medium text-[#4b5566] hover:text-[#081220]"
-        >
+        <Button variant="ghost" onClick={() => onApply('', '')}>
           Clear
-        </button>
-        <button
-          type="button"
-          onClick={() => onApply(minimum, maximum)}
-          className="rounded-lg bg-[#0d7a4f] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#0a5e3d]"
-        >
-          Apply
-        </button>
+        </Button>
+        <Button onClick={() => onApply(minimumFee, maximumFee)}>Apply budget</Button>
       </div>
     </div>
   )
 }
 
-function ServicesPanel({ services, selected, onToggle }) {
+function ServicesPanel({ services, selectedNames, onToggle }) {
+  if (services.length === 0) {
+    return <p className="text-sm text-ink-soft">No school has listed a service yet.</p>
+  }
+
   return (
-    <div>
-      {services.length === 0 && <p className="px-2 py-2 text-sm text-[#4b5566]">No service available.</p>}
-      {services.map((name) => (
-        <label key={name} className="flex items-center gap-3 rounded-lg px-2 py-2 transition-colors hover:bg-[#f0f8f4]">
-          <input
-            type="checkbox"
-            checked={selected.includes(name)}
-            onChange={() => onToggle(name)}
-            className="h-4 w-4 accent-[#0d7a4f]"
-          />
-          <span className="text-sm text-[#081220]">{name}</span>
-        </label>
+    <ul>
+      {services.map((serviceName) => (
+        <li key={serviceName}>
+          <label className="flex min-h-11 cursor-pointer items-center gap-3 rounded-control px-2 text-sm transition-colors hover:bg-muted">
+            <input
+              type="checkbox"
+              checked={selectedNames.includes(serviceName)}
+              onChange={() => onToggle(serviceName)}
+              className="size-4 accent-primary"
+            />
+            {serviceName}
+          </label>
+        </li>
       ))}
+    </ul>
+  )
+}
+
+function ExamRequirementRow({ requirement, exams, onChange, onRemove }) {
+  return (
+    <div className="flex items-center gap-2">
+      <select
+        aria-label="Exam"
+        value={requirement.examId}
+        onChange={(event) => onChange({ examId: event.target.value })}
+        className={`${CONTROL_CLASSES} min-w-0 flex-1`}
+      >
+        <option value="">Exam</option>
+        {exams.map((exam) => (
+          <option key={exam.id} value={exam.id}>
+            {exam.name}
+          </option>
+        ))}
+      </select>
+      <input
+        aria-label="Minimum pass rate in percent"
+        type="number"
+        min="0"
+        max="100"
+        value={requirement.minRate}
+        onChange={(event) => onChange({ minRate: event.target.value })}
+        placeholder="%"
+        className={`${CONTROL_CLASSES} w-20 shrink-0`}
+      />
+      <button
+        type="button"
+        aria-label="Remove this exam"
+        onClick={onRemove}
+        className="flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-control text-ink-soft transition-colors hover:bg-danger-soft hover:text-danger"
+      >
+        <X aria-hidden="true" className="size-4" />
+      </button>
     </div>
   )
 }
 
 function ExamPanel({ exams, requirements, onApply }) {
-  const [rows, setRows] = useState(requirements.length ? requirements : [{ examId: '', minRate: '' }])
+  const [draftRequirements, setDraftRequirements] = useState(
+    requirements.length > 0 ? requirements : [EMPTY_EXAM_REQUIREMENT],
+  )
 
-  const updateRow = (index, patch) =>
-    setRows((previous) => previous.map((row, rowIndex) => (rowIndex === index ? { ...row, ...patch } : row)))
-  const removeRow = (index) => setRows((previous) => previous.filter((_, rowIndex) => rowIndex !== index))
-  const addRow = () => setRows((previous) => [...previous, { examId: '', minRate: '' }])
+  const updateRequirement = (changedIndex, changes) =>
+    setDraftRequirements((current) =>
+      current.map((requirement, index) =>
+        index === changedIndex ? { ...requirement, ...changes } : requirement,
+      ),
+    )
+  const removeRequirement = (removedIndex) =>
+    setDraftRequirements((current) => current.filter((_, index) => index !== removedIndex))
+  const addRequirement = () =>
+    setDraftRequirements((current) => [...current, EMPTY_EXAM_REQUIREMENT])
+  // Une ligne incomplète n'est pas un critère : seules les lignes ayant un
+  // examen ET un taux sont envoyées.
+  const applyCompleteRequirements = () =>
+    onApply(draftRequirements.filter((requirement) => requirement.examId && requirement.minRate))
 
   return (
     <div>
-      <div className="space-y-2 pr-1">
-        {rows.map((row, index) => (
-          <div key={index} className="flex items-center gap-2">
-            <select
-              value={row.examId}
-              onChange={(event) => updateRow(index, { examId: event.target.value })}
-              className="h-9 flex-1 rounded-lg border border-[#dcebe3] bg-white px-2 text-sm text-[#081220] outline-none focus:border-[#0d7a4f]"
-            >
-              <option value="">Exam</option>
-              {exams.map((exam) => (
-                <option key={exam.id} value={exam.id}>{exam.name}</option>
-              ))}
-            </select>
-            <div className="flex items-center rounded-lg border border-[#dcebe3] px-2">
-              <input
-                type="number"
-                min="0"
-                max="100"
-                value={row.minRate}
-                onChange={(event) => updateRow(index, { minRate: event.target.value })}
-                className="h-9 w-16 bg-white text-sm text-[#081220] outline-none"
-                placeholder="%"
-              />
-              <span className="text-sm text-[#4b5566]">%</span>
-            </div>
-            <button
-              type="button"
-              onClick={() => removeRow(index)}
-              className="px-1 text-lg leading-none text-[#4b5566] transition-colors hover:text-[#d6453d]"
-              aria-label="Remove exam"
-            >
-              ×
-            </button>
-          </div>
+      <div className="grid gap-2">
+        {draftRequirements.map((requirement, index) => (
+          <ExamRequirementRow
+            key={index}
+            requirement={requirement}
+            exams={exams}
+            onChange={(changes) => updateRequirement(index, changes)}
+            onRemove={() => removeRequirement(index)}
+          />
         ))}
       </div>
-      <button
-        type="button"
-        onClick={addRow}
-        className="mt-2 text-sm font-medium text-[#0d7a4f] transition-colors hover:underline"
-      >
-        + Add exam
-      </button>
-      <div className="mt-4 flex justify-end">
-        <button
-          type="button"
-          onClick={() => onApply(rows.filter((row) => row.examId && row.minRate))}
-          className="rounded-lg bg-[#0d7a4f] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#0a5e3d]"
-        >
-          Apply
-        </button>
+      <div className="mt-4 flex flex-wrap justify-between gap-2">
+        <Button variant="ghost" onClick={addRequirement}>
+          Add an exam
+        </Button>
+        <Button onClick={applyCompleteRequirements}>Apply pass rates</Button>
       </div>
     </div>
   )
 }
 
-// Barre de critères avancés 
 function AdvancedFilters({ advancedFilters }) {
   const {
     meta,
@@ -209,35 +204,51 @@ function AdvancedFilters({ advancedFilters }) {
     onApplyExams,
   } = advancedFilters
 
-  const sectionOptions = meta.languages.map((language) => ({ id: String(language.id), label: language.name }))
-
-  const sectorOptions = meta.sectors.map((sector) => ({ id: String(sector.id), label: sector.name }))
-  const regionOptions = meta.regions.map((region) => ({ id: String(region.id), label: region.name }))
-  const budgetActive = Boolean(minFee || maxFee)
-
   return (
-    <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
-      <SelectFilter label="Section" value={sectionId} onChange={onSectionChange} options={sectionOptions} placeholder="All sections" />
-      <SelectFilter label="Sector" value={sectorId} onChange={onSectorChange} options={sectorOptions} placeholder="All sectors" />
-      <SelectFilter label="Region" value={regionId} onChange={onRegionChange} options={regionOptions} placeholder="All regions" />
-      <DropdownFilter label="Budget" count={budgetActive ? 1 : 0}>
+    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <SelectField
+        label="Language section"
+        value={sectionId}
+        onChange={(event) => onSectionChange(event.target.value)}
+        placeholder="All sections"
+        options={meta.languages}
+      />
+      <SelectField
+        label="Sector"
+        value={sectorId}
+        onChange={(event) => onSectorChange(event.target.value)}
+        placeholder="Public and private"
+        options={meta.sectors}
+      />
+      <SelectField
+        label="Region"
+        value={regionId}
+        onChange={(event) => onRegionChange(event.target.value)}
+        placeholder="All regions"
+        options={meta.regions}
+      />
+      <PopoverFilter label="Yearly budget" activeCount={minFee || maxFee ? 1 : 0}>
         {({ close }) => (
           <BudgetPanel
             minFee={minFee}
             maxFee={maxFee}
-            onApply={(minimum, maximum) => {
-              onApplyBudget(minimum, maximum)
+            onApply={(minimumFee, maximumFee) => {
+              onApplyBudget(minimumFee, maximumFee)
               close()
             }}
           />
         )}
-      </DropdownFilter>
-      <DropdownFilter label="Services" count={serviceNames.length}>
+      </PopoverFilter>
+      <PopoverFilter label="Services" activeCount={serviceNames.length}>
         {() => (
-          <ServicesPanel services={meta.services} selected={serviceNames} onToggle={onToggleService} />
+          <ServicesPanel
+            services={meta.services}
+            selectedNames={serviceNames}
+            onToggle={onToggleService}
+          />
         )}
-      </DropdownFilter>
-      <DropdownFilter label="Pass rate" count={examRequirements.length}>
+      </PopoverFilter>
+      <PopoverFilter label="Exam pass rate" activeCount={examRequirements.length}>
         {({ close }) => (
           <ExamPanel
             exams={meta.exams}
@@ -248,7 +259,7 @@ function AdvancedFilters({ advancedFilters }) {
             }}
           />
         )}
-      </DropdownFilter>
+      </PopoverFilter>
     </div>
   )
 }

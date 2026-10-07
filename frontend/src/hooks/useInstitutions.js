@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import axios from 'axios'
 
 import { API_URL } from '../constants'
+import { scrollToSection } from '../utils/scroll'
 
 // Tout l'état de recherche vit ici : chaque filtre déclenche une vraie requête
 // axios vers /institutions, les composants ne font que consommer cet état.
@@ -24,7 +25,7 @@ export function useInstitutions() {
   const [metaError, setMetaError] = useState(false)
 
   const scrollToResults = () => {
-    document.getElementById('results')?.scrollIntoView({ behavior: 'smooth' })
+    scrollToSection('results')
   }
 
   const buildParams = useCallback(

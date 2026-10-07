@@ -1,182 +1,228 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { ChevronDown, GraduationCap, Menu, Scale, Search, X } from 'lucide-react'
 
-import { NAV_ITEMS } from '../constants'
-import { ChevronDownIcon, GradCapIcon, ScaleIcon } from './icons'
+import Button from './ui/Button'
+import Container from './ui/Container'
 
-function Header({ activeTypeId, onNavigateToType, types = [], compareCount = 0, featuredTypeIds = [] }) {
-  const [menuOpen, setMenuOpen] = useState(false)
-  const [openDropdown, setOpenDropdown] = useState(null)
+const SECTION_LINKS = [
+  { label: 'Destinations', href: '#destinations' },
+  { label: 'The global picture', href: '#global-picture' },
+  { label: 'How it works', href: '#how-it-works' },
+]
 
-  // Le menu « Explore » est alimenté par les types renvoyés par l'API
-  // (meta.types), filtrés selon featuredTypeIds dérivé de la base — aucun
-  // identifiant de référence n'est figé côté front.
-  const exploreItems = featuredTypeIds
-    .map((typeId) => types.find((type) => type.id === typeId))
-    .filter(Boolean)
-    .map((type) => ({ label: type.name, typeId: type.id }))
-  const navItems = NAV_ITEMS.map((item) =>
-    item.label === 'Explore' ? { ...item, items: exploreItems } : item,
+const NAV_PILL_CLASSES =
+  'flex h-11 cursor-pointer items-center gap-1.5 rounded-full px-3.5 text-sm font-medium text-on-navy-soft transition-colors hover:bg-white/10 hover:text-white'
+const ICON_BUTTON_CLASSES =
+  'flex size-11 cursor-pointer items-center justify-center rounded-full border border-white/20 text-white transition-colors hover:border-white/50 hover:bg-white/10'
+
+function Brand() {
+  return (
+    <a href="#" className="flex min-h-11 items-center gap-2 rounded-control text-white">
+      <GraduationCap aria-hidden="true" className="size-7 text-primary" />
+      <span className="text-base">
+        <span className="font-bold">EduFinder</span>
+        <span className="font-light text-on-navy-soft">Cameroon</span>
+      </span>
+    </a>
   )
+}
 
-  const isSubActive = (sub) =>
-    sub.typeId && String(sub.typeId) === String(activeTypeId)
+// Raccourci affiché seulement quand au moins un établissement est coché pour
+// comparaison (demande produit).
+function CompareCount({ count }) {
+  if (count === 0) return null
 
-  const handleSubClick = (sub) => {
-    if (sub.typeId) {
-      onNavigateToType(sub.typeId)
-      setOpenDropdown(null)
-      setMenuOpen(false)
+  return (
+    <span className="inline-flex h-11 items-center gap-2 rounded-full border border-white/30 px-4 text-sm font-semibold text-white">
+      <Scale aria-hidden="true" className="size-4" />
+      {count}
+      <span className="sr-only">schools selected for comparison</span>
+    </span>
+  )
+}
+
+function TypeMenuItem({ type, isActive, onSelect }) {
+  return (
+    <button
+      type="button"
+      aria-pressed={isActive}
+      onClick={() => onSelect(type.id)}
+      className={`flex min-h-11 w-full cursor-pointer items-center rounded-control px-3 text-left text-sm transition-colors hover:bg-white/10 hover:text-white ${
+        isActive ? 'bg-white/10 font-semibold text-white' : 'text-on-navy-soft'
+      }`}
+    >
+      {type.name}
+    </button>
+  )
+}
+
+function TypeMenu({ types, activeTypeId, onSelectType }) {
+  const [isOpen, setIsOpen] = useState(false)
+  const menuRef = useRef(null)
+
+  // Le menu se referme dès qu'on clique ailleurs ou qu'on appuie sur Échap,
+  // comme n'importe quel menu déroulant du système.
+  useEffect(() => {
+    if (!isOpen) return undefined
+
+    const closeOnOutsideClick = (event) => {
+      if (!menuRef.current?.contains(event.target)) setIsOpen(false)
     }
+    const closeOnEscape = (event) => {
+      if (event.key === 'Escape') setIsOpen(false)
+    }
+    document.addEventListener('mousedown', closeOnOutsideClick)
+    document.addEventListener('keydown', closeOnEscape)
+    return () => {
+      document.removeEventListener('mousedown', closeOnOutsideClick)
+      document.removeEventListener('keydown', closeOnEscape)
+    }
+  }, [isOpen])
+
+  if (types.length === 0) {
+    return (
+      <a href="#results" className={NAV_PILL_CLASSES}>
+        Find schools
+      </a>
+    )
+  }
+
+  const selectType = (typeId) => {
+    onSelectType(typeId)
+    setIsOpen(false)
   }
 
   return (
-    <header className="sticky top-0 z-50 border-b border-white/10 bg-gradient-to-r from-[#0a3d2c] via-[#0d7a4f] to-[#0a5e3d] shadow-[0_4px_24px_rgba(8,18,32,0.10)]">
-      <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        <a href="#" className="flex items-center gap-2.5">
-          <div className="rounded-lg bg-gradient-to-br from-[#0d7a4f] to-[#d9a406] p-2 text-white">
-            <GradCapIcon />
-          </div>
-          <div className="leading-tight">
-            <span className="font-display text-lg font-bold text-white">EduFinder</span>
-            <span className="block text-[11px] uppercase tracking-[0.18em] text-[#dcebe3]/70">Cameroon</span>
-          </div>
+    <div ref={menuRef} className="relative">
+      <button
+        type="button"
+        aria-expanded={isOpen}
+        onClick={() => setIsOpen(!isOpen)}
+        className={NAV_PILL_CLASSES}
+      >
+        Find schools
+        <ChevronDown
+          aria-hidden="true"
+          className={`size-4 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+        />
+      </button>
+      {isOpen && (
+        <ul className="absolute left-0 top-full z-20 mt-2 w-64 rounded-panel border border-white/10 bg-navy p-2 shadow-raised">
+          {types.map((type) => (
+            <li key={type.id}>
+              <TypeMenuItem
+                type={type}
+                isActive={String(type.id) === String(activeTypeId)}
+                onSelect={selectType}
+              />
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  )
+}
+
+function MobileMenu({ types, activeTypeId, onSelectType }) {
+  return (
+    <nav id="mobile-menu" aria-label="Main" className="border-t border-white/10 lg:hidden">
+      <Container className="py-3">
+        <a href="#results" className={NAV_PILL_CLASSES}>
+          Find schools
         </a>
+        {types.length > 0 && (
+          <ul className="ml-3 border-l border-white/10 pl-2">
+            {types.map((type) => (
+              <li key={type.id}>
+                <TypeMenuItem
+                  type={type}
+                  isActive={String(type.id) === String(activeTypeId)}
+                  onSelect={onSelectType}
+                />
+              </li>
+            ))}
+          </ul>
+        )}
+        {SECTION_LINKS.map((link) => (
+          <a key={link.label} href={link.href} className={NAV_PILL_CLASSES}>
+            {link.label}
+          </a>
+        ))}
+        <Button as="a" href="#/login" variant="accent" className="mt-3 w-full rounded-full">
+          For schools
+        </Button>
+      </Container>
+    </nav>
+  )
+}
 
-        <nav className="hidden items-center gap-1 lg:flex">
-          {navItems.map((item) => (
-            <div key={item.label} className="relative">
-              <button
-                onClick={() => setOpenDropdown(openDropdown === item.label ? null : item.label)}
-                className={`flex items-center gap-1.5 rounded-full px-3.5 py-2 text-sm font-medium transition-colors ${
-                  item.label === 'Home' ? 'text-white' : 'text-white/70 hover:bg-white/10 hover:text-white'
-                }`}
-              >
-                <a
-                  href={item.href}
-                  onClick={(event) => event.stopPropagation()}
-                  className={item.label === 'Home' ? 'text-white' : ''}
-                >
-                  {item.label}
-                </a>
-                {item.items && (
-                  <ChevronDownIcon
-                    className={`h-4 w-4 transition-transform duration-200 ${
-                      openDropdown === item.label ? 'rotate-180' : ''
-                    }`}
-                  />
-                )}
-              </button>
+function Header({ activeTypeId, onNavigateToType, types = [], compareCount = 0, featuredTypeIds = [] }) {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
-              {item.items && openDropdown === item.label && (
-                <div className="dropdown-panel absolute left-0 top-full mt-2 w-56 rounded-xl border border-white/10 bg-[#0e4a36] p-2 shadow-[0_22px_54px_rgba(8,18,32,0.4)]">
-                  {item.items.map((sub) =>
-                    sub.typeId ? (
-                      <button
-                        key={sub.label}
-                        onClick={() => handleSubClick(sub)}
-                        className={`block w-full rounded-lg px-3.5 py-2.5 text-left text-sm transition-colors hover:bg-white/10 ${
-                          isSubActive(sub) ? 'bg-white/10 font-semibold text-white' : 'text-white/70 hover:text-white'
-                        }`}
-                      >
-                        {sub.label}
-                      </button>
-                    ) : (
-                      <a
-                        key={sub.label}
-                        href={sub.href}
-                        className="block rounded-lg px-3.5 py-2.5 text-sm text-white/70 transition-colors hover:bg-white/10 hover:text-white"
-                      >
-                        {sub.label}
-                      </a>
-                    ),
-                  )}
-                </div>
-              )}
-            </div>
+  // Le menu ne propose que les types les plus représentés, dans l'ordre fourni
+  // par l'API : aucun identifiant de référence n'est figé côté interface.
+  // Sans onNavigateToType (fiche d'établissement), la page ne sait pas
+  // filtrer : le menu des types reste alors vide et ne s'affiche pas.
+  const featuredTypes = onNavigateToType
+    ? featuredTypeIds.map((typeId) => types.find((type) => type.id === typeId)).filter(Boolean)
+    : []
+
+  const selectTypeFromMobileMenu = (typeId) => {
+    onNavigateToType(typeId)
+    setIsMobileMenuOpen(false)
+  }
+
+  return (
+    <header className="sticky top-0 z-50 border-b border-white/10 bg-navy/95 backdrop-blur-md [--focus-ring:var(--color-accent)]">
+      <Container className="flex h-16 items-center justify-between gap-4 lg:h-20">
+        <Brand />
+
+        <nav aria-label="Main" className="hidden items-center gap-1 lg:flex">
+          <TypeMenu
+            types={featuredTypes}
+            activeTypeId={activeTypeId}
+            onSelectType={onNavigateToType}
+          />
+          {SECTION_LINKS.map((link) => (
+            <a key={link.label} href={link.href} className={NAV_PILL_CLASSES}>
+              {link.label}
+            </a>
           ))}
         </nav>
 
-        <div className="hidden items-center gap-2 lg:flex">
-          {/* Compteur de comparaison : visible seulement si au moins une école
-              est sélectionnée (demande produit). */}
-          {compareCount > 0 && (
-            <button
-              type="button"
-              title="Schools selected for comparison"
-              className="inline-flex items-center gap-1.5 rounded-full bg-[#f2c14e] px-3.5 py-2 text-sm font-bold text-[#081220] shadow-[0_0_18px_rgba(242,193,78,0.45)] transition-transform hover:scale-105"
-            >
-              <ScaleIcon className="h-4 w-4" />
-              {compareCount}
-              <span className="sr-only">schools selected for comparison</span>
-            </button>
-          )}
-          <a
-            href="#/login"
-            className="rounded-full border border-white/30 px-6 py-2 text-sm font-semibold text-white transition-colors hover:bg-white/10"
-          >
-            Sign in
+        <div className="flex items-center gap-2">
+          <CompareCount count={compareCount} />
+          <a href="#search" aria-label="Search schools" className={ICON_BUTTON_CLASSES}>
+            <Search aria-hidden="true" className="size-4" />
           </a>
-        </div>
-
-        <div className="flex items-center gap-2 lg:hidden">
-          {compareCount > 0 && (
-            <span
-              title="Schools selected for comparison"
-              className="flex h-10 min-w-10 items-center justify-center gap-1 rounded-full bg-[#f2c14e] px-3 text-sm font-bold text-[#081220]"
-            >
-              <ScaleIcon className="h-4 w-4" />
-              {compareCount}
-            </span>
-          )}
+          <div className="hidden lg:block">
+            <Button as="a" href="#/login" variant="accent" className="rounded-full">
+              For schools
+            </Button>
+          </div>
           <button
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-white/15 text-white transition-colors hover:bg-white/10"
-            onClick={() => setMenuOpen(!menuOpen)}
-            aria-label="Toggle menu"
+            type="button"
+            aria-label={isMobileMenuOpen ? 'Close menu' : 'Open menu'}
+            aria-expanded={isMobileMenuOpen}
+            aria-controls="mobile-menu"
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className={`${ICON_BUTTON_CLASSES} lg:hidden`}
           >
-            <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              {menuOpen ? <path d="M18 6L6 18M6 6l12 12" strokeLinecap="round" /> : <path d="M4 7h16M4 12h16M4 17h16" strokeLinecap="round" />}
-            </svg>
+            {isMobileMenuOpen ? (
+              <X aria-hidden="true" className="size-5" />
+            ) : (
+              <Menu aria-hidden="true" className="size-5" />
+            )}
           </button>
         </div>
-      </div>
+      </Container>
 
-      {menuOpen && (
-        <div className="menu-slide border-t border-white/10 bg-[#0a3d2c] px-6 py-4 lg:hidden">
-          {navItems.map((item) => (
-            <div key={item.label}>
-              <a href={item.href} className={`block py-2.5 text-sm ${item.label === 'Home' ? 'font-semibold text-white' : 'text-white/70'}`}>
-                {item.label}
-              </a>
-              {item.items && (
-                <div className="ml-4 space-y-1 pb-1">
-                  {item.items.map((sub) =>
-                    sub.typeId ? (
-                      <button
-                        key={sub.label}
-                        onClick={() => handleSubClick(sub)}
-                        className={`block py-1.5 text-left text-sm transition-colors hover:text-white ${
-                          isSubActive(sub) ? 'font-semibold text-white' : 'text-white/50'
-                        }`}
-                      >
-                        {sub.label}
-                      </button>
-                    ) : (
-                      <a key={sub.label} href={sub.href} className="block py-1.5 text-sm text-white/50 hover:text-white">
-                        {sub.label}
-                      </a>
-                    ),
-                  )}
-                </div>
-              )}
-            </div>
-          ))}
-          <a
-            href="#/login"
-            className="mt-3 inline-block rounded-full border border-white/30 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-white/10"
-          >
-            Sign in
-          </a>
-        </div>
+      {isMobileMenuOpen && (
+        <MobileMenu
+          types={featuredTypes}
+          activeTypeId={activeTypeId}
+          onSelectType={selectTypeFromMobileMenu}
+        />
       )}
     </header>
   )
