@@ -90,4 +90,5 @@ REST_FRAMEWORK = {
     # seules des routes publiques existent à ce stade.
     "DEFAULT_AUTHENTICATION_CLASSES": [],
     "UNAUTHENTICATED_USER": None,
+    "EXCEPTION_HANDLER": "edufinder.exception_handler.handle_api_exception",
 }
