@@ -2,6 +2,7 @@ from django.urls import path
 
 from edufinder.services.tracking import TrackedEvent
 from edufinder.views import (
+    activity,
     admin,
     auth,
     manager,
@@ -82,6 +83,12 @@ urlpatterns = [
         "my/establishments/<str:establishment_uuid>/benchmarks",
         manager.my_establishment_benchmarks,
         name="my-establishment-benchmarks",
+    ),
+    path("admin/activity", activity.platform_activity, name="admin-activity"),
+    path(
+        "my/establishments/<str:establishment_uuid>/activity",
+        activity.my_establishment_activity,
+        name="my-establishment-activity",
     ),
     path("notifications", notifications.my_notifications, name="my-notifications"),
     # « read-all » est déclarée avant la route par identifiant, sinon elle

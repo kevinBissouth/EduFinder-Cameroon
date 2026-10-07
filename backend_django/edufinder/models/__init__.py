@@ -22,6 +22,7 @@ from edufinder.models.reference import (
 from edufinder.models.user import User
 from edufinder.models.establishment import (
     Establishment,
+    EstablishmentDailyActivity,
     ExamResult,
     Media,
     ProgramOffer,
@@ -57,6 +58,7 @@ __all__ = [
     "StudyLevel",
     "User",
     "Establishment",
+    "EstablishmentDailyActivity",
     "ExamResult",
     "Media",
     "ProgramOffer",

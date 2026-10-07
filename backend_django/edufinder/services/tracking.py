@@ -13,9 +13,11 @@ ce module.
 from enum import Enum
 
 from django.core.cache import cache
+from django.db import transaction
 from django.db.models import F
+from django.utils import timezone
 
-from edufinder.models import Establishment
+from edufinder.models import Establishment, EstablishmentDailyActivity
 
 DEDUPLICATION_WINDOW_SECONDS = 30 * 60
 
@@ -43,13 +45,23 @@ def count_event_once(
     )
     if not is_new_event:
         return
-    counter_field = _COUNTER_FIELD_BY_EVENT[tracked_event]
+    _increment_counters(establishment, _COUNTER_FIELD_BY_EVENT[tracked_event])
+
+
+# Le total et la ligne du jour avancent ensemble ou pas du tout : la courbe
+# du responsable ne doit jamais s'écarter du total affiché à côté.
+@transaction.atomic
+def _increment_counters(establishment: Establishment, counter_field: str) -> None:
     # L'incrément se fait en base (UPDATE ... SET compteur = compteur + 1) :
     # lire puis réécrire la valeur en Python perdrait des événements quand deux
     # clients distincts arrivent en même temps.
-    Establishment.objects.filter(pk=establishment.pk).update(
-        **{counter_field: F(counter_field) + 1}
+    increment = {counter_field: F(counter_field) + 1}
+    Establishment.objects.filter(pk=establishment.pk).update(**increment)
+    # Le jour est celui du fuseau du serveur (UTC), le même pour tous.
+    daily_activity, _ = EstablishmentDailyActivity.objects.get_or_create(
+        establishment=establishment, day=timezone.localdate()
     )
+    EstablishmentDailyActivity.objects.filter(pk=daily_activity.pk).update(**increment)
 
 
 # La clé utilise l'UUID relu en base, jamais celui de l'URL : aucun texte

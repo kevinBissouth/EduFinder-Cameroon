@@ -279,3 +279,27 @@ class Media(models.Model):
 
     class Meta:
         db_table = "media"
+
+
+# Vues et demandes de contact d'un établissement pour une journée. Les totaux
+# portés par establishment ne disent rien de l'évolution : cette table garde
+# une ligne par jour où il s'est passé quelque chose.
+class EstablishmentDailyActivity(models.Model):
+    id_daily_activity = models.AutoField(primary_key=True)
+    establishment = models.ForeignKey(
+        Establishment,
+        on_delete=models.CASCADE,
+        db_column="id_establishment",
+        related_name="daily_activities",
+    )
+    day = models.DateField()
+    views_count = models.IntegerField(default=0)
+    inquiries_count = models.IntegerField(default=0)
+
+    class Meta:
+        db_table = "establishment_daily_activity"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["establishment", "day"], name="uq_daily_activity_establishment_day"
+            ),
+        ]
