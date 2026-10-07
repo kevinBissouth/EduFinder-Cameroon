@@ -50,6 +50,7 @@ ALLOWED_HOSTS = json.loads(os.environ.get("ALLOWED_HOSTS", '["localhost", "127.0
 INSTALLED_APPS = [
     "corsheaders",
     "rest_framework",
+    "edufinder",
 ]
 
 MIDDLEWARE = [

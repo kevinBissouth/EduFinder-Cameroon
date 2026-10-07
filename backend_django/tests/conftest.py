@@ -1,7 +1,75 @@
+from collections.abc import Callable
+
 import pytest
 from rest_framework.test import APIClient
+
+from edufinder.models import (
+    City,
+    Establishment,
+    EstablishmentStatus,
+    EstablishmentType,
+    LinguisticSection,
+    Region,
+    Sector,
+    User,
+    UserRole,
+)
 
 
 @pytest.fixture(name="client")
 def client_fixture() -> APIClient:
     return APIClient()
+
+
+@pytest.fixture(name="city")
+def city_fixture() -> City:
+    region = Region.objects.create(name="Littoral")
+    return City.objects.create(name="Douala", region=region)
+
+
+@pytest.fixture(name="create_establishment")
+def create_establishment_fixture(city) -> Callable[..., Establishment]:
+    default_references = {
+        "city": city,
+        "type": EstablishmentType.objects.create(label="Secondaire"),
+        "sector": Sector.objects.create(label="Privé laïc"),
+        "linguistic_section": LinguisticSection.objects.create(label="Francophone"),
+    }
+
+    def create_establishment(
+        name: str = "Collège de la Paix",
+        status: EstablishmentStatus = EstablishmentStatus.PUBLISHED,
+        **overridden_fields,
+    ) -> Establishment:
+        return Establishment.objects.create(
+            name=name, status=status, **{**default_references, **overridden_fields}
+        )
+
+    return create_establishment
+
+
+@pytest.fixture(name="establishment")
+def establishment_fixture(create_establishment) -> Establishment:
+    return create_establishment()
+
+
+@pytest.fixture(name="manager")
+def manager_fixture() -> User:
+    # Le hash n'est pas vérifié par les tests de modèles : une valeur factice
+    # suffit et aucun mot de passe réel n'apparaît dans le dépôt.
+    return User.objects.create(
+        name="Awa Manager",
+        email="manager@example.com",
+        password_hash="not-a-real-hash",
+        role=UserRole.MANAGER,
+    )
+
+
+@pytest.fixture(name="super_admin")
+def super_admin_fixture() -> User:
+    return User.objects.create(
+        name="Sam Admin",
+        email="admin@example.com",
+        password_hash="not-a-real-hash",
+        role=UserRole.SUPER_ADMIN,
+    )
