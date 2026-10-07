@@ -66,8 +66,9 @@ WSGI_APPLICATION = "config.wsgi.application"
 DATABASES = {"default": _parse_database_url(os.environ["DATABASE_URL"])}
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
-# Le cache sert au dédoublonnage des événements de suivi. MAX_ENTRIES borne la
-# mémoire : au-delà, Django évince des entrées au lieu de grossir sans limite.
+# Le cache sert au dédoublonnage des événements de suivi et au décompte des
+# tentatives de connexion. MAX_ENTRIES borne la mémoire : au-delà, Django
+# évince des entrées au lieu de grossir sans limite.
 CACHE_MAX_ENTRIES = 10_000
 CACHES = {
     "default": {
@@ -94,12 +95,19 @@ ACCESS_TOKEN_EXPIRE_MINUTES = int(
 )
 COOKIE_SECURE = _read_boolean("COOKIE_SECURE")
 
+LOGIN_ATTEMPTS_RATE = "10/min"
+
 REST_FRAMEWORK = {
     "DEFAULT_RENDERER_CLASSES": ["rest_framework.renderers.JSONRenderer"],
     "DEFAULT_PARSER_CLASSES": ["rest_framework.parsers.JSONParser"],
-    # Aucune authentification tant que le modèle de comptes n'est pas porté :
-    # seules des routes publiques existent à ce stade.
+    # Aucune authentification par défaut : les routes sont publiques sauf
+    # celles qui déclarent explicitement CookieJwtAuthentication.
     "DEFAULT_AUTHENTICATION_CLASSES": [],
     "UNAUTHENTICATED_USER": None,
+    "DEFAULT_THROTTLE_RATES": {"login": LOGIN_ATTEMPTS_RATE},
+    # 0 = l'adresse du client est celle de la connexion. Sans ce réglage, DRF
+    # croirait l'en-tête X-Forwarded-For, que le client peut forger pour
+    # contourner la limite de tentatives.
+    "NUM_PROXIES": 0,
     "EXCEPTION_HANDLER": "edufinder.exception_handler.handle_api_exception",
 }

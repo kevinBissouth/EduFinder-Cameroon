@@ -15,6 +15,7 @@ from edufinder.models import (
     User,
     UserRole,
 )
+from edufinder.services.security import create_access_token
 
 
 # Le cache vit dans la mémoire du processus : sans cette remise à zéro, un
@@ -81,3 +82,13 @@ def super_admin_fixture() -> User:
         password_hash="not-a-real-hash",
         role=UserRole.SUPER_ADMIN,
     )
+
+
+# Ouvre une session en posant directement le cookie : les tests des espaces
+# privés n'ont pas à repasser par la connexion (et son calcul bcrypt).
+@pytest.fixture(name="log_in_as")
+def log_in_as_fixture(client) -> Callable[[User], None]:
+    def log_in_as(user: User) -> None:
+        client.cookies["token"] = create_access_token(user)
+
+    return log_in_as

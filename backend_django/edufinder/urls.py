@@ -1,9 +1,12 @@
 from django.urls import path
 
 from edufinder.services.tracking import TrackedEvent
-from edufinder.views import public
+from edufinder.views import auth, public
 
 urlpatterns = [
+    path("auth/login", auth.login, name="auth-login"),
+    path("auth/logout", auth.logout, name="auth-logout"),
+    path("auth/me", auth.current_user, name="auth-current-user"),
     path("stats", public.platform_stats, name="platform-stats"),
     path("filters-meta", public.filters_meta, name="filters-meta"),
     path("institutions", public.institution_list, name="institution-list"),
