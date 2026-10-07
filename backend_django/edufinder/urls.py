@@ -7,7 +7,17 @@ urlpatterns = [
     path("auth/login", auth.login, name="auth-login"),
     path("auth/logout", auth.logout, name="auth-logout"),
     path("auth/me", auth.current_user, name="auth-current-user"),
+    path(
+        "establishments/proposals",
+        manager.submit_creation_proposal,
+        name="creation-proposal",
+    ),
     path("my/establishments", manager.my_establishments, name="my-establishments"),
+    path(
+        "my/establishments/<str:establishment_uuid>/modification-proposals",
+        manager.submit_modification_proposal,
+        name="modification-proposal",
+    ),
     path("my/submissions", manager.my_submissions, name="my-submissions"),
     path(
         "my/establishments/<str:establishment_uuid>",
