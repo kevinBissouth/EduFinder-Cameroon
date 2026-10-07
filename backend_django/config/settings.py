@@ -57,6 +57,7 @@ MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
     "edufinder.middleware.csrf_origin_middleware",
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.middleware.common.CommonMiddleware",
 ]
 
@@ -70,6 +71,30 @@ DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 # là que vivent les images de démonstration, et l'ancien backend y écrit.
 MEDIA_ROOT = BASE_DIR.parent / "media"
 MEDIA_URL = "/media/"
+
+# Le frontend compilé est servi par Django lui-même, à la racine du site :
+# l'interface et l'API partagent ainsi le même domaine, et le cookie de
+# session fonctionne sans réglage particulier. Le dossier n'existe qu'après
+# « npm run build » : en développement, c'est Vite qui sert l'interface.
+FRONTEND_BUILD_DIR = BASE_DIR.parent / "frontend" / "dist"
+HASHED_ASSETS_URL_PREFIX = "/assets/"
+
+
+# Vite met une empreinte du contenu dans le nom de chaque fichier de
+# « assets » : un nom donné ne change jamais de contenu, le navigateur peut
+# donc le garder en cache indéfiniment. Les autres fichiers (index.html,
+# manifeste, icônes) gardent un cache court pour suivre les mises à jour.
+def _is_hashed_asset(file_path: str, url: str) -> bool:
+    return url.startswith(HASHED_ASSETS_URL_PREFIX)
+
+
+if FRONTEND_BUILD_DIR.is_dir():
+    WHITENOISE_ROOT = FRONTEND_BUILD_DIR
+    WHITENOISE_INDEX_FILE = True
+    WHITENOISE_IMMUTABLE_FILE_TEST = _is_hashed_asset
+    # Type attendu par les navigateurs pour le manifeste de l'application ;
+    # il n'est pas dans la table par défaut.
+    WHITENOISE_MIMETYPES = {".webmanifest": "application/manifest+json"}
 
 # Le cache sert au dédoublonnage des événements de suivi et au décompte des
 # tentatives de connexion. MAX_ENTRIES borne la mémoire : au-delà, Django
