@@ -1,12 +1,39 @@
 from django.urls import path
 
 from edufinder.services.tracking import TrackedEvent
-from edufinder.views import auth, manager, manager_media, public
+from edufinder.views import admin, auth, manager, manager_media, public
 
 urlpatterns = [
     path("auth/login", auth.login, name="auth-login"),
     path("auth/logout", auth.logout, name="auth-logout"),
     path("auth/me", auth.current_user, name="auth-current-user"),
+    path("admin/submissions", admin.submissions, name="admin-submissions"),
+    path(
+        "admin/submissions/<str:submission_uuid>",
+        admin.submission_detail,
+        name="admin-submission-detail",
+    ),
+    path(
+        "admin/submissions/<str:submission_uuid>/approve",
+        admin.approve,
+        name="admin-submission-approve",
+    ),
+    path(
+        "admin/submissions/<str:submission_uuid>/reject",
+        admin.reject,
+        name="admin-submission-reject",
+    ),
+    path("admin/establishments", admin.establishments, name="admin-establishments"),
+    path(
+        "admin/establishments/<str:establishment_uuid>/suspend",
+        admin.suspend,
+        name="admin-establishment-suspend",
+    ),
+    path(
+        "admin/establishments/<str:establishment_uuid>/reactivate",
+        admin.reactivate,
+        name="admin-establishment-reactivate",
+    ),
     path(
         "establishments/proposals",
         manager.submit_creation_proposal,

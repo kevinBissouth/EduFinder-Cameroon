@@ -17,7 +17,7 @@ from rest_framework.request import Request
 
 from edufinder.authentication import CookieJwtAuthentication
 from edufinder.models import Establishment
-from edufinder.permissions import IsManagerOrSuperAdmin
+from edufinder.permissions import IsManagerOrSuperAdmin, IsSuperAdmin
 from edufinder.services.manager_space import user_manages_establishment
 
 NOT_MANAGED_MESSAGE = "You do not manage this establishment"
@@ -40,6 +40,7 @@ def _build_private_api_view(role_permission: type[BasePermission]) -> Callable:
 
 
 manager_api_view = _build_private_api_view(IsManagerOrSuperAdmin)
+admin_api_view = _build_private_api_view(IsSuperAdmin)
 
 
 # Toute route d'établissement de l'espace responsable passe par ici : un

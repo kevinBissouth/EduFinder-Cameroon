@@ -3,6 +3,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import exception_handler
 
+from edufinder.services.errors import ConflictError
 from edufinder.services.media_files import UploadRejectedError
 from edufinder.services.proposals import ProposalError
 
@@ -11,6 +12,7 @@ from edufinder.services.proposals import ProposalError
 _BUSINESS_ERROR_STATUSES = {
     ProposalError: status.HTTP_422_UNPROCESSABLE_ENTITY,
     UploadRejectedError: status.HTTP_400_BAD_REQUEST,
+    ConflictError: status.HTTP_409_CONFLICT,
 }
 
 
