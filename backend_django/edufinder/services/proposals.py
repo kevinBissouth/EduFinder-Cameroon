@@ -22,6 +22,7 @@ from edufinder.models import (
     EstablishmentType,
     Exam,
     LinguisticSection,
+    Media,
     PaymentMethod,
     Program,
     Sector,
@@ -36,6 +37,7 @@ from edufinder.services.data_rules import (
     get_exam_section_violation,
     get_exam_type_violation,
 )
+from edufinder.services.media_files import StoredFile
 
 
 class ProposalError(Exception):
@@ -53,6 +55,12 @@ class IncoherentExamResultError(ProposalError):
 class EmptyModificationError(ProposalError):
     pass
 
+
+# Clés du contenu d'une soumission qui portent sur la galerie : l'ajout d'un
+# fichier déjà téléversé, et le retrait d'un média existant (par son id).
+MEDIA_ADDITIONS_KEY = "media_additions"
+MEDIA_REMOVALS_KEY = "media_removals"
+DIRECTOR_PHOTO_KEY = "director_photo"
 
 _SINGLE_REFERENCE_MODELS = {
     "id_city": City,
@@ -96,6 +104,45 @@ def create_modification_proposal(
     _ensure_modified_exam_results_coherent(establishment, changed_fields)
     return _open_submission(
         user, establishment, SubmissionType.MODIFICATION, changed_fields
+    )
+
+
+# Les trois propositions ci-dessous concernent les fichiers. Comme toute
+# modification, elles ne touchent pas la fiche : le fichier est stocké, mais il
+# n'apparaît sur la fiche publique qu'une fois la soumission approuvée.
+def propose_media_addition(
+    user: User, establishment: Establishment, stored_file: StoredFile, caption: str
+) -> Submission:
+    media_addition = {
+        "url": stored_file.url,
+        "type": stored_file.media_type.value,
+        "caption": caption,
+    }
+    return _open_submission(
+        user,
+        establishment,
+        SubmissionType.MODIFICATION,
+        {MEDIA_ADDITIONS_KEY: [media_addition]},
+    )
+
+
+def propose_media_removal(user: User, media: Media) -> Submission:
+    return _open_submission(
+        user,
+        media.establishment,
+        SubmissionType.MODIFICATION,
+        {MEDIA_REMOVALS_KEY: [media.id_media]},
+    )
+
+
+def propose_director_photo(
+    user: User, establishment: Establishment, stored_file: StoredFile
+) -> Submission:
+    return _open_submission(
+        user,
+        establishment,
+        SubmissionType.MODIFICATION,
+        {DIRECTOR_PHOTO_KEY: stored_file.url},
     )
 
 

@@ -66,6 +66,11 @@ WSGI_APPLICATION = "config.wsgi.application"
 DATABASES = {"default": _parse_database_url(os.environ["DATABASE_URL"])}
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
+# Dossier unique des fichiers téléversés, à la racine du projet : c'est aussi
+# là que vivent les images de démonstration, et l'ancien backend y écrit.
+MEDIA_ROOT = BASE_DIR.parent / "media"
+MEDIA_URL = "/media/"
+
 # Le cache sert au dédoublonnage des événements de suivi et au décompte des
 # tentatives de connexion. MAX_ENTRIES borne la mémoire : au-delà, Django
 # évince des entrées au lieu de grossir sans limite.

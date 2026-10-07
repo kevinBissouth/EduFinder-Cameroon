@@ -25,6 +25,14 @@ def clear_cache_between_tests():
     cache.clear()
 
 
+# Le vrai dossier média contient les images de démonstration : chaque test
+# écrit dans un dossier temporaire qui lui est propre, jamais dans ce dossier.
+@pytest.fixture(autouse=True)
+def isolated_media_root(settings, tmp_path):
+    settings.MEDIA_ROOT = tmp_path / "media"
+    return settings.MEDIA_ROOT
+
+
 @pytest.fixture(name="client")
 def client_fixture() -> APIClient:
     return APIClient()
