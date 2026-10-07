@@ -1,11 +1,9 @@
 @import "tailwindcss";
-@plugin "daisyui";
 
-/* Je pose les polices du thème ici plutôt que dans un tailwind.config.js :
-   Tailwind v4 est CSS-first, la config JS n'était d'ailleurs jamais
-   chargée (sans @config elle est ignorée), d'où les titres sans police.
-   DM Serif Display pour les titres (font-display), Manrope pour tout le
-   texte courant — même identité typographique que worldschoolfinder.com. */
+/* DM Serif Display pour les titres (font-display), Manrope pour le texte et
+   l'interface (font-sans). Manrope est variable : un seul fichier couvre
+   toutes les graisses. DM Serif Display a un fichier italique à part, utilisé
+   pour le mot mis en avant dans les grands titres. */
 @font-face {
   font-family: "DM Serif Display";
   font-style: normal;
@@ -14,7 +12,14 @@
   src: url("/fonts/dm-serif-display-400-latin.woff2") format("woff2");
 }
 
-/* Manrope est une police variable : un seul fichier couvre 200 à 800. */
+@font-face {
+  font-family: "DM Serif Display";
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/dm-serif-display-400-italic-latin.woff2") format("woff2");
+}
+
 @font-face {
   font-family: "Manrope";
   font-style: normal;
@@ -23,56 +28,138 @@
   src: url("/fonts/manrope-var-latin.woff2") format("woff2");
 }
 
+/* Système de design : toute couleur, tout rayon et toute ombre de l'interface
+   vient d'ici. Un composant n'écrit jamais de valeur en dur.
+
+   Tailles de texte : je n'utilise que huit tailles de l'échelle Tailwind —
+   xs (12), sm (14), base (16), lg (18), 2xl (24), 3xl (30), 4xl (36), 5xl (48),
+   et 6xl (60) pour le seul titre d'accroche sur grand écran. */
 @theme {
   --font-display: "DM Serif Display", Georgia, "Times New Roman", serif;
   --font-sans: "Manrope", system-ui, -apple-system, "Segoe UI", sans-serif;
 
-  /* Couleur du texte courant, utilisée par la homepage (text-body). */
-  --color-body: #334155;
+  /* Titres serrés et petits libellés en capitales espacées. */
+  --leading-display: 1.05;
+  --tracking-eyebrow: 0.18em;
 
-  /* Animation des orbes flottants de l'espace super admin (template Glass). */
-  --animate-float: float 20s ease-in-out infinite;
+  /* Bleu nuit : titres, en-tête, pied de page et grandes sections sombres. */
+  --color-navy: #081220;
+  /* Texte secondaire posé sur le bleu nuit. */
+  --color-on-navy-soft: #b5b8bc;
 
-  @keyframes float {
-    0%,
-    100% {
-      transform: translate(0, 0) scale(1);
-    }
-    25% {
-      transform: translate(30px, -30px) scale(1.05);
-    }
-    50% {
-      transform: translate(-20px, 20px) scale(0.95);
-    }
-    75% {
-      transform: translate(20px, 10px) scale(1.02);
-    }
-  }
+  /* Bleu vif : actions et liens. */
+  --color-primary: #2d5bff;
+  --color-primary-deep: #1434a4;
+  --color-primary-soft: #ddebff;
+  --color-muted: #eaf2ff;
 
-  /* Entrée/sortie du carrousel « Recent actions » de la dashboard : l'action
-     qui part glisse vers le haut et s'efface, la suivante monte avec fondu. */
-  --animate-action-in: action-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
-  --animate-action-out: action-out 0.5s ease-in both;
+  /* L'ambre signale l'action réservée aux établissements et ce qui est
+     recommandé ; le violet ne sert qu'aux dégradés et aux graphiques. */
+  --color-accent: #ffb020;
+  --color-violet: #a78bfa;
 
-  @keyframes action-in {
+  /* Teintes des espaces privés : le vert dit « publié » ou « approuvé », le
+     violet « suspendu ». Les versions -deep portent du texte blanc ou se
+     lisent sur leur version -soft. */
+  --color-success: #0f7a55;
+  --color-success-soft: #dcf5ea;
+  --color-violet-deep: #5b3fd6;
+  --color-violet-soft: #ede9fe;
+
+  /* Surfaces et texte courant. */
+  --color-paper: #f7f8fc;
+  --color-surface: #ffffff;
+  --color-ink: #343a44;
+  --color-ink-soft: #4b5566;
+  --color-line: #c9d6ec;
+
+  /* États. */
+  --color-danger: #dc2626;
+  /* Texte d'erreur posé sur danger-soft : le rouge de base n'y atteint pas 4,5:1. */
+  --color-danger-deep: #b91c1c;
+  --color-danger-soft: #fdecec;
+  --color-warning: #8a5200;
+  --color-warning-soft: #fff4dc;
+
+  /* Formes hiérarchisées : champs, boutons, puis cartes et grands blocs. */
+  --radius-control: 0.875rem;
+  --radius-button: 1.25rem;
+  --radius-panel: 1.5rem;
+
+  /* Deux niveaux d'élévation, teintés de bleu nuit plutôt que de noir, et une
+     lueur réservée au bouton principal. */
+  --shadow-soft: 0 1px 2px rgb(8 18 32 / 0.04), 0 4px 12px -4px rgb(8 18 32 / 0.08);
+  --shadow-raised: 0 2px 4px rgb(8 18 32 / 0.04), 0 24px 48px -16px rgb(8 18 32 / 0.18);
+  --shadow-glow: 0 10px 24px -8px rgb(45 91 255 / 0.55);
+  /* Couronne de lumière du bouton flottant de la barre d'onglets : un liseré
+     clair puis un halo bleu, discret. */
+  --shadow-halo: 0 0 0 4px rgb(255 255 255 / 0.35), 0 0 20px 4px rgb(45 91 255 / 0.5);
+  /* Ombre de la barre d'onglets : portée vers le haut, elle suit la découpe
+     courbe de la barre, ce qu'une ombre de boîte ne sait pas faire. */
+  --drop-shadow-bar: 0 -6px 14px rgb(8 18 32 / 0.12);
+
+  /* Seule animation d'entrée de l'interface : le haut de page se pose une fois
+     au chargement. Tout le reste ne bouge qu'en réponse à une action. */
+  --animate-settle: settle 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+
+  @keyframes settle {
     from {
       opacity: 0;
-      transform: translateY(24px);
+      transform: translateY(12px);
     }
     to {
       opacity: 1;
       transform: translateY(0);
     }
   }
+}
 
-  @keyframes action-out {
-    from {
-      opacity: 1;
-      transform: translateY(0);
+/* Contour organique des photos de la fiche d'établissement : quatre rayons
+   inégaux donnent une forme de galet. */
+@utility shape-blob {
+  border-radius: 42% 58% 55% 45% / 48% 42% 58% 52%;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    letter-spacing: -0.01em;
+  }
+
+  ::selection {
+    background-color: var(--color-primary-soft);
+    color: var(--color-navy);
+  }
+
+  /* Anneau de focus unique pour toute l'interface. Sur un aplat sombre, le
+     conteneur redéfinit --focus-ring pour que l'anneau reste visible. */
+  :focus-visible {
+    outline: 2px solid var(--focus-ring, var(--color-primary));
+    outline-offset: 2px;
+  }
+
+  /* Respect du réglage système « réduire les animations ». */
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
     }
-    to {
-      opacity: 0;
-      transform: translateY(-24px);
+
+    *,
+    ::before,
+    ::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
     }
   }
+}
+
+/* Boutons de zoom de la carte portés à 44 px : la taille par défaut de Leaflet
+   (30 px) est trop petite pour le doigt. La règle est hors couche et plus
+   précise que celle de Leaflet, sinon sa feuille de style l'emporterait. */
+.leaflet-container.leaflet-touch .leaflet-bar a,
+.leaflet-container .leaflet-bar a {
+  width: 2.75rem;
+  height: 2.75rem;
+  line-height: 2.75rem;
 }
