@@ -246,7 +246,10 @@ function AdminHomePage({ profile, onSignOut }) {
           )}
 
           {status === 'ready' && activeView === 'establishments' && (
-            <AdminEstablishmentsView establishments={data.establishments} />
+            <AdminEstablishmentsView
+              establishments={data.establishments}
+              onStatusChanged={reload}
+            />
           )}
         </div>
       </main>

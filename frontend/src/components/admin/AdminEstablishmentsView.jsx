@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 import { X, Building2, MapPin, UserRound, GraduationCap, Compass } from 'lucide-react'
 
 import { AdminGlassCard, AdminStatusBadge } from './AdminShared'
+import EstablishmentStatusActions from './EstablishmentStatusActions'
 
 // Vue super admin de tous les établissements sous forme de cartes : chaque
 // carte résume l'établissement (nom, ville, statut) et s'ouvre au clic sur une
@@ -28,7 +29,7 @@ function FieldRow({ icon: Icon, label, value, capitalize = false }) {
 
 // Fenêtre de détail d'un établissement : le clic sur une carte l'ouvre, on y
 // voit tout l'établissement et ses responsables dans une modale défilable.
-function EstablishmentDetailModal({ item, onClose }) {
+function EstablishmentDetailModal({ item, onClose, onStatusChanged }) {
   return (
     <div
       className="fixed inset-0 z-[60] flex items-center justify-center overflow-y-auto bg-black/70 p-4 backdrop-blur-sm"
@@ -77,14 +78,23 @@ function EstablishmentDetailModal({ item, onClose }) {
               value={item.owners.length > 0 ? item.owners.join(', ') : '—'}
             />
           </div>
+
+          <EstablishmentStatusActions item={item} onStatusChanged={onStatusChanged} />
         </div>
       </div>
     </div>
   )
 }
 
-export default function AdminEstablishmentsView({ establishments }) {
+export default function AdminEstablishmentsView({ establishments, onStatusChanged }) {
   const [selectedItem, setSelectedItem] = useState(null)
+
+  // La fenêtre affiche l'ancien statut : je la ferme avant de recharger la
+  // liste, pour ne jamais laisser à l'écran un état périmé.
+  async function handleStatusChanged() {
+    setSelectedItem(null)
+    await onStatusChanged()
+  }
 
   return (
     <AdminGlassCard className="p-6">
@@ -158,7 +168,11 @@ export default function AdminEstablishmentsView({ establishments }) {
 
       {selectedItem &&
         createPortal(
-          <EstablishmentDetailModal item={selectedItem} onClose={() => setSelectedItem(null)} />,
+          <EstablishmentDetailModal
+            item={selectedItem}
+            onClose={() => setSelectedItem(null)}
+            onStatusChanged={handleStatusChanged}
+          />,
           document.body,
         )}
     </AdminGlassCard>
