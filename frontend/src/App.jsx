@@ -1,11 +1,15 @@
-import { useEffect, useState } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import HomePage from './pages/HomePage'
 import SchoolProfilePage from './pages/SchoolProfilePage'
 import LoginPage from './pages/LoginPage'
-import ManagerHomePage from './pages/ManagerHomePage'
-import AdminHomePage from './pages/AdminHomePage'
+import ToastProvider from './components/workspace/ToastProvider'
 import { parseCurrentRoute } from './routes'
 import { clearAuthToken, fetchAuthenticatedProfile } from './utils/auth'
+
+// Les espaces privés embarquent la bibliothèque de graphiques : ils sont
+// chargés à part, pour ne pas alourdir le site public.
+const ManagerHomePage = lazy(() => import('./pages/ManagerHomePage'))
+const AdminHomePage = lazy(() => import('./pages/AdminHomePage'))
 
 function App() {
   const [route, setRoute] = useState(() => parseCurrentRoute())
@@ -63,14 +67,18 @@ function App() {
     }
     // L'espace super admin n'est accessible qu'au rôle super_admin ; tout
     // autre compte authentifié est redirigé vers l'espace responsable.
-    if (route.page === 'school-admin' && profile.role === 'super_admin') {
-      return <AdminHomePage profile={profile} onSignOut={handleSignOut} />
-    }
-    if (route.page === 'school-admin') {
+    const isAdminSpace = route.page === 'school-admin' && profile.role === 'super_admin'
+    if (route.page === 'school-admin' && !isAdminSpace) {
       window.location.hash = '#/manager'
-      return <ManagerHomePage profile={profile} onSignOut={handleSignOut} />
     }
-    return <ManagerHomePage profile={profile} onSignOut={handleSignOut} />
+    const WorkspacePage = isAdminSpace ? AdminHomePage : ManagerHomePage
+    return (
+      <ToastProvider>
+        <Suspense fallback={null}>
+          <WorkspacePage profile={profile} onSignOut={handleSignOut} />
+        </Suspense>
+      </ToastProvider>
+    )
   }
 
   return <HomePage />
