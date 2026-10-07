@@ -10,6 +10,8 @@ from edufinder.models import (
     Establishment,
     EstablishmentStatus,
     EstablishmentStatusChange,
+    Media,
+    MediaType,
     Submission,
     SubmissionStatus,
     SubmissionType,
@@ -256,6 +258,7 @@ def test_establishments_are_listed_whatever_their_status_with_their_owners(
             "city": "Douala",
             "type": "Secondaire",
             "sector": "Privé laïc",
+            "cover_url": None,
             "owners": ["Awa Manager", "Bob Co-manager"],
             "suspension_reason": None,
         },
@@ -266,12 +269,26 @@ def test_establishments_are_listed_whatever_their_status_with_their_owners(
             "city": "Douala",
             "type": "Secondaire",
             "sector": "Privé laïc",
+            "cover_url": None,
             "owners": [],
             "suspension_reason": None,
         },
     ]
     # Les coordonnées privées des responsables ne sortent pas, seulement leur nom.
     assert "example.com" not in response.content.decode()
+
+
+@pytest.mark.django_db
+def test_establishment_list_carries_the_first_image_as_cover(
+    client, log_in_as, super_admin, establishment
+):
+    Media.objects.create(establishment=establishment, type=MediaType.VIDEO, url="/media/a.mp4")
+    Media.objects.create(establishment=establishment, type=MediaType.IMAGE, url="/media/b.jpg")
+    log_in_as(super_admin)
+
+    response = client.get("/admin/establishments")
+
+    assert response.json()[0]["cover_url"] == "/media/b.jpg"
 
 
 @pytest.mark.django_db

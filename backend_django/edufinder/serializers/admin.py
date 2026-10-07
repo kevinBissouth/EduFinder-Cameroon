@@ -36,6 +36,8 @@ class AdminEstablishmentItemSerializer(serializers.Serializer):
     city = serializers.CharField(source="city.name")
     type = serializers.CharField(source="type.label")
     sector = serializers.CharField(source="sector.label")
+    # Première image de la fiche, pour illustrer sa carte ; vide sans image.
+    cover_url = serializers.CharField()
     owners = serializers.SerializerMethodField()
     suspension_reason = serializers.SerializerMethodField()
 
