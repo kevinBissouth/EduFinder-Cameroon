@@ -51,16 +51,6 @@ export function useManagerData() {
     return result
   }
 
-  // Traduction des erreurs API en message affichable dans le formulaire.
-  function extractServerErrorMessage(error) {
-    const detail = error?.response?.data?.detail
-    if (typeof detail === 'string') return detail
-    if (Array.isArray(detail)) {
-      return detail.map((item) => item.msg).join(' · ')
-    }
-    return 'Something went wrong. Please check your input and try again.'
-  }
-
   return {
     meta,
     metaError,
@@ -70,6 +60,5 @@ export function useManagerData() {
     refresh,
     submitCreationProposal,
     submitModificationProposal,
-    extractServerErrorMessage,
   }
 }

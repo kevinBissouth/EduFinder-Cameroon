@@ -1,108 +1,100 @@
-import { PencilLine, Loader2, Clock } from 'lucide-react'
+import { ArrowRight, Clock, MapPin, PencilLine, Plus } from 'lucide-react'
 
-import StatusBadge from './StatusBadge'
-import { PALETTES } from '../../constants'
+import Button from '../ui/Button'
+import PagedCards from '../workspace/PagedCards'
+import SchoolCover from '../workspace/SchoolCover'
+import ViewHero from '../workspace/ViewHero'
 
-// Même identité de couleur que les cartes publiques : hachage stable de
-// l'UUID -> palette dégradée, pour reconnaître une école au premier coup d'œil.
-function paletteOf(uuidValue) {
-  const hash = [...(uuidValue ?? '')].reduce(
-    (total, character) => total + character.charCodeAt(0),
-    0,
-  )
-  return PALETTES[hash % PALETTES.length]
+function describeSchoolCount(establishments) {
+  const publishedCount = establishments.filter(
+    (school) => school.establishment_status === 'published',
+  ).length
+  const schoolWord = establishments.length === 1 ? 'school' : 'schools'
+  return `You manage ${establishments.length} ${schoolWord}, ${publishedCount} visible to the public.`
 }
 
 function SchoolCard({ school, onOpenSchool, onProposeModification }) {
-  const [colorFrom, colorTo] = paletteOf(school.establishment_uuid)
+  const tags = [school.type, school.sector].filter(Boolean)
 
   return (
-    <div
-      onClick={() => onOpenSchool(school.establishment_uuid)}
-      className="group flex cursor-pointer flex-col overflow-hidden rounded-2xl border border-[#dcebe3] bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
-    >
-      {/* Bandeau identitaire avec monogramme */}
-      <div
-        className="relative flex h-20 items-end p-4"
-        style={{ background: `linear-gradient(135deg, ${colorFrom}, ${colorTo})` }}
-      >
-        <span className="font-display text-3xl font-bold text-white/90">
-          {school.name[0]}
-        </span>
-        <div className="absolute right-3 top-3">
-          <StatusBadge status={school.establishment_status} />
-        </div>
-      </div>
-
-      <div className="flex flex-1 flex-col justify-between gap-3 p-4">
-        <div>
-          <h3 className="font-display text-base font-bold leading-snug text-[#081220]">
-            {school.name}
-          </h3>
-          {school.has_pending_submission ? (
-            <p className="mt-1.5 inline-flex items-center gap-1.5 rounded-full bg-[#fdf3dd] px-2.5 py-1 text-[11px] font-semibold text-[#8a5b00]">
-              <Clock size={12} />
-              A proposal is awaiting review
-            </p>
-          ) : (
-            <p className="mt-1.5 text-xs text-gray-400">Up to date</p>
-          )}
-        </div>
-
-        <button
-          onClick={(event) => {
-            event.stopPropagation()
-            onProposeModification(school)
-          }}
-          disabled={school.has_pending_submission}
-          title={
-            school.has_pending_submission
-              ? 'Wait for the current review to finish'
-              : `Propose changes for ${school.name}`
-          }
-          className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-[#0d7a4f]/30 px-4 py-2 text-sm font-semibold text-[#0d7a4f] transition-colors hover:bg-[#e5f3ec] disabled:cursor-not-allowed disabled:opacity-40"
-        >
-          <PencilLine size={15} />
-          Propose modification
-        </button>
-      </div>
-    </div>
-  )
-}
-
-// Liste des fiches gérées par le responsable connecté.
-export default function SchoolList({ establishments, loading, onOpenSchool, onProposeModification }) {
-  if (loading) {
-    return (
-      <div className="flex items-center gap-2 py-10 text-sm text-[#4b5566]">
-        <Loader2 className="h-4 w-4 animate-spin" />
-        Loading your schools…
-      </div>
-    )
-  }
-
-  if (establishments.length === 0) {
-    return (
-      <div className="rounded-2xl border border-dashed border-[#b9d8c9] bg-[#f7fbf9] p-8 text-center">
-        <p className="font-display text-lg font-bold text-[#081220]">No school yet</p>
-        <p className="mt-1 text-sm text-[#4b5566]">
-          Propose your first school — an administrator will review it before it
-          goes public.
+    <li className="group flex h-full flex-col overflow-hidden rounded-panel border border-line bg-surface shadow-soft transition-shadow hover:shadow-raised">
+      <SchoolCover
+        name={school.name}
+        coverUrl={school.cover_url}
+        status={school.establishment_status}
+      />
+      <div className="flex flex-1 flex-col p-5">
+        <p className="flex items-center gap-1.5 text-sm font-medium text-navy">
+          <MapPin aria-hidden="true" className="size-4 shrink-0 text-primary" />
+          {school.city}
         </p>
+        <ul className="mt-3 flex flex-wrap gap-2">
+          {tags.map((tag) => (
+            <li
+              key={tag}
+              className="rounded-full bg-primary-soft px-3 py-1 text-xs font-semibold capitalize text-primary-deep"
+            >
+              {tag}
+            </li>
+          ))}
+        </ul>
+        {school.has_pending_submission && (
+          <p className="mt-3 flex items-center gap-1.5 rounded-control bg-warning-soft px-3 py-2 text-sm font-medium text-warning">
+            <Clock aria-hidden="true" className="size-4 shrink-0" />
+            Changes awaiting review
+          </p>
+        )}
+        <div className="mt-auto flex flex-wrap gap-2 pt-5">
+          <Button
+            className="flex-1"
+            aria-label={`Open ${school.name}`}
+            onClick={() => onOpenSchool(school.establishment_uuid)}
+          >
+            Open
+            <ArrowRight aria-hidden="true" className="size-4" />
+          </Button>
+          <Button
+            variant="secondary"
+            className="flex-1"
+            aria-label={`Propose changes to ${school.name}`}
+            onClick={() => onProposeModification(school)}
+          >
+            <PencilLine aria-hidden="true" className="size-4" />
+            Edit
+          </Button>
+        </div>
       </div>
-    )
-  }
-
-  return (
-    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-      {establishments.map((school) => (
-        <SchoolCard
-          key={school.establishment_uuid}
-          school={school}
-          onOpenSchool={onOpenSchool}
-          onProposeModification={onProposeModification}
-        />
-      ))}
-    </div>
+    </li>
   )
 }
+
+// Vue « Your schools » : le bandeau, puis une carte par établissement géré.
+function SchoolList({ establishments, onOpenSchool, onProposeModification, onCreateProposal }) {
+  return (
+    <>
+      <ViewHero
+        title="Your schools"
+        description={describeSchoolCount(establishments)}
+        action={
+          <Button variant="accent" className="w-full sm:w-auto" onClick={onCreateProposal}>
+            <Plus aria-hidden="true" className="size-4" />
+            Propose a school
+          </Button>
+        }
+      />
+      <PagedCards
+        items={establishments}
+        renderCard={(school) => (
+          <SchoolCard
+            key={school.establishment_uuid}
+            school={school}
+            onOpenSchool={onOpenSchool}
+            onProposeModification={onProposeModification}
+          />
+        )}
+      />
+    </>
+  )
+}
+
+export default SchoolList
