@@ -367,3 +367,26 @@ def test_invalid_filter_is_rejected_with_422(client, query_string, rejected_para
 @pytest.mark.django_db
 def test_unknown_parameter_is_ignored(client, catalog):
     assert len(search_names(client, "?unknown_filter=1")) == 3
+
+
+# MySQL ignore les accents et la casse dans la recherche ; SQLite (tests et
+# hébergement de démonstration) doit faire pareil, sinon « college » ne
+# trouverait plus aucun collège.
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "search_term", ["college", "COLLÈGE", "collége", "ecole", "École", "superieure"]
+)
+def test_name_search_ignores_accents_and_case(client, create_establishment, search_term):
+    create_establishment(name="Collège de l'École Supérieure")
+    create_establishment(name="Lycée Technique")
+
+    assert search_names(client, f"?q={search_term}") == ["Collège de l'École Supérieure"]
+
+
+@pytest.mark.django_db
+def test_name_search_treats_like_wildcards_as_plain_text(client, create_establishment):
+    create_establishment(name="100% Réussite")
+    create_establishment(name="Lycée Technique")
+
+    assert search_names(client, "?q=100%25") == ["100% Réussite"]
+    assert search_names(client, "?q=_") == []

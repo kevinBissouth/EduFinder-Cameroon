@@ -26,7 +26,12 @@ def _read_boolean(variable_name: str, default: bool = False) -> bool:
     return raw_value.strip().lower() in {"1", "true", "yes"}
 
 
+SQLITE_URL_PREFIX = "sqlite:///"
+
+
 def _parse_database_url(database_url: str) -> dict:
+    if database_url.startswith(SQLITE_URL_PREFIX):
+        return _build_sqlite_settings(database_url.removeprefix(SQLITE_URL_PREFIX))
     # L'URL est au format SQLAlchemy (mysql+pymysql://user:mdp@hote:port/base) ;
     # Django veut ces éléments séparés.
     parsed_url = urlparse(database_url)
@@ -38,6 +43,17 @@ def _parse_database_url(database_url: str) -> dict:
         "HOST": parsed_url.hostname or "localhost",
         "PORT": parsed_url.port or DEFAULT_MYSQL_PORT,
         "OPTIONS": {"charset": "utf8mb4"},
+    }
+
+
+# SQLite sert à l'hébergement de démonstration, là où MySQL n'est pas offert :
+# toute la base tient dans un fichier. Un chemin relatif part du dossier du
+# projet Django ; un chemin absolu s'écrit avec une quatrième barre oblique
+# (sqlite:////home/moi/base.sqlite3), comme dans la convention SQLAlchemy.
+def _build_sqlite_settings(database_path: str) -> dict:
+    return {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": BASE_DIR / database_path,
     }
 
 

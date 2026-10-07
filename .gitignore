@@ -9,3 +9,5 @@ dist/
 build/
 *.log
 .DS_Store
+# Base SQLite de l'hébergement de démonstration : elle contient des comptes.
+*.sqlite3
