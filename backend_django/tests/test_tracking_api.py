@@ -82,6 +82,53 @@ def test_forged_forwarded_header_does_not_bypass_deduplication(client, establish
     assert read_counters(establishment) == (1, 0)
 
 
+PROXY_ADDRESS = "10.0.0.1"
+
+
+@pytest.mark.django_db
+def test_behind_a_trusted_proxy_each_visitor_is_counted(client, establishment, settings):
+    settings.TRUSTED_PROXY_COUNT = 1
+
+    for visitor_address in (CLIENT_ADDRESS, OTHER_CLIENT_ADDRESS):
+        client.post(
+            f"/institutions/{establishment.uuid}/track-view",
+            REMOTE_ADDR=PROXY_ADDRESS,
+            HTTP_X_FORWARDED_FOR=visitor_address,
+        )
+
+    assert read_counters(establishment) == (2, 0)
+
+
+@pytest.mark.django_db
+def test_behind_a_trusted_proxy_a_forged_prefix_does_not_bypass_deduplication(
+    client, establishment, settings
+):
+    settings.TRUSTED_PROXY_COUNT = 1
+
+    for forged_address in ("198.51.100.1", "198.51.100.2", "198.51.100.3"):
+        # Le client écrit ce qu'il veut en tête ; le serveur de confiance
+        # ajoute à la fin l'adresse qu'il a réellement vue.
+        client.post(
+            f"/institutions/{establishment.uuid}/track-view",
+            REMOTE_ADDR=PROXY_ADDRESS,
+            HTTP_X_FORWARDED_FOR=f"{forged_address}, {CLIENT_ADDRESS}",
+        )
+
+    assert read_counters(establishment) == (1, 0)
+
+
+@pytest.mark.django_db
+def test_behind_a_trusted_proxy_a_missing_header_falls_back_to_the_connection(
+    client, establishment, settings
+):
+    settings.TRUSTED_PROXY_COUNT = 1
+
+    post_event(client, establishment, "track-view", CLIENT_ADDRESS)
+    post_event(client, establishment, "track-view", OTHER_CLIENT_ADDRESS)
+
+    assert read_counters(establishment) == (2, 0)
+
+
 @pytest.mark.django_db
 def test_client_is_counted_again_once_the_window_has_elapsed(
     client, establishment, monkeypatch

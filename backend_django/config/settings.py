@@ -102,6 +102,14 @@ COOKIE_SECURE = _read_boolean("COOKIE_SECURE")
 
 LOGIN_ATTEMPTS_RATE = "10/min"
 
+# Nombre de serveurs intermédiaires de confiance placés devant Django
+# (répartiteur de charge de l'hébergeur…). 0 en développement : l'adresse du
+# client est celle de la connexion. Derrière un hébergeur, Django ne voit que
+# l'adresse du dernier serveur ; ce nombre dit combien de crans remonter dans
+# X-Forwarded-For pour retrouver le vrai visiteur, sans croire ce que le
+# client a pu y écrire lui-même.
+TRUSTED_PROXY_COUNT = int(os.environ.get("TRUSTED_PROXY_COUNT", "0"))
+
 REST_FRAMEWORK = {
     "DEFAULT_RENDERER_CLASSES": ["rest_framework.renderers.JSONRenderer"],
     "DEFAULT_PARSER_CLASSES": ["rest_framework.parsers.JSONParser"],
@@ -110,9 +118,8 @@ REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [],
     "UNAUTHENTICATED_USER": None,
     "DEFAULT_THROTTLE_RATES": {"login": LOGIN_ATTEMPTS_RATE},
-    # 0 = l'adresse du client est celle de la connexion. Sans ce réglage, DRF
-    # croirait l'en-tête X-Forwarded-For, que le client peut forger pour
-    # contourner la limite de tentatives.
-    "NUM_PROXIES": 0,
+    # Sans ce réglage, DRF croirait tout l'en-tête X-Forwarded-For, que le
+    # client peut forger pour contourner la limite de tentatives.
+    "NUM_PROXIES": TRUSTED_PROXY_COUNT,
     "EXCEPTION_HANDLER": "edufinder.exception_handler.handle_api_exception",
 }
