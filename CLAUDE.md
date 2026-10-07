@@ -45,7 +45,7 @@ EduFinder-Cameroon/
 │   │   ├── schemas/          # Schémas Pydantic (institution.py, proposal.py, auth.py)
 │   │   └── services/         # Logique métier : data_rules (cohérence examens/langues),
 │   │                         #   proposals, validation, workflow, security
-│   ├── alembic/versions/     # Migrations (head : e5f6a7b8c9d0)
+│   ├── alembic/versions/     # Migrations (head : a1b2c3d4e5f7)
 │   ├── scripts/              # Scripts de données hors API (mots de passe, soumissions de démo)
 │   ├── tests/                # Tests pytest de l'API publique, responsable et admin
 │   │                         #   (SQLite en mémoire, la base MySQL de démo n'est jamais touchée)

@@ -22,6 +22,7 @@ from app.models import (
     UserEstablishment,
     ValidationDecision,
 )
+from app.services.suspension import get_suspension_reasons
 from app.services.workflow import ensure_transition
 
 
@@ -253,10 +254,12 @@ def _apply_content_on_establishment(
 def approve_submission(session: Session, admin_user: User, submission_uuid: str) -> tuple[Submission, Establishment]:
     submission = _get_pending_submission_or_error(session, submission_uuid)
     establishment = _apply_content_on_establishment(session, submission)
-
-
-    ensure_transition(establishment.status, EstablishmentStatus.published)
-    establishment.status = EstablishmentStatus.published
+    # Une fiche suspendue le reste après l'approbation d'une modification :
+    # seule une réactivation explicite du super admin peut la republier,
+    # sinon une approbation de routine lèverait la suspension sans décision.
+    if establishment.status != EstablishmentStatus.suspended:
+        ensure_transition(establishment.status, EstablishmentStatus.published)
+        establishment.status = EstablishmentStatus.published
     submission.status = SubmissionStatus.approved
     session.add(_build_decision(submission, admin_user, "approved", None))
     session.commit()
@@ -348,11 +351,23 @@ def list_all_establishments_with_owners(session: Session) -> list[dict]:
                 ownership_row.id_establishment, []
             ).append(user.name)
 
+    suspension_reasons = get_suspension_reasons(
+        session,
+        [
+            establishment.id_establishment
+            for establishment in establishments
+            if establishment.status == EstablishmentStatus.suspended
+        ],
+    )
+
     return [
         {
             "establishment_uuid": establishment.uuid,
             "name": establishment.name,
             "establishment_status": establishment.status.value,
+            "suspension_reason": suspension_reasons.get(
+                establishment.id_establishment
+            ),
             "city": establishment.city.name,
             "type": establishment.type.label,
             "sector": establishment.sector.label,

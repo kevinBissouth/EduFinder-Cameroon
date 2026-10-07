@@ -6,7 +6,12 @@ from sqlalchemy import JSON, Column, UniqueConstraint
 from sqlalchemy.orm import Mapped
 from sqlmodel import Field, Relationship, SQLModel
 
-from app.models.enums import DecisionStatus, SubmissionStatus, SubmissionType
+from app.models.enums import (
+    DecisionStatus,
+    EstablishmentStatus,
+    SubmissionStatus,
+    SubmissionType,
+)
 
 if TYPE_CHECKING:
     from app.models.establishment import Establishment
@@ -61,3 +66,21 @@ class ValidationDecision(SQLModel, table=True):
 
     submission: Mapped["Submission"] = Relationship(back_populates="decision")
     user: Mapped["User"] = Relationship(back_populates="decisions")
+
+
+# Historique des changements de statut décidés directement par un super_admin
+# (suspension, réactivation). Ces actions ne passent par aucune soumission,
+# donc validation_decision ne peut pas les porter : je les trace ici pour
+# savoir qui a fait quoi, quand et pourquoi.
+class EstablishmentStatusChange(SQLModel, table=True):
+    __tablename__ = "establishment_status_change"
+
+    id_status_change: int = Field(primary_key=True)
+    id_establishment: int = Field(foreign_key="establishment.id_establishment")
+    id_user: int = Field(foreign_key="user.id_user")
+    changed_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    previous_status: EstablishmentStatus
+    new_status: EstablishmentStatus
+    # Obligatoire pour une suspension (exigé par le schéma d'entrée), absent
+    # pour une réactivation.
+    reason: str | None = Field(default=None, max_length=500)

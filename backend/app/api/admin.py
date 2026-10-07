@@ -1,4 +1,5 @@
-"""Espace super-administrateur : liste, détail et décision des soumissions.
+"""Espace super-administrateur : décision des soumissions, suspension et
+réactivation des établissements.
 
 Uniquement accessible au rôle super_admin (require_admin), contrôlé côté
 serveur. Les décisions (approbation / refus) modifient l'état de la soumission
@@ -15,9 +16,16 @@ from app.models import Submission, SubmissionStatus, User
 from app.schemas.proposal import (
     AdminDecisionResponse,
     AdminEstablishmentItem,
+    AdminEstablishmentStatusResponse,
     AdminSubmissionDetail,
     AdminSubmissionItem,
     RejectionInput,
+    SuspensionInput,
+)
+from app.services.suspension import (
+    EstablishmentNotFoundError,
+    reactivate_establishment,
+    suspend_establishment,
 )
 from app.services.validation import (
     SubmissionNotPendingError,
@@ -61,6 +69,56 @@ def list_establishments_for_admin(
         AdminEstablishmentItem(**item)
         for item in list_all_establishments_with_owners(session)
     ]
+
+
+def _to_establishment_status_response(establishment) -> AdminEstablishmentStatusResponse:
+    return AdminEstablishmentStatusResponse(
+        establishment_uuid=establishment.uuid,
+        establishment_status=establishment.status.value,
+    )
+
+
+@admin_router.post(
+    "/admin/establishments/{establishment_uuid}/suspend",
+    response_model=AdminEstablishmentStatusResponse,
+)
+def suspend_establishment_endpoint(
+    establishment_uuid: str,
+    suspension_input: SuspensionInput,
+    session: Session = Depends(get_db),
+    current_user: User = Depends(require_admin),
+):
+    try:
+        establishment = suspend_establishment(
+            session, current_user, establishment_uuid, suspension_input.reason
+        )
+    except EstablishmentNotFoundError as error:
+        raise HTTPException(status_code=404, detail=str(error))
+    except ValueError as error:
+        # Seule une fiche publiée peut être suspendue : tout autre état de
+        # départ est un conflit d'état.
+        raise HTTPException(status_code=409, detail=str(error))
+    return _to_establishment_status_response(establishment)
+
+
+@admin_router.post(
+    "/admin/establishments/{establishment_uuid}/reactivate",
+    response_model=AdminEstablishmentStatusResponse,
+)
+def reactivate_establishment_endpoint(
+    establishment_uuid: str,
+    session: Session = Depends(get_db),
+    current_user: User = Depends(require_admin),
+):
+    try:
+        establishment = reactivate_establishment(
+            session, current_user, establishment_uuid
+        )
+    except EstablishmentNotFoundError as error:
+        raise HTTPException(status_code=404, detail=str(error))
+    except ValueError as error:
+        raise HTTPException(status_code=409, detail=str(error))
+    return _to_establishment_status_response(establishment)
 
 
 @admin_router.get("/admin/submissions/{submission_uuid}", response_model=AdminSubmissionDetail)

@@ -134,11 +134,20 @@ class ManagerSubmissionItem(BaseModel):
     content: dict = Field(default_factory=dict)
 
 
+# Motif saisi par le super admin : obligatoire et non vide pour un refus comme
+# pour une suspension, car le responsable doit pouvoir comprendre la décision.
+DecisionReason = Annotated[
+    str,
+    StringConstraints(strip_whitespace=True, min_length=3, max_length=500),
+]
+
+
 class RejectionInput(BaseModel):
-    reason: Annotated[
-        str,
-        StringConstraints(strip_whitespace=True, min_length=3, max_length=500),
-    ]
+    reason: DecisionReason
+
+
+class SuspensionInput(BaseModel):
+    reason: DecisionReason
 
 
 class AdminSubmissionItem(BaseModel):
@@ -172,3 +181,10 @@ class AdminEstablishmentItem(BaseModel):
     type: str | None = None
     sector: str | None = None
     owners: list[str] = Field(default_factory=list)
+    # Renseigné uniquement pour un établissement actuellement suspendu.
+    suspension_reason: str | None = None
+
+
+class AdminEstablishmentStatusResponse(BaseModel):
+    establishment_uuid: str
+    establishment_status: str

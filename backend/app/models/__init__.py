@@ -31,7 +31,11 @@ from app.models.establishment import (
     Service,
     UserEstablishment,
 )
-from app.models.submission import Submission, ValidationDecision
+from app.models.submission import (
+    EstablishmentStatusChange,
+    Submission,
+    ValidationDecision,
+)
 
 __all__ = [
     "SQLModel",
@@ -60,6 +64,7 @@ __all__ = [
     "SchoolFeePaymentMethod",
     "Service",
     "UserEstablishment",
+    "EstablishmentStatusChange",
     "Submission",
     "ValidationDecision",
 ]
