@@ -1,26 +1,50 @@
-// Constantes et utilitaires partagés par les sections de la fiche établissement.
-export const SHADOW_SOFT = 'shadow-[0_2px_12px_rgba(11,122,98,0.04)]'
-export const SHADOW_1 = 'shadow-[0_4px_24px_rgba(11,122,98,0.06)]'
-export const SHADOW_2 = 'shadow-[0_12px_32px_rgba(11,122,98,0.08)]'
+// Utilitaires partagés par les sections de la fiche d'établissement.
 
-export const TABS = [
-  { id: 'overview', label: 'Overview' },
-  { id: 'fees', label: 'Fees' },
-  { id: 'programs', label: 'Programs' },
-  { id: 'results', label: 'Results' },
-  { id: 'services', label: 'Services' },
-  { id: 'contact', label: 'Contact' },
-]
+const URL_SCHEME_PATTERN = /^([a-z][a-z0-9+.-]*):/i
+const SAFE_SCHEMES = ['http', 'https']
 
-export const compactFcfa = (amount) =>
-  `${new Intl.NumberFormat('en-US', { notation: 'compact', maximumFractionDigits: 1 }).format(amount)} FCFA`
+// Beaucoup de sites sont saisis sans schéma (« www.ecole.cm ») : tel quel, le
+// navigateur en ferait un lien relatif cassé. Tout schéma autre que http(s)
+// est refusé, pour qu'une adresse comme « javascript: » ne devienne jamais un
+// lien cliquable.
+export function toExternalUrl(website) {
+  const trimmedWebsite = (website ?? '').trim()
+  if (!trimmedWebsite) return null
+  const matchedScheme = trimmedWebsite.match(URL_SCHEME_PATTERN)
+  if (!matchedScheme) return `https://${trimmedWebsite}`
+  return SAFE_SCHEMES.includes(matchedScheme[1].toLowerCase()) ? trimmedWebsite : null
+}
 
+// Lien de prise de contact : l'e-mail d'abord (avec un objet prérempli), le
+// téléphone à défaut.
+export function buildContactHref({ name, contact_email: contactEmail, phone }) {
+  if (contactEmail) {
+    return `mailto:${contactEmail}?subject=${encodeURIComponent(`Admission enquiry: ${name}`)}`
+  }
+  return phone ? `tel:${phone}` : null
+}
+
+// Années scolaires de la plus récente à la plus ancienne, chacune avec ses frais.
 export function groupFeesByYear(fees) {
-  const groups = new Map()
+  const feesBySchoolYear = new Map()
   fees.forEach((fee) => {
-    const schoolYear = fee.school_year || '—'
-    if (!groups.has(schoolYear)) groups.set(schoolYear, [])
-    groups.get(schoolYear).push(fee)
+    feesBySchoolYear.set(fee.school_year, [...(feesBySchoolYear.get(fee.school_year) ?? []), fee])
   })
-  return [...groups.entries()]
+  return [...feesBySchoolYear.entries()].sort(([firstYear], [secondYear]) =>
+    secondYear.localeCompare(firstYear),
+  )
+}
+
+// Dernier résultat publié de chaque examen (session la plus récente).
+export function listLatestExamResults(examResults) {
+  const latestResultByExam = new Map()
+  examResults.forEach((examResult) => {
+    const knownResult = latestResultByExam.get(examResult.exam)
+    if (!knownResult || Number(examResult.session) > Number(knownResult.session)) {
+      latestResultByExam.set(examResult.exam, examResult)
+    }
+  })
+  return [...latestResultByExam.values()].sort(
+    (firstResult, secondResult) => Number(secondResult.pass_rate) - Number(firstResult.pass_rate),
+  )
 }

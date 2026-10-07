@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import axios from 'axios'
 
 import { API_URL } from '../constants'
+import { trackInstitutionEvent } from '../utils/tracking'
 
 // Chargement de la fiche d'un établissement ; l'annulation évite qu'une
 // réponse tardive d'une école précédente écrase la fiche courante. Sans
@@ -24,6 +25,7 @@ export function useSchoolProfile(schoolId) {
         if (cancelled) return
         setInstitution(response.data)
         setStatus('success')
+        trackInstitutionEvent(schoolId, 'view')
       })
       .catch(() => {
         if (!cancelled) setStatus('error')

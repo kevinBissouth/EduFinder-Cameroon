@@ -1,3 +1,7 @@
+export function navigateToHome() {
+  window.location.hash = '#/'
+}
+
 // Routage minimal pour la page publique d'un établissement.
 export function navigateToSchool(id) {
   window.location.hash = `/school/${id}`

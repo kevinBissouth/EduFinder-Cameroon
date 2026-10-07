@@ -1,140 +1,99 @@
-import { API_URL } from '../constants'
-import { AlertIcon } from '../components/icons'
-import { useSchoolProfile } from '../hooks/useSchoolProfile'
-import useFiltersMeta from '../hooks/useFiltersMeta'
-import ProfileCover from '../components/school-profile/ProfileCover'
-import LeadershipSection from '../components/school-profile/LeadershipSection'
-import OverviewSection from '../components/school-profile/OverviewSection'
-import FeesSection from '../components/school-profile/FeesSection'
-import ProgramsSection from '../components/school-profile/ProgramsSection'
-import ServicesSection from '../components/school-profile/ServicesSection'
-import ExamResultsSection from '../components/school-profile/ExamResultsSection'
-import ContactSection from '../components/school-profile/ContactSection'
-import InterestCta from '../components/school-profile/InterestCta'
-import QuickFactsSidebar from '../components/school-profile/QuickFactsSidebar'
-import GallerySection from '../components/school-profile/GallerySection'
-import Header from '../components/Header'
+import { SearchX } from 'lucide-react'
+
 import Footer from '../components/Footer'
+import Header from '../components/Header'
+import ExamResultsSection from '../components/school-profile/ExamResultsSection'
+import FeesSection from '../components/school-profile/FeesSection'
+import GallerySection from '../components/school-profile/GallerySection'
+import KeyFacts from '../components/school-profile/KeyFacts'
+import LeadershipSection from '../components/school-profile/LeadershipSection'
+import LocationSection from '../components/school-profile/LocationSection'
+import OfferSection from '../components/school-profile/OfferSection'
+import OverviewSection from '../components/school-profile/OverviewSection'
+import ProfileCta from '../components/school-profile/ProfileCta'
+import ProfileHero from '../components/school-profile/ProfileHero'
+import QuestionsSection from '../components/school-profile/QuestionsSection'
+import SectionNav from '../components/school-profile/SectionNav'
+import Container from '../components/ui/Container'
+import StateMessage from '../components/ui/StateMessage'
+import { useSchoolProfile } from '../hooks/useSchoolProfile'
+import { navigateToHome } from '../routes'
 
-// Fiche publique d'un établissement : composition des sections du dossier
-// school-profile/, alimentées par le détail renvoyé par /institutions/{uuid}.
-function SchoolProfilePage({ schoolId }) {
-  const { institution, status } = useSchoolProfile(schoolId)
-  const { meta } = useFiltersMeta()
+const PAGE_CLASSES = 'min-h-screen overflow-x-clip bg-paper font-sans text-ink'
 
-  if (status === 'loading') {
-    return (
-      <div className="min-h-screen bg-[#f6faf8]">
-        <Header />
-        <p className="py-24 text-center text-sm text-[#8a90a0]">
-          Loading establishment profile…
-        </p>
-        <Footer types={meta.types} />
-      </div>
-    )
-  }
+// Onglets de la fiche : seules les sections qui ont un contenu y figurent.
+function listSections(institution) {
+  const hasOffer = institution.programs.length > 0 || institution.services.length > 0
+  return [
+    { id: 'overview', label: 'Overview' },
+    institution.fees.length > 0 && { id: 'fees', label: 'Fees' },
+    institution.exam_results.length > 0 && { id: 'results', label: 'Exam results' },
+    hasOffer && { id: 'offer', label: 'Programs and services' },
+    institution.media.length > 0 && { id: 'gallery', label: 'Gallery' },
+    { id: 'contact', label: 'Location and contact' },
+  ].filter(Boolean)
+}
 
-  if (status === 'error' || !institution) {
-    return (
-      <div className="min-h-screen bg-[#f6faf8]">
-        <Header />
-        <div className="mx-auto max-w-[1390px] px-4 py-16 sm:px-6 lg:px-[70px]">
-          <div className="rounded-2xl border border-[#fecaca] bg-white p-12 text-center">
-            <AlertIcon className="mx-auto h-14 w-14 text-[#dc2626]" />
-            <h2 className="mt-4 font-display text-2xl text-[#081220]">
-              Establishment not found
-            </h2>
-            <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-[#4b5566]">
-              We couldn't find this establishment. It may not be published
-              anymore, or the link is incorrect.
-            </p>
-            <a
-              href="#/"
-              className="mt-6 inline-flex items-center rounded-xl bg-gradient-to-r from-[#0d7a4f] to-[#0a5e3d] px-6 py-3 text-sm font-semibold text-white transition-all hover:-translate-y-0.5"
-            >
-              Back to search
-            </a>
-          </div>
-        </div>
-        <Footer types={meta.types} />
-      </div>
-    )
-  }
-
-  const locationText = [institution.city, institution.region].filter(Boolean).join(' · ')
-  const imageMedia = (institution.media || []).filter(
-    (mediaItem) => mediaItem.type === 'image',
+function ProfileSkeleton() {
+  return (
+    <Container className="animate-pulse py-12" aria-busy="true" aria-label="Loading the school profile">
+      <div className="h-4 w-48 rounded-full bg-muted" />
+      <div className="mt-8 h-12 w-2/3 rounded-control bg-muted" />
+      <div className="mt-4 h-5 w-1/3 rounded-control bg-muted" />
+      <div className="mt-8 h-24 max-w-xl rounded-control bg-muted" />
+      <div className="mt-12 h-20 rounded-panel bg-muted" />
+    </Container>
   )
-  // L'emblème et la couverture reprennent la première photo publiée : il
-  // n'existe pas de logo dédié en base, on ne fabrique pas de ressource.
-  const logoUrl = imageMedia.length > 0 ? `${API_URL}${imageMedia[0].url}` : null
-  const coverUrl = imageMedia.length > 0 ? `${API_URL}${imageMedia[0].url}` : null
-  const minFee = institution.fees?.length
-    ? Math.min(...institution.fees.map((fee) => Number(fee.amount)))
-    : null
+}
+
+function ProfileNotFound() {
+  return (
+    <Container className="py-16">
+      <StateMessage
+        icon={SearchX}
+        title="This school could not be found"
+        description="It may not be published anymore, or the link may be incorrect."
+        actionLabel="Back to all schools"
+        onAction={navigateToHome}
+      />
+    </Container>
+  )
+}
+
+function ProfileContent({ institution }) {
+  const coverUrl = institution.media.find((media) => media.type === 'image')?.url ?? null
 
   return (
-    <div className="min-h-screen bg-[#f6faf8]">
-      <Header
-        types={meta.types}
-        featuredTypeIds={meta.featured_type_ids}
-      />
+    <>
+      <ProfileHero institution={institution} coverUrl={coverUrl} />
+      <KeyFacts institution={institution} />
+      <SectionNav sections={listSections(institution)} />
+      <OverviewSection institution={institution} />
+      <LeadershipSection institution={institution} />
+      <FeesSection fees={institution.fees} />
+      <ExamResultsSection examResults={institution.exam_results} />
+      <OfferSection programs={institution.programs} services={institution.services} />
+      <GallerySection media={institution.media} />
+      <LocationSection institution={institution} />
+      <QuestionsSection institution={institution} />
+      <ProfileCta />
+    </>
+  )
+}
 
-      <ProfileCover
-        name={institution.name}
-        type={institution.type}
-        sector={institution.sector}
-        linguisticSection={institution.linguistic_section}
-        phone={institution.phone}
-        website={institution.website}
-        logoUrl={logoUrl}
-        coverUrl={coverUrl}
-      />
+// Fiche publique d'un établissement, alimentée par /institutions/{uuid}.
+function SchoolProfilePage({ schoolId }) {
+  const { institution, status } = useSchoolProfile(schoolId)
 
-      <main className="mx-auto max-w-[1390px] px-4 py-12 sm:px-6 lg:px-[70px]">
-        <div className="grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,1fr)_340px]">
-          <div className="space-y-12">
-            <LeadershipSection
-              directorName={institution.director_name}
-              directorTitle={institution.director_title}
-              directorBio={institution.director_bio}
-              directorPhotoUrl={institution.director_photo_url}
-            />
-            <OverviewSection description={institution.description} />
-            <ProgramsSection programs={institution.programs || []} />
-            <FeesSection fees={institution.fees || []} />
-            <ExamResultsSection examResults={institution.exam_results || []} />
-            <ServicesSection services={institution.services || []} />
-            <GallerySection media={institution.media || []} />
-            <ContactSection
-              address={institution.address}
-              phone={institution.phone}
-              contactEmail={institution.contact_email}
-              website={institution.website}
-            />
-          </div>
-
-          <aside className="space-y-6 lg:sticky lg:top-28 lg:self-start">
-            <QuickFactsSidebar
-              type={institution.type}
-              sector={institution.sector}
-              linguisticSection={institution.linguistic_section}
-              locationText={locationText}
-              minFee={minFee}
-              programCount={institution.programs?.length ?? 0}
-              serviceCount={institution.services?.length ?? 0}
-              photoCount={imageMedia.length}
-            />
-            <InterestCta
-              name={institution.name}
-              phone={institution.phone}
-              contactEmail={institution.contact_email}
-            />
-          </aside>
-        </div>
+  return (
+    <div className={PAGE_CLASSES}>
+      <Header />
+      <main>
+        {status === 'loading' && <ProfileSkeleton />}
+        {status === 'error' && <ProfileNotFound />}
+        {status === 'success' && institution && <ProfileContent institution={institution} />}
       </main>
-
-      <Footer types={meta.types} />
+      <Footer />
     </div>
   )
 }

@@ -1,54 +1,61 @@
+import { useState } from 'react'
+
+import Container from '../ui/Container'
+import { Eyebrow } from '../ui/SectionHeading'
 import { API_URL } from '../../constants'
 
-// Responsable de l'établissement (directeur / proviseur) : présenté comme une
-// courte bio, distinct du compte du gestionnaire. Masqué si aucune donnée.
-function initialsOf(fullName) {
-  if (!fullName) return '—'
-  return fullName
+function buildInitials(name) {
+  return name
     .split(/\s+/)
-    .filter(Boolean)
+    .filter((word) => /^\p{L}/u.test(word) && !word.endsWith('.'))
     .slice(0, 2)
     .map((word) => word[0].toUpperCase())
     .join('')
 }
 
-function LeadershipSection({ directorName, directorTitle, directorBio, directorPhotoUrl }) {
-  if (!directorName && !directorTitle && !directorBio && !directorPhotoUrl) return null
+function DirectorPortrait({ name, photoUrl }) {
+  const [hasPhotoFailed, setHasPhotoFailed] = useState(false)
 
-  const photoSrc = directorPhotoUrl ? `${API_URL}${directorPhotoUrl}` : null
+  if (!photoUrl || hasPhotoFailed) {
+    return (
+      <span
+        aria-hidden="true"
+        className="flex size-28 shrink-0 items-center justify-center rounded-panel bg-navy font-display text-3xl text-white"
+      >
+        {buildInitials(name)}
+      </span>
+    )
+  }
 
   return (
-    <section id="leadership" className="scroll-mt-40">
-      <h2 className="font-display text-3xl text-[#081220]">Leadership</h2>
-      <div className="mt-6 flex flex-col gap-5 rounded-2xl border border-[#e7ece9] bg-gradient-to-b from-[#f7fbf9] to-white p-6 sm:flex-row sm:items-center">
-        {photoSrc ? (
-          <img
-            src={photoSrc}
-            alt={directorName || 'Director'}
-            className="h-20 w-20 shrink-0 rounded-full border-4 border-white object-cover shadow-[0_6px_18px_rgba(13,122,79,0.18)]"
-            onError={(event) => {
-              event.currentTarget.style.display = 'none'
-            }}
-          />
-        ) : (
-          <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-[#0d7a4f] text-xl font-bold text-white">
-            {initialsOf(directorName)}
-          </div>
-        )}
+    <img
+      src={`${API_URL}${photoUrl}`}
+      alt={name}
+      onError={() => setHasPhotoFailed(true)}
+      className="size-28 shrink-0 rounded-panel object-cover shadow-soft"
+    />
+  )
+}
+
+// La personne qui dirige l'établissement, distincte du compte qui gère la fiche.
+function LeadershipSection({ institution }) {
+  if (!institution.director_name) return null
+
+  return (
+    <section className="border-y border-line bg-paper py-12 sm:py-16">
+      <Container className="flex flex-col gap-6 sm:flex-row sm:items-center sm:gap-8">
+        <DirectorPortrait name={institution.director_name} photoUrl={institution.director_photo_url} />
         <div>
-          {directorName && (
-            <p className="text-lg font-semibold text-[#081220]">{directorName}</p>
+          <Eyebrow>Leadership</Eyebrow>
+          <p className="mt-3 font-display text-2xl text-navy sm:text-3xl">{institution.director_name}</p>
+          {institution.director_title && (
+            <p className="mt-1 text-sm font-semibold text-ink-soft">{institution.director_title}</p>
           )}
-          {directorTitle && (
-            <p className="text-sm text-[#5b6670]">{directorTitle}</p>
-          )}
-          {directorBio && (
-            <p className="mt-3 whitespace-pre-line text-[15px] leading-7 text-[#343a44]">
-              {directorBio}
-            </p>
+          {institution.director_bio && (
+            <p className="mt-3 max-w-[70ch] text-pretty text-base text-ink">{institution.director_bio}</p>
           )}
         </div>
-      </div>
+      </Container>
     </section>
   )
 }

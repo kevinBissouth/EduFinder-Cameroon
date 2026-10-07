@@ -1,41 +1,94 @@
 import { useState } from 'react'
 
-import { ChevronDownIcon } from '../icons'
+import ContactCard from './ContactCard'
+import Container from '../ui/Container'
+import SectionHeading, { Emphasis } from '../ui/SectionHeading'
 
-// Description de l'établissement avec repli « Read more » au-delà de 260 caractères.
-function OverviewSection({ description }) {
+// Au-delà de cette longueur, la description est repliée derrière « Read more ».
+const LONG_DESCRIPTION_LENGTH = 420
+
+function Description({ description }) {
   const [isExpanded, setIsExpanded] = useState(false)
+  const isLong = description.length > LONG_DESCRIPTION_LENGTH
 
   return (
-    <section id="overview" className="scroll-mt-40">
-      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#0d7a4f]">
-        Presentation
+    <>
+      <p
+        className={`mt-5 whitespace-pre-line text-pretty text-base text-ink ${
+          isLong && !isExpanded ? 'line-clamp-6' : ''
+        }`}
+      >
+        {description}
       </p>
-      <h2 className="mt-2 font-display text-3xl text-[#081220]">About the institution</h2>
-      {description && (
-        <>
-          <p
-            className={`mt-6 max-w-3xl whitespace-pre-line text-[17px] leading-[2] text-[#3a4250] ${
-              !isExpanded ? 'line-clamp-3' : ''
-            }`}
-          >
-            {description}
-          </p>
-          {description.length > 260 && (
-            <button
-              onClick={() => setIsExpanded((value) => !value)}
-              className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-[#0d7a4f] transition-colors hover:text-[#0a5e3d]"
-            >
-              {isExpanded ? 'Show less' : 'Read more'}
-              <ChevronDownIcon
-                className={`h-4 w-4 transition-transform duration-300 ${
-                  isExpanded ? 'rotate-180' : ''
-                }`}
-              />
-            </button>
-          )}
-        </>
+      {isLong && (
+        <button
+          type="button"
+          aria-expanded={isExpanded}
+          onClick={() => setIsExpanded(!isExpanded)}
+          className="mt-2 inline-flex h-11 cursor-pointer items-center rounded-control text-sm font-semibold text-primary-deep transition-colors hover:text-primary"
+        >
+          {isExpanded ? 'Show less' : 'Read the full presentation'}
+        </button>
       )}
+    </>
+  )
+}
+
+function countDistinct(values) {
+  return new Set(values).size
+}
+
+// Repères chiffrés de la fiche, sans répéter la barre de faits clés.
+function listLandmarks(institution) {
+  const photoCount = (institution.media ?? []).filter((media) => media.type === 'image').length
+  return [
+    { label: 'Location', value: [institution.city, institution.region].filter(Boolean).join(', ') },
+    { label: 'Programs offered', value: institution.programs?.length || null },
+    { label: 'Services on site', value: institution.services?.length || null },
+    {
+      label: 'Exam sessions published',
+      value: countDistinct((institution.exam_results ?? []).map((result) => result.session)) || null,
+    },
+    { label: 'Photos', value: photoCount || null },
+  ].filter((landmark) => landmark.value)
+}
+
+function OverviewSection({ institution }) {
+  return (
+    <section id="overview" className="scroll-mt-36 bg-surface py-16 sm:py-20">
+      <Container className="grid gap-12 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.8fr)_minmax(0,0.9fr)] lg:gap-12">
+        <div>
+          <SectionHeading
+            size="md"
+            eyebrow="At a glance"
+            title={
+              <>
+                What to know <Emphasis>before</Emphasis> you visit.
+              </>
+            }
+          />
+          {institution.description ? (
+            <Description description={institution.description} />
+          ) : (
+            <p className="mt-5 text-base text-ink-soft">
+              This school has not published a presentation yet.
+            </p>
+          )}
+        </div>
+
+        <dl className="divide-y divide-line border-y border-line self-start">
+          {listLandmarks(institution).map((landmark) => (
+            <div key={landmark.label} className="py-4">
+              <dt className="text-xs text-ink-soft">{landmark.label}</dt>
+              <dd className="mt-0.5 text-sm font-bold tabular-nums text-navy">{landmark.value}</dd>
+            </div>
+          ))}
+        </dl>
+
+        <div className="self-start">
+          <ContactCard institution={institution} />
+        </div>
+      </Container>
     </section>
   )
 }

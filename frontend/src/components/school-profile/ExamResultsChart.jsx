@@ -1,203 +1,148 @@
-import { useEffect, useState } from 'react'
+const CHART_WIDTH = 640
+const CHART_HEIGHT = 280
+const MARGIN = { top: 12, right: 16, bottom: 32, left: 40 }
+const PLOT_WIDTH = CHART_WIDTH - MARGIN.left - MARGIN.right
+const PLOT_HEIGHT = CHART_HEIGHT - MARGIN.top - MARGIN.bottom
+const GRADUATION_COUNT = 4
+const RATE_STEP = 10
+// Plage minimale de l'axe des taux, pour qu'une série presque plate ne
+// paraisse pas varier fortement.
+const MINIMUM_RATE_SPAN = 20
+// Une couleur par examen, dans l'ordre des couleurs de graphique du thème.
+const SERIES_STYLES = [
+  { stroke: 'stroke-primary', fill: 'fill-primary', dot: 'bg-primary' },
+  { stroke: 'stroke-violet', fill: 'fill-violet', dot: 'bg-violet' },
+  { stroke: 'stroke-accent', fill: 'fill-accent', dot: 'bg-accent' },
+  { stroke: 'stroke-primary-deep', fill: 'fill-primary-deep', dot: 'bg-primary-deep' },
+  { stroke: 'stroke-ink-soft', fill: 'fill-ink-soft', dot: 'bg-ink-soft' },
+]
 
-import { useInView } from '../../hooks/useInView'
-
-// Palette de courbes, dans la charte vert/doré + accents vifs pour rester lisible.
-const PALETTE = ['#0d7a4f', '#d9a406', '#0e7490', '#7c3aed', '#0ea5e9', '#db2777', '#65a30d', '#ea580c']
-
-// Convertit une liste de points [x, y] en chemin SVG lissé (Catmull-Rom -> Bézier)
-// pour un rendu organique plutôt que des segments anguleux.
-function smoothPath(points) {
-  if (points.length === 0) return ''
-  if (points.length === 1) return `M ${points[0][0]} ${points[0][1]}`
-  let path = `M ${points[0][0].toFixed(1)} ${points[0][1].toFixed(1)}`
-  for (let i = 0; i < points.length - 1; i++) {
-    const p0 = points[i - 1] || points[i]
-    const p1 = points[i]
-    const p2 = points[i + 1]
-    const p3 = points[i + 2] || p2
-    const cp1x = p1[0] + (p2[0] - p0[0]) / 6
-    const cp1y = p1[1] + (p2[1] - p0[1]) / 6
-    const cp2x = p2[0] - (p3[0] - p1[0]) / 6
-    const cp2y = p2[1] - (p3[1] - p1[1]) / 6
-    path += ` C ${cp1x.toFixed(1)} ${cp1y.toFixed(1)}, ${cp2x.toFixed(1)} ${cp2y.toFixed(1)}, ${p2[0].toFixed(1)} ${p2[1].toFixed(1)}`
-  }
-  return path
+function listSessions(examResults) {
+  return [...new Set(examResults.map((examResult) => examResult.session))].sort(
+    (firstSession, secondSession) => Number(firstSession) - Number(secondSession),
+  )
 }
 
-// Graphe cartésien d'évolution des taux de réussite par session : axes X (session)
-// et Y (taux %), une courbe lissée par examen, historique non écrasé. SVG natif.
-function ExamResultsChart({ examResults = [] }) {
-  const [wrapRef, inView] = useInView(0.15)
-  const [drawn, setDrawn] = useState(false)
-  const [hovered, setHovered] = useState(null)
-  useEffect(() => {
-    if (inView) setDrawn(true)
-  }, [inView])
-
-  const sessions = [...new Set(examResults.map((result) => result.session))].sort((a, b) => {
-    const na = Number(a)
-    const nb = Number(b)
-    if (!Number.isNaN(na) && !Number.isNaN(nb)) return na - nb
-    return String(a).localeCompare(String(b))
-  })
-
-  const byExam = {}
-  for (const result of examResults) {
-    ;(byExam[result.exam] ||= []).push(result)
+// L'axe des taux se cale sur la plage réelle des données, arrondie à la
+// dizaine : sur une échelle fixe de 0 à 100, des taux voisins se superposent.
+function buildRateScale(examResults) {
+  const rates = examResults.map((examResult) => Number(examResult.pass_rate))
+  let lowestRate = Math.floor(Math.min(...rates) / RATE_STEP) * RATE_STEP
+  let highestRate = Math.ceil(Math.max(...rates) / RATE_STEP) * RATE_STEP
+  if (highestRate - lowestRate < MINIMUM_RATE_SPAN) {
+    highestRate = Math.min(100, lowestRate + MINIMUM_RATE_SPAN)
+    lowestRate = highestRate - MINIMUM_RATE_SPAN
   }
-  const series = Object.keys(byExam).map((exam, index) => ({
+  const graduationStep = (highestRate - lowestRate) / GRADUATION_COUNT
+  return {
+    lowestRate,
+    highestRate,
+    graduations: Array.from(
+      { length: GRADUATION_COUNT + 1 },
+      (_, index) => lowestRate + index * graduationStep,
+    ),
+  }
+}
+
+// Une série par examen, ses points rangés par session croissante.
+function buildSeries(examResults, sessions) {
+  const exams = [...new Set(examResults.map((examResult) => examResult.exam))]
+  return exams.map((exam, index) => ({
     exam,
-    color: PALETTE[index % PALETTE.length],
-    points: byExam[exam]
-      .slice()
-      .sort((a, b) => sessions.indexOf(a.session) - sessions.indexOf(b.session))
-      .map((result) => ({ session: result.session, rate: Number(result.pass_rate) })),
+    style: SERIES_STYLES[index % SERIES_STYLES.length],
+    points: examResults
+      .filter((examResult) => examResult.exam === exam)
+      .map((examResult) => ({
+        session: examResult.session,
+        rate: Number(examResult.pass_rate),
+        sessionIndex: sessions.indexOf(examResult.session),
+      }))
+      .sort((firstPoint, secondPoint) => firstPoint.sessionIndex - secondPoint.sessionIndex),
   }))
+}
 
-  if (sessions.length === 0) return null
+function ChartGrid({ sessions, graduations, xOfSession, yOfRate }) {
+  return (
+    <>
+      {graduations.map((rate) => (
+        <g key={rate}>
+          <line
+            x1={MARGIN.left}
+            x2={CHART_WIDTH - MARGIN.right}
+            y1={yOfRate(rate)}
+            y2={yOfRate(rate)}
+            className="stroke-line"
+          />
+          <text x={MARGIN.left - 8} y={yOfRate(rate)} textAnchor="end" dominantBaseline="middle" className="fill-ink-soft text-xs">
+            {rate}%
+          </text>
+        </g>
+      ))}
+      {sessions.map((session, sessionIndex) => (
+        <text key={session} x={xOfSession(sessionIndex)} y={CHART_HEIGHT - 8} textAnchor="middle" className="fill-ink-soft text-xs">
+          {session}
+        </text>
+      ))}
+    </>
+  )
+}
 
-  const W = 780
-  const H = 400
-  const PL = 54
-  const PR = 20
-  const PT = 24
-  const PB = 56
-  const iw = W - PL - PR
-  const ih = H - PT - PB
-  const xAt = (i) => PL + (sessions.length === 1 ? iw / 2 : (iw * i) / (sessions.length - 1))
-  const yAt = (value) => PT + ih * (1 - value / 100)
-  const baseY = yAt(0)
-  const gridValues = [0, 20, 40, 60, 80, 100]
+function SeriesLine({ series, xOfSession, yOfRate }) {
+  const linePoints = series.points
+    .map((point) => `${xOfSession(point.sessionIndex)},${yOfRate(point.rate)}`)
+    .join(' ')
 
   return (
-    <div ref={wrapRef} className="relative overflow-hidden rounded-2xl border border-[#e7ece9] bg-gradient-to-b from-white to-[#f4faf6] p-5 shadow-[0_10px_34px_rgba(13,122,79,0.10)]">
-      <svg viewBox={`0 0 ${W} ${H}`} className="w-full" role="img" aria-label="Exam pass rate by session">
-        <defs>
-          {series.map((s, i) => (
-            <linearGradient key={s.exam} id={`area-${i}`} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor={s.color} stopOpacity="0.28" />
-              <stop offset="100%" stopColor={s.color} stopOpacity="0.02" />
-            </linearGradient>
-          ))}
-          <filter id="lineGlow" x="-20%" y="-20%" width="140%" height="140%">
-            <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="#0d7a4f" floodOpacity="0.18" />
-          </filter>
-        </defs>
+    <g>
+      <polyline points={linePoints} fill="none" strokeWidth="2" strokeLinejoin="round" className={series.style.stroke} />
+      {series.points.map((point) => (
+        <circle key={point.session} cx={xOfSession(point.sessionIndex)} cy={yOfRate(point.rate)} r="3.5" className={`${series.style.fill} stroke-surface`} strokeWidth="1.5">
+          <title>{`${series.exam}, ${point.session}: ${point.rate}%`}</title>
+        </circle>
+      ))}
+    </g>
+  )
+}
 
-        {/* Grille horizontale + étiquettes Y */}
-        {gridValues.map((value) => (
-          <g key={value}>
-            <line x1={PL} y1={yAt(value)} x2={W - PR} y2={yAt(value)} stroke="#eaf0ed" strokeWidth="1" />
-            <text x={PL - 10} y={yAt(value) + 4} textAnchor="end" className="fill-[#8a90a0] text-[11px]">
-              {value}
-            </text>
-          </g>
+// Évolution des taux de réussite, session après session, une courbe par
+// examen. La légende nomme chaque courbe : l'information ne repose pas sur la
+// seule couleur.
+function ExamResultsChart({ examResults = [] }) {
+  const sessions = listSessions(examResults)
+  if (sessions.length === 0) return null
+
+  const series = buildSeries(examResults, sessions)
+  const xOfSession = (sessionIndex) =>
+    MARGIN.left + (sessions.length === 1 ? PLOT_WIDTH / 2 : (PLOT_WIDTH * sessionIndex) / (sessions.length - 1))
+  const rateScale = buildRateScale(examResults)
+  const yOfRate = (rate) =>
+    MARGIN.top +
+    PLOT_HEIGHT * (1 - (rate - rateScale.lowestRate) / (rateScale.highestRate - rateScale.lowestRate))
+
+  return (
+    <figure>
+      <svg viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`} role="img" aria-label="Pass rate by exam and by session" className="w-full">
+        <ChartGrid
+          sessions={sessions}
+          graduations={rateScale.graduations}
+          xOfSession={xOfSession}
+          yOfRate={yOfRate}
+        />
+        {series.map((examSeries) => (
+          <SeriesLine key={examSeries.exam} series={examSeries} xOfSession={xOfSession} yOfRate={yOfRate} />
         ))}
-
-        {/* Axes X et Y */}
-        <line x1={PL} y1={PT} x2={PL} y2={baseY} stroke="#94a3b8" strokeWidth="1.5" />
-        <line x1={PL} y1={baseY} x2={W - PR} y2={baseY} stroke="#94a3b8" strokeWidth="1.5" />
-
-        {/* Graduations + étiquettes de session (axe X) */}
-        {sessions.map((session, i) => (
-          <g key={session}>
-            <line x1={xAt(i)} y1={baseY} x2={xAt(i)} y2={baseY + 5} stroke="#94a3b8" strokeWidth="1.5" />
-            <text x={xAt(i)} y={baseY + 20} textAnchor="middle" className="fill-[#5b6670] text-[11px]">
-              {session}
-            </text>
-          </g>
-        ))}
-
-        {/* Titres d'axes */}
-        <text x={PL + iw / 2} y={H - 8} textAnchor="middle" className="fill-[#5b6670] text-[12px] font-semibold">
-          Session
-        </text>
-        <text
-          x={16}
-          y={PT + ih / 2}
-          textAnchor="middle"
-          className="fill-[#5b6670] text-[12px] font-semibold"
-          transform={`rotate(-90 16 ${PT + ih / 2})`}
-        >
-          Pass rate (%)
-        </text>
-
-        {/* Aires + courbes lissées */}
-        {series.map((s, si) => {
-          const pts = s.points.map((p, i) => [xAt(i), yAt(p.rate)])
-          const linePath = smoothPath(pts)
-          const areaPath = `${linePath} L ${pts[pts.length - 1][0].toFixed(1)} ${baseY} L ${pts[0][0].toFixed(1)} ${baseY} Z`
-          return (
-            <g key={s.exam}>
-              <path d={areaPath} fill={`url(#area-${si})`} stroke="none" />
-              <path
-                d={linePath}
-                fill="none"
-                stroke={s.color}
-                strokeWidth="3"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                pathLength="1"
-                strokeDasharray="1"
-                strokeDashoffset={drawn ? 0 : 1}
-                style={{ transition: 'stroke-dashoffset 1.3s ease-out' }}
-                filter="url(#lineGlow)"
-              />
-              {s.points.map((p, i) => {
-                const isActive = hovered && hovered.si === si && hovered.pi === i
-                return (
-                  <circle
-                    key={p.session}
-                    cx={xAt(i)}
-                    cy={yAt(p.rate)}
-                    r={isActive ? 6.5 : 4.5}
-                    fill="#fff"
-                    stroke={s.color}
-                    strokeWidth="2.5"
-                    className="cursor-pointer transition-all"
-                    onMouseEnter={() => setHovered({ si, pi: i })}
-                    onMouseLeave={() => setHovered(null)}
-                  >
-                    <title>{`${s.exam} · ${p.session} : ${p.rate}%`}</title>
-                  </circle>
-                )
-              })}
-            </g>
-          )
-        })}
       </svg>
-
-      {/* Infobulle au survol */}
-      {hovered && (() => {
-        const s = series[hovered.si]
-        const p = s.points[hovered.pi]
-        const left = (xAt(hovered.pi) / W) * 100
-        const top = (yAt(p.rate) / H) * 100
-        return (
-          <div
-            className="pointer-events-none absolute z-10 -translate-x-1/2 -translate-y-[140%] rounded-xl bg-[#081220] px-3 py-2 text-center shadow-lg"
-            style={{ left: `${left}%`, top: `${top}%` }}
-          >
-            <p className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: s.color }}>
-              {s.exam}
-            </p>
-            <p className="text-sm font-bold text-white">{p.rate}%</p>
-            <p className="text-[10px] text-white/60">Session {p.session}</p>
-          </div>
-        )
-      })()}
-
-      {/* Légende */}
-      <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2">
-        {series.map((s) => (
-          <div key={s.exam} className="flex items-center gap-2">
-            <span className="h-3 w-3 rounded-full" style={{ background: s.color }} />
-            <span className="text-[12px] font-medium text-[#343a44]">{s.exam}</span>
-          </div>
-        ))}
-      </div>
-    </div>
+      <figcaption>
+        <ul className="mt-3 flex flex-wrap gap-x-5 gap-y-2">
+          {series.map((examSeries) => (
+            <li key={examSeries.exam} className="flex items-center gap-2 text-sm text-ink">
+              <span aria-hidden="true" className={`size-2.5 rounded-full ${examSeries.style.dot}`} />
+              {examSeries.exam}
+            </li>
+          ))}
+        </ul>
+      </figcaption>
+    </figure>
   )
 }
 
