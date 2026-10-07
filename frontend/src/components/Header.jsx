@@ -173,7 +173,7 @@ function Header({ activeTypeId, onNavigateToType, types = [], compareCount = 0, 
   }
 
   return (
-    <header className="sticky top-0 z-50 border-b border-white/10 bg-navy/95 backdrop-blur-md [--focus-ring:var(--color-accent)]">
+    <header className="sticky top-0 z-50 border-b border-white/10 bg-navy/95 pt-[env(safe-area-inset-top)] backdrop-blur-md [--focus-ring:var(--color-accent)]">
       <Container className="flex h-16 items-center justify-between gap-4 lg:h-20">
         <Brand />
 
