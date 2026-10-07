@@ -38,6 +38,7 @@ from edufinder.services.data_rules import (
     get_exam_type_violation,
 )
 from edufinder.services.media_files import StoredFile
+from edufinder.services.notifications import notify_submission_received
 
 
 class ProposalError(Exception):
@@ -146,19 +147,24 @@ def propose_director_photo(
     )
 
 
+# La soumission et les notifications des super administrateurs sont écrites
+# ensemble : jamais l'une sans les autres.
+@transaction.atomic
 def _open_submission(
     user: User,
     establishment: Establishment,
     submission_type: SubmissionType,
     content: dict[str, Any],
 ) -> Submission:
-    return Submission.objects.create(
+    submission = Submission.objects.create(
         user=user,
         establishment=establishment,
         type=submission_type,
         status=SubmissionStatus.PENDING,
         content=_to_json_safe(content),
     )
+    notify_submission_received(submission)
+    return submission
 
 
 # Les montants et les taux sont des Decimal, que JSON ne sait pas écrire : je

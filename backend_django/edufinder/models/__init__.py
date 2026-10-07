@@ -2,6 +2,7 @@ from edufinder.models.enums import (
     DecisionStatus,
     EstablishmentStatus,
     MediaType,
+    NotificationKind,
     SubmissionStatus,
     SubmissionType,
     UserRole,
@@ -34,11 +35,13 @@ from edufinder.models.submission import (
     Submission,
     ValidationDecision,
 )
+from edufinder.models.notification import Notification
 
 __all__ = [
     "DecisionStatus",
     "EstablishmentStatus",
     "MediaType",
+    "NotificationKind",
     "SubmissionStatus",
     "SubmissionType",
     "UserRole",
@@ -64,4 +67,5 @@ __all__ = [
     "EstablishmentStatusChange",
     "Submission",
     "ValidationDecision",
+    "Notification",
 ]

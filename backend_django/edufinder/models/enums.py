@@ -33,3 +33,11 @@ class MediaType(models.TextChoices):
     IMAGE = "image"
     PDF = "pdf"
     VIDEO = "video"
+
+
+class NotificationKind(models.TextChoices):
+    SUBMISSION_RECEIVED = "submission_received"
+    SUBMISSION_APPROVED = "submission_approved"
+    SUBMISSION_REJECTED = "submission_rejected"
+    ESTABLISHMENT_SUSPENDED = "establishment_suspended"
+    ESTABLISHMENT_REACTIVATED = "establishment_reactivated"

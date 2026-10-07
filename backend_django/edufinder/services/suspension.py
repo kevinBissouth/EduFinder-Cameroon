@@ -12,6 +12,7 @@ from edufinder.models import (
     User,
 )
 from edufinder.services.errors import ConflictError
+from edufinder.services.notifications import notify_establishment_status_changed
 
 
 class StatusConflictError(ConflictError):
@@ -72,4 +73,5 @@ def _change_status(
     )
     locked_establishment.status = new_status
     locked_establishment.save(update_fields=["status"])
+    notify_establishment_status_changed(locked_establishment, reason)
     return locked_establishment

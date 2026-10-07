@@ -32,6 +32,7 @@ from edufinder.models import (
 )
 from edufinder.services.errors import ConflictError
 from edufinder.services.media_files import delete_stored_file_if_unused
+from edufinder.services.notifications import notify_submission_decided
 from edufinder.services.proposals import (
     DIRECTOR_PHOTO_KEY,
     MEDIA_ADDITIONS_KEY,
@@ -171,6 +172,7 @@ def _record_decision(
         status=decision_status,
         rejection_reason=rejection_reason,
     )
+    notify_submission_decided(submission, rejection_reason)
 
 
 # --- Application du contenu ---------------------------------------------------

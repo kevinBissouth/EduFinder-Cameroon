@@ -1,7 +1,14 @@
 from django.urls import path
 
 from edufinder.services.tracking import TrackedEvent
-from edufinder.views import admin, auth, manager, manager_media, public
+from edufinder.views import (
+    admin,
+    auth,
+    manager,
+    manager_media,
+    notifications,
+    public,
+)
 
 urlpatterns = [
     path("auth/login", auth.login, name="auth-login"),
@@ -75,6 +82,19 @@ urlpatterns = [
         "my/establishments/<str:establishment_uuid>/benchmarks",
         manager.my_establishment_benchmarks,
         name="my-establishment-benchmarks",
+    ),
+    path("notifications", notifications.my_notifications, name="my-notifications"),
+    # « read-all » est déclarée avant la route par identifiant, sinon elle
+    # serait prise pour l'identifiant d'une notification.
+    path(
+        "notifications/read-all",
+        notifications.mark_all_read,
+        name="my-notifications-read-all",
+    ),
+    path(
+        "notifications/<str:notification_uuid>/read",
+        notifications.mark_read,
+        name="my-notification-read",
     ),
     path("stats", public.platform_stats, name="platform-stats"),
     path("filters-meta", public.filters_meta, name="filters-meta"),
