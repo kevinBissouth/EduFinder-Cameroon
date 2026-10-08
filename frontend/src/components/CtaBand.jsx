@@ -1,5 +1,4 @@
 import { Search } from 'lucide-react'
-import { useTranslation } from 'react-i18next'
 
 import Button from './ui/Button'
 import Container from './ui/Container'
@@ -8,8 +7,6 @@ import { scrollToSection } from '../utils/scroll'
 // Le texte reste à gauche, sur la partie bleue du dégradé : le blanc ne
 // serait pas lisible sur son extrémité violette.
 function CtaBand() {
-  const { t } = useTranslation('home')
-
   return (
     <section className="relative overflow-hidden bg-linear-to-r from-primary-deep via-primary via-60% to-violet [--focus-ring:var(--color-accent)]">
       <svg
@@ -31,13 +28,13 @@ function CtaBand() {
       <Container className="relative flex flex-col gap-8 py-16 sm:py-24 lg:flex-row lg:items-center lg:justify-between">
         <div className="max-w-xl">
           <p className="text-xs font-semibold uppercase tracking-eyebrow text-white">
-            {t('cta.eyebrow')}
+            Not sure where to begin?
           </p>
           <h2 className="mt-4 text-balance font-display text-3xl leading-display tracking-tight text-white sm:text-5xl">
-            {t('cta.title')}
+            Start with one simple search.
           </h2>
           <p className="mt-5 text-pretty text-base text-white sm:text-lg">
-            {t('cta.lead')}
+            Pick a city or a type of school, then compare what each one offers.
           </p>
         </div>
         <Button
@@ -47,7 +44,7 @@ function CtaBand() {
           onClick={() => scrollToSection('search')}
         >
           <Search aria-hidden="true" className="size-4" />
-          {t('cta.action')}
+          Find your school
         </Button>
       </Container>
     </section>

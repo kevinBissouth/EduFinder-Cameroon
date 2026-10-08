@@ -1,15 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
 import { ChevronDown, GraduationCap, Menu, Scale, Search, X } from 'lucide-react'
-import { useTranslation } from 'react-i18next'
 
 import Button from './ui/Button'
 import Container from './ui/Container'
-import LanguageSwitch from './ui/LanguageSwitch'
 
 const SECTION_LINKS = [
-  { labelKey: 'header.destinations', href: '#destinations' },
-  { labelKey: 'header.globalPicture', href: '#global-picture' },
-  { labelKey: 'header.howItWorks', href: '#how-it-works' },
+  { label: 'Destinations', href: '#destinations' },
+  { label: 'The global picture', href: '#global-picture' },
+  { label: 'How it works', href: '#how-it-works' },
 ]
 
 const NAV_PILL_CLASSES =
@@ -32,14 +30,13 @@ function Brand() {
 // Raccourci affiché seulement quand au moins un établissement est coché pour
 // comparaison (demande produit).
 function CompareCount({ count }) {
-  const { t } = useTranslation()
   if (count === 0) return null
 
   return (
     <span className="inline-flex h-11 items-center gap-2 rounded-full border border-white/30 px-4 text-sm font-semibold text-white">
       <Scale aria-hidden="true" className="size-4" />
       {count}
-      <span className="sr-only"> {t('header.selectedForComparison', { count })}</span>
+      <span className="sr-only">schools selected for comparison</span>
     </span>
   )
 }
@@ -60,7 +57,6 @@ function TypeMenuItem({ type, isActive, onSelect }) {
 }
 
 function TypeMenu({ types, activeTypeId, onSelectType }) {
-  const { t } = useTranslation()
   const [isOpen, setIsOpen] = useState(false)
   const menuRef = useRef(null)
 
@@ -86,7 +82,7 @@ function TypeMenu({ types, activeTypeId, onSelectType }) {
   if (types.length === 0) {
     return (
       <a href="#results" className={NAV_PILL_CLASSES}>
-        {t('header.findSchools')}
+        Find schools
       </a>
     )
   }
@@ -104,7 +100,7 @@ function TypeMenu({ types, activeTypeId, onSelectType }) {
         onClick={() => setIsOpen(!isOpen)}
         className={NAV_PILL_CLASSES}
       >
-        {t('header.findSchools')}
+        Find schools
         <ChevronDown
           aria-hidden="true"
           className={`size-4 transition-transform ${isOpen ? 'rotate-180' : ''}`}
@@ -128,17 +124,11 @@ function TypeMenu({ types, activeTypeId, onSelectType }) {
 }
 
 function MobileMenu({ types, activeTypeId, onSelectType }) {
-  const { t } = useTranslation()
-
   return (
-    <nav
-      id="mobile-menu"
-      aria-label={t('header.mainNavigation')}
-      className="border-t border-white/10 lg:hidden"
-    >
+    <nav id="mobile-menu" aria-label="Main" className="border-t border-white/10 lg:hidden">
       <Container className="py-3">
         <a href="#results" className={NAV_PILL_CLASSES}>
-          {t('header.findSchools')}
+          Find schools
         </a>
         {types.length > 0 && (
           <ul className="ml-3 border-l border-white/10 pl-2">
@@ -154,15 +144,12 @@ function MobileMenu({ types, activeTypeId, onSelectType }) {
           </ul>
         )}
         {SECTION_LINKS.map((link) => (
-          <a key={link.href} href={link.href} className={NAV_PILL_CLASSES}>
-            {t(link.labelKey)}
+          <a key={link.label} href={link.href} className={NAV_PILL_CLASSES}>
+            {link.label}
           </a>
         ))}
-        <div className="mt-3 sm:hidden">
-          <LanguageSwitch />
-        </div>
         <Button as="a" href="#/login" variant="accent" className="mt-3 w-full rounded-full">
-          {t('header.forSchools')}
+          For schools
         </Button>
       </Container>
     </nav>
@@ -170,7 +157,6 @@ function MobileMenu({ types, activeTypeId, onSelectType }) {
 }
 
 function Header({ activeTypeId, onNavigateToType, types = [], compareCount = 0, featuredTypeIds = [] }) {
-  const { t } = useTranslation()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   // Le menu ne propose que les types les plus représentés, dans l'ordre fourni
@@ -191,36 +177,32 @@ function Header({ activeTypeId, onNavigateToType, types = [], compareCount = 0, 
       <Container className="flex h-16 items-center justify-between gap-4 lg:h-20">
         <Brand />
 
-        <nav aria-label={t('header.mainNavigation')} className="hidden items-center gap-1 lg:flex">
+        <nav aria-label="Main" className="hidden items-center gap-1 lg:flex">
           <TypeMenu
             types={featuredTypes}
             activeTypeId={activeTypeId}
             onSelectType={onNavigateToType}
           />
           {SECTION_LINKS.map((link) => (
-            <a key={link.href} href={link.href} className={NAV_PILL_CLASSES}>
-              {t(link.labelKey)}
+            <a key={link.label} href={link.href} className={NAV_PILL_CLASSES}>
+              {link.label}
             </a>
           ))}
         </nav>
 
         <div className="flex items-center gap-2">
           <CompareCount count={compareCount} />
-          {/* Sous 640 px la barre n'a plus la place : le sélecteur passe dans le menu. */}
-          <div className="hidden sm:block">
-            <LanguageSwitch />
-          </div>
-          <a href="#search" aria-label={t('header.searchSchools')} className={ICON_BUTTON_CLASSES}>
+          <a href="#search" aria-label="Search schools" className={ICON_BUTTON_CLASSES}>
             <Search aria-hidden="true" className="size-4" />
           </a>
           <div className="hidden lg:block">
             <Button as="a" href="#/login" variant="accent" className="rounded-full">
-              {t('header.forSchools')}
+              For schools
             </Button>
           </div>
           <button
             type="button"
-            aria-label={isMobileMenuOpen ? t('header.closeMenu') : t('header.openMenu')}
+            aria-label={isMobileMenuOpen ? 'Close menu' : 'Open menu'}
             aria-expanded={isMobileMenuOpen}
             aria-controls="mobile-menu"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}

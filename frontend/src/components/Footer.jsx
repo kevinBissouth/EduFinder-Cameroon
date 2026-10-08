@@ -1,5 +1,4 @@
 import { ArrowUp, GraduationCap } from 'lucide-react'
-import { useTranslation } from 'react-i18next'
 
 import Button from './ui/Button'
 import Container from './ui/Container'
@@ -9,16 +8,15 @@ const FOOTER_LINK_CLASSES =
 const COLUMN_TITLE_CLASSES = 'text-xs font-semibold uppercase tracking-eyebrow text-violet'
 
 const DIRECTORY_LINKS = [
-  { labelKey: 'footer.findSchools', href: '#results' },
-  { labelKey: 'footer.popularDestinations', href: '#destinations' },
-  { labelKey: 'footer.globalPicture', href: '#global-picture' },
-  { labelKey: 'footer.howItWorks', href: '#how-it-works' },
+  { label: 'Find schools', href: '#results' },
+  { label: 'Popular destinations', href: '#destinations' },
+  { label: 'The global picture', href: '#global-picture' },
+  { label: 'How it works', href: '#how-it-works' },
 ]
 
 // Le filtre par type n'a de sens que sur la page de recherche : sans
 // onNavigateToType (fiche d'établissement), la colonne n'est pas affichée.
 function Footer({ types = [], onNavigateToType }) {
-  const { t } = useTranslation()
   const currentYear = new Date().getFullYear()
 
   return (
@@ -33,26 +31,27 @@ function Footer({ types = [], onNavigateToType }) {
             </span>
           </p>
           <p className="mt-5 text-pretty text-sm text-on-navy-soft">
-            {t('footer.tagline')}
+            The school discovery platform for families comparing schools and universities
+            across Cameroon.
           </p>
           <div className="mt-8 border-t border-white/10 pt-6">
-            <p className="font-display text-2xl text-white">{t('footer.runSchool')}</p>
+            <p className="font-display text-2xl text-white">Run a school?</p>
             <p className="mt-2 text-balance text-sm text-on-navy-soft">
-              {t('footer.runSchoolLead')}
+              Keep your fees, results and photos up to date for families.
             </p>
             <Button as="a" href="#/login" variant="accent" className="mt-5 rounded-full">
-              {t('footer.manageSchoolPage')}
+              Manage your school&apos;s page
             </Button>
           </div>
         </div>
 
-        <nav aria-label={t('footer.directoryNavigation')}>
-          <h2 className={COLUMN_TITLE_CLASSES}>{t('footer.schools')}</h2>
+        <nav aria-label="Directory">
+          <h2 className={COLUMN_TITLE_CLASSES}>Schools</h2>
           <ul className="mt-4">
             {DIRECTORY_LINKS.map((link) => (
-              <li key={link.href}>
+              <li key={link.label}>
                 <a href={link.href} className={FOOTER_LINK_CLASSES}>
-                  {t(link.labelKey)}
+                  {link.label}
                 </a>
               </li>
             ))}
@@ -60,8 +59,8 @@ function Footer({ types = [], onNavigateToType }) {
         </nav>
 
         {onNavigateToType && (
-          <nav aria-label={t('footer.typesNavigation')}>
-            <h2 className={COLUMN_TITLE_CLASSES}>{t('footer.schoolTypes')}</h2>
+          <nav aria-label="Schools by type">
+            <h2 className={COLUMN_TITLE_CLASSES}>School types</h2>
             <ul className="mt-4">
               {types.map((type) => (
                 <li key={type.id}>
@@ -85,7 +84,7 @@ function Footer({ types = [], onNavigateToType }) {
             href="#"
             className="flex min-h-11 items-center gap-2 rounded-control font-semibold transition-colors hover:text-white"
           >
-            {t('footer.backToTop')}
+            Back to top
             <ArrowUp aria-hidden="true" className="size-4" />
           </a>
         </Container>

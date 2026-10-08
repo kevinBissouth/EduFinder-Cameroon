@@ -2,7 +2,6 @@ import { useRef, useEffect, useState } from 'react'
 import { Eye, EyeOff, ArrowRight, GraduationCap, AlertCircle } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
-import LanguageSwitch from '../components/ui/LanguageSwitch'
 import {
   requestLogin,
   fetchAuthenticatedProfile,
@@ -252,9 +251,6 @@ function LoginPage({ onAuthenticated }) {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <div className="mb-4 flex justify-end">
-              <LanguageSwitch tone="onLight" />
-            </div>
             <p className="mb-6 flex items-center gap-2 text-base text-navy md:hidden">
               <GraduationCap aria-hidden="true" className="size-7 text-primary" />
               <span>

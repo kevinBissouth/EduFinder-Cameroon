@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { ChevronDown, X } from 'lucide-react'
-import { useTranslation } from 'react-i18next'
 
 import Button from './ui/Button'
 import { CONTROL_CLASSES, SelectField, TextField } from './ui/Field'
@@ -11,7 +10,6 @@ const EMPTY_EXAM_REQUIREMENT = { examId: '', minRate: '' }
 // panneau de la même largeur que lui, qui se referme au clic extérieur ou
 // avec la touche Échap.
 function PopoverFilter({ label, activeCount, children }) {
-  const { t } = useTranslation('home')
   const [isOpen, setIsOpen] = useState(false)
   const close = () => setIsOpen(false)
 
@@ -29,9 +27,7 @@ function PopoverFilter({ label, activeCount, children }) {
         onClick={() => setIsOpen(!isOpen)}
         className={`${CONTROL_CLASSES} flex cursor-pointer items-center justify-between gap-2 text-left`}
       >
-        <span>
-          {activeCount > 0 ? t('filters.selected', { count: activeCount }) : t('filters.any')}
-        </span>
+        <span>{activeCount > 0 ? `${activeCount} selected` : 'Any'}</span>
         <ChevronDown
           aria-hidden="true"
           className={`size-4 text-ink-soft transition-transform ${isOpen ? 'rotate-180' : ''}`}
@@ -50,7 +46,6 @@ function PopoverFilter({ label, activeCount, children }) {
 }
 
 function BudgetPanel({ minFee, maxFee, onApply }) {
-  const { t } = useTranslation('home')
   const [minimumFee, setMinimumFee] = useState(minFee || '')
   const [maximumFee, setMaximumFee] = useState(maxFee || '')
 
@@ -58,7 +53,7 @@ function BudgetPanel({ minFee, maxFee, onApply }) {
     <div>
       <div className="grid gap-3">
         <TextField
-          label={t('filters.minimumPerYear')}
+          label="Minimum per year (FCFA)"
           type="number"
           min="0"
           step="1000"
@@ -67,30 +62,28 @@ function BudgetPanel({ minFee, maxFee, onApply }) {
           placeholder="0"
         />
         <TextField
-          label={t('filters.maximumPerYear')}
+          label="Maximum per year (FCFA)"
           type="number"
           min="0"
           step="1000"
           value={maximumFee}
           onChange={(event) => setMaximumFee(event.target.value)}
-          placeholder={t('filters.noLimit')}
+          placeholder="No limit"
         />
       </div>
       <div className="mt-4 flex justify-end gap-2">
         <Button variant="ghost" onClick={() => onApply('', '')}>
-          {t('filters.clear')}
+          Clear
         </Button>
-        <Button onClick={() => onApply(minimumFee, maximumFee)}>{t('filters.applyBudget')}</Button>
+        <Button onClick={() => onApply(minimumFee, maximumFee)}>Apply budget</Button>
       </div>
     </div>
   )
 }
 
 function ServicesPanel({ services, selectedNames, onToggle }) {
-  const { t } = useTranslation('home')
-
   if (services.length === 0) {
-    return <p className="text-sm text-ink-soft">{t('filters.noService')}</p>
+    return <p className="text-sm text-ink-soft">No school has listed a service yet.</p>
   }
 
   return (
@@ -113,17 +106,15 @@ function ServicesPanel({ services, selectedNames, onToggle }) {
 }
 
 function ExamRequirementRow({ requirement, exams, onChange, onRemove }) {
-  const { t } = useTranslation('home')
-
   return (
     <div className="flex items-center gap-2">
       <select
-        aria-label={t('filters.exam')}
+        aria-label="Exam"
         value={requirement.examId}
         onChange={(event) => onChange({ examId: event.target.value })}
         className={`${CONTROL_CLASSES} min-w-0 flex-1`}
       >
-        <option value="">{t('filters.exam')}</option>
+        <option value="">Exam</option>
         {exams.map((exam) => (
           <option key={exam.id} value={exam.id}>
             {exam.name}
@@ -131,7 +122,7 @@ function ExamRequirementRow({ requirement, exams, onChange, onRemove }) {
         ))}
       </select>
       <input
-        aria-label={t('filters.minimumPassRate')}
+        aria-label="Minimum pass rate in percent"
         type="number"
         min="0"
         max="100"
@@ -142,7 +133,7 @@ function ExamRequirementRow({ requirement, exams, onChange, onRemove }) {
       />
       <button
         type="button"
-        aria-label={t('filters.removeExam')}
+        aria-label="Remove this exam"
         onClick={onRemove}
         className="flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-control text-ink-soft transition-colors hover:bg-danger-soft hover:text-danger"
       >
@@ -153,7 +144,6 @@ function ExamRequirementRow({ requirement, exams, onChange, onRemove }) {
 }
 
 function ExamPanel({ exams, requirements, onApply }) {
-  const { t } = useTranslation('home')
   const [draftRequirements, setDraftRequirements] = useState(
     requirements.length > 0 ? requirements : [EMPTY_EXAM_REQUIREMENT],
   )
@@ -188,16 +178,15 @@ function ExamPanel({ exams, requirements, onApply }) {
       </div>
       <div className="mt-4 flex flex-wrap justify-between gap-2">
         <Button variant="ghost" onClick={addRequirement}>
-          {t('filters.addExam')}
+          Add an exam
         </Button>
-        <Button onClick={applyCompleteRequirements}>{t('filters.applyPassRates')}</Button>
+        <Button onClick={applyCompleteRequirements}>Apply pass rates</Button>
       </div>
     </div>
   )
 }
 
 function AdvancedFilters({ advancedFilters }) {
-  const { t } = useTranslation('home')
   const {
     meta,
     sectionId,
@@ -218,27 +207,27 @@ function AdvancedFilters({ advancedFilters }) {
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       <SelectField
-        label={t('filters.languageSection')}
+        label="Language section"
         value={sectionId}
         onChange={(event) => onSectionChange(event.target.value)}
-        placeholder={t('filters.allSections')}
+        placeholder="All sections"
         options={meta.languages}
       />
       <SelectField
-        label={t('filters.sector')}
+        label="Sector"
         value={sectorId}
         onChange={(event) => onSectorChange(event.target.value)}
-        placeholder={t('filters.allSectors')}
+        placeholder="Public and private"
         options={meta.sectors}
       />
       <SelectField
-        label={t('filters.region')}
+        label="Region"
         value={regionId}
         onChange={(event) => onRegionChange(event.target.value)}
-        placeholder={t('filters.allRegions')}
+        placeholder="All regions"
         options={meta.regions}
       />
-      <PopoverFilter label={t('filters.yearlyBudget')} activeCount={minFee || maxFee ? 1 : 0}>
+      <PopoverFilter label="Yearly budget" activeCount={minFee || maxFee ? 1 : 0}>
         {({ close }) => (
           <BudgetPanel
             minFee={minFee}
@@ -250,7 +239,7 @@ function AdvancedFilters({ advancedFilters }) {
           />
         )}
       </PopoverFilter>
-      <PopoverFilter label={t('filters.services')} activeCount={serviceNames.length}>
+      <PopoverFilter label="Services" activeCount={serviceNames.length}>
         {() => (
           <ServicesPanel
             services={meta.services}
@@ -259,7 +248,7 @@ function AdvancedFilters({ advancedFilters }) {
           />
         )}
       </PopoverFilter>
-      <PopoverFilter label={t('filters.examPassRate')} activeCount={examRequirements.length}>
+      <PopoverFilter label="Exam pass rate" activeCount={examRequirements.length}>
         {({ close }) => (
           <ExamPanel
             exams={meta.exams}

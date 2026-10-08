@@ -1,8 +1,6 @@
-import { Languages, LogOut, Mail, ShieldCheck, UserRound } from 'lucide-react'
-import { useTranslation } from 'react-i18next'
+import { LogOut, Mail, ShieldCheck, UserRound } from 'lucide-react'
 
 import Button from '../ui/Button'
-import LanguageSwitch from '../ui/LanguageSwitch'
 import Panel from './Panel'
 import { buildInitials } from '../../utils/format'
 
@@ -74,8 +72,6 @@ function DetailRow({ icon: Icon, label, value }) {
 // son compte, suivies des lignes propres à l'espace (extraDetails). Rien ne
 // s'y modifie : les comptes sont créés et tenus à jour hors de l'application.
 function AccountView({ profile, roleLabel, changeHint, extraDetails = [], onSignOut }) {
-  const { t } = useTranslation()
-
   return (
     <div className="space-y-6">
       <ProfileCard profile={profile} roleLabel={roleLabel} onSignOut={onSignOut} />
@@ -92,11 +88,6 @@ function AccountView({ profile, roleLabel, changeHint, extraDetails = [], onSign
           {extraDetails.map((detail) => (
             <DetailRow key={detail.label} {...detail} />
           ))}
-          <DetailRow
-            icon={Languages}
-            label={t('language.switchLabel')}
-            value={<LanguageSwitch tone="onLight" />}
-          />
         </dl>
       </Panel>
       {/* Sur téléphone, la déconnexion ferme la vue : un bouton pleine largeur,

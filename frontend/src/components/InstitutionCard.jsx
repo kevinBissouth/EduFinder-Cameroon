@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { ArrowRight, GraduationCap, Heart, MapPin, Scale, Star } from 'lucide-react'
-import { useTranslation } from 'react-i18next'
 
 import { API_URL } from '../constants'
 import { formatFcfa, formatPercent } from '../utils/format'
@@ -12,7 +11,6 @@ function capitalize(text) {
 // La ville est posée sur la photo, sur un voile sombre qui garantit sa
 // lisibilité quelle que soit l'image.
 function CardCover({ institution }) {
-  const { t } = useTranslation('home')
   const [hasImageFailed, setHasImageFailed] = useState(false)
   const hasCoverImage = institution.cover_url && !hasImageFailed
 
@@ -37,7 +35,7 @@ function CardCover({ institution }) {
       {institution.recommended && (
         <span className="absolute left-4 top-4 inline-flex items-center gap-1.5 rounded-full bg-accent px-3 py-1 text-xs font-bold text-navy shadow-soft">
           <Star aria-hidden="true" className="size-3.5" fill="currentColor" />
-          {t('card.recommended')}
+          Recommended
         </span>
       )}
     </div>
@@ -46,15 +44,14 @@ function CardCover({ institution }) {
 
 // Les deux chiffres qu'un parent compare d'abord, côte à côte.
 function KeyFigures({ institution }) {
-  const { t } = useTranslation(['home', 'common'])
   const figures = [
     {
-      label: t('card.bestPassRate'),
+      label: 'Best pass rate',
       value: institution.best_pass_rate != null ? formatPercent(institution.best_pass_rate) : null,
       valueClasses: 'text-primary',
     },
     {
-      label: t('card.feesFrom'),
+      label: 'Fees from, per year',
       value: institution.min_tuition != null ? formatFcfa(institution.min_tuition) : null,
       valueClasses: 'text-navy',
     },
@@ -72,7 +69,7 @@ function KeyFigures({ institution }) {
                 : 'mt-1 text-sm leading-8 text-ink-soft'
             }
           >
-            {figure.value ?? t('common:notPublished')}
+            {figure.value ?? 'Not published'}
           </dd>
         </div>
       ))}
@@ -102,7 +99,6 @@ function IconToggle({ isActive, label, icon: Icon, onToggle }) {
 }
 
 function InstitutionCard({ institution, isCompared, onToggleCompare, onView }) {
-  const { t } = useTranslation('home')
   const [isSaved, setIsSaved] = useState(false)
   const categories = [capitalize(institution.sector), institution.type, institution.linguistic_section]
     .filter(Boolean)
@@ -134,13 +130,13 @@ function InstitutionCard({ institution, isCompared, onToggleCompare, onView }) {
             <div className="flex items-center gap-2">
               <IconToggle
                 isActive={isCompared}
-                label={isCompared ? t('card.removeFromComparison') : t('card.addToComparison')}
+                label={isCompared ? 'Remove from comparison' : 'Add to comparison'}
                 icon={Scale}
                 onToggle={onToggleCompare}
               />
               <IconToggle
                 isActive={isSaved}
-                label={isSaved ? t('card.unsave') : t('card.save')}
+                label={isSaved ? 'Remove from saved schools' : 'Save this school'}
                 icon={Heart}
                 onToggle={() => setIsSaved(!isSaved)}
               />
@@ -148,10 +144,10 @@ function InstitutionCard({ institution, isCompared, onToggleCompare, onView }) {
             <button
               type="button"
               onClick={openProfile}
-              aria-label={t('card.viewNamed', { name: institution.name })}
+              aria-label={`View ${institution.name}`}
               className="inline-flex h-11 cursor-pointer items-center gap-2 rounded-full px-1 text-sm font-semibold text-primary-deep transition-colors hover:text-primary"
             >
-              {t('card.view')}
+              View school
               <ArrowRight aria-hidden="true" className="size-4 transition-transform group-hover:translate-x-1" />
             </button>
           </div>

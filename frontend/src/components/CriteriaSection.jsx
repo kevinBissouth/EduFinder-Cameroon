@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { ArrowRight, Check, GraduationCap } from 'lucide-react'
-import { Trans, useTranslation } from 'react-i18next'
 
 import Button from './ui/Button'
 import Container from './ui/Container'
@@ -12,19 +11,25 @@ import { scrollToSection } from '../utils/scroll'
 const PREVIEW_SIZE = 3
 
 // Les quatre critères avancés que la recherche sait réellement appliquer.
-const CRITERION_IDS = ['budget', 'exams', 'services', 'language']
+const CRITERIA = [
+  { title: 'Yearly budget', description: 'Set the fee range that suits your family.' },
+  { title: 'Exam results', description: 'Ask for a minimum pass rate, exam by exam.' },
+  { title: 'Services', description: 'Canteen, boarding, transport and more.' },
+  {
+    title: 'Language and sector',
+    description: 'Francophone, anglophone or bilingual, public or private.',
+  },
+]
 
-function CriterionRow({ criterionId }) {
-  const { t } = useTranslation('home')
-
+function CriterionRow({ criterion }) {
   return (
     <li className="flex items-start gap-3 py-4">
       <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-primary text-white">
         <Check aria-hidden="true" className="size-3" strokeWidth={3} />
       </span>
       <span>
-        <span className="block text-sm font-bold text-navy">{t(`criteria.${criterionId}.title`)}</span>
-        <span className="block text-sm text-ink">{t(`criteria.${criterionId}.description`)}</span>
+        <span className="block text-sm font-bold text-navy">{criterion.title}</span>
+        <span className="block text-sm text-ink">{criterion.description}</span>
       </span>
     </li>
   )
@@ -53,8 +58,6 @@ function PreviewThumbnail({ institution }) {
 }
 
 function PreviewRow({ institution, onView }) {
-  const { t } = useTranslation('home')
-
   return (
     <li>
       <button
@@ -72,7 +75,7 @@ function PreviewRow({ institution, onView }) {
           </span>
           {institution.min_tuition != null && (
             <span className="block text-xs tabular-nums text-ink-soft">
-              {t('criteria.feesFrom', { amount: formatFcfa(institution.min_tuition) })}
+              From {formatFcfa(institution.min_tuition)} / year, as listed
             </span>
           )}
         </span>
@@ -88,7 +91,6 @@ function PreviewRow({ institution, onView }) {
 // La liste de droite n'est pas un exemple inventé : ce sont les premiers
 // établissements qui répondent à la recherche en cours.
 function CriteriaSection({ institutions, onView }) {
-  const { t } = useTranslation(['home', 'common'])
   const previewedInstitutions = institutions.slice(0, PREVIEW_SIZE)
 
   return (
@@ -96,17 +98,21 @@ function CriteriaSection({ institutions, onView }) {
       <Container className="grid items-center gap-12 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] lg:gap-20">
         <div>
           <SectionHeading
-            eyebrow={t('criteria.eyebrow')}
-            title={<Trans t={t} i18nKey="criteria.title" components={{ emphasis: <Emphasis /> }} />}
-            lead={t('criteria.lead')}
+            eyebrow="Refine your search"
+            title={
+              <>
+                Your family&apos;s criteria. Compared with <Emphasis>clarity.</Emphasis>
+              </>
+            }
+            lead="Tell the search what matters most. It keeps only the schools that meet every criterion you set."
           />
           <ul className="mt-8 divide-y divide-line border-y border-line">
-            {CRITERION_IDS.map((criterionId) => (
-              <CriterionRow key={criterionId} criterionId={criterionId} />
+            {CRITERIA.map((criterion) => (
+              <CriterionRow key={criterion.title} criterion={criterion} />
             ))}
           </ul>
           <Button className="group mt-8 rounded-full" onClick={() => scrollToSection('search')}>
-            {t('criteria.action')}
+            Set your criteria
             <ArrowRight aria-hidden="true" className="size-4 transition-transform group-hover:translate-x-0.5" />
           </Button>
         </div>
@@ -115,13 +121,13 @@ function CriteriaSection({ institutions, onView }) {
           <div className="rounded-panel border border-line bg-surface p-5 shadow-raised sm:p-8">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="font-display text-2xl text-navy">{t('criteria.matching')}</p>
+                <p className="font-display text-2xl text-navy">Matching your search</p>
                 <p className="mt-1.5 text-xs font-semibold uppercase tracking-eyebrow text-ink-soft">
-                  {t('criteria.live')}
+                  Live from the directory
                 </p>
               </div>
               <p className="shrink-0 rounded-full bg-primary-soft px-3 py-1 text-xs font-bold tabular-nums text-primary-deep">
-                {t('common:schoolCount', { count: institutions.length })}
+                {institutions.length} {institutions.length === 1 ? 'school' : 'schools'}
               </p>
             </div>
             <ul className="mt-4 divide-y divide-line border-t border-line">
@@ -133,7 +139,7 @@ function CriteriaSection({ institutions, onView }) {
               href="#results"
               className="mt-2 inline-flex h-11 items-center gap-2 rounded-control text-sm font-semibold text-primary-deep transition-colors hover:text-primary"
             >
-              {t('criteria.viewAll', { count: institutions.length })}
+              View all {institutions.length} schools
               <ArrowRight aria-hidden="true" className="size-4" />
             </a>
           </div>
