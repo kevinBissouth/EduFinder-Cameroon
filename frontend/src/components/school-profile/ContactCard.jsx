@@ -1,4 +1,5 @@
 import { ArrowUpRight, Globe, Mail, MapPin, Phone } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 import Button from '../ui/Button'
 import { buildContactHref, toExternalUrl } from './helpers'
@@ -10,6 +11,7 @@ const CONTACT_LINK_CLASSES =
 // Coordonnées publiées par l'établissement. Une ligne absente n'est pas
 // affichée ; si rien n'est publié, la carte le dit.
 function ContactCard({ institution }) {
+  const { t } = useTranslation('profile')
   const websiteUrl = toExternalUrl(institution.website)
   const contactHref = buildContactHref(institution)
   // Téléphone, e-mail et demande de renseignements comptent comme une prise
@@ -20,9 +22,9 @@ function ContactCard({ institution }) {
 
   return (
     <div className="rounded-panel border border-line bg-surface p-6 shadow-soft">
-      <h3 className="text-lg font-bold text-navy">Contact the school</h3>
+      <h3 className="text-lg font-bold text-navy">{t('contact.title')}</h3>
       {!hasAnyContact && (
-        <p className="mt-3 text-sm text-ink-soft">This school has not published its contacts yet.</p>
+        <p className="mt-3 text-sm text-ink-soft">{t('contact.none')}</p>
       )}
       <ul className="mt-2">
         {websiteUrl && (
@@ -67,13 +69,13 @@ function ContactCard({ institution }) {
       <div className="mt-4 flex flex-wrap gap-3">
         {websiteUrl && (
           <Button as="a" href={websiteUrl} target="_blank" rel="noopener noreferrer">
-            Visit website
+            {t('hero.visitWebsite')}
             <ArrowUpRight aria-hidden="true" className="size-4" />
           </Button>
         )}
         {contactHref && (
           <Button as="a" href={contactHref} variant="secondary" onClick={trackInquiry}>
-            Send an enquiry
+            {t('contact.sendEnquiry')}
           </Button>
         )}
       </div>

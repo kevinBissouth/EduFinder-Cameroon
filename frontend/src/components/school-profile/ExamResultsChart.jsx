@@ -1,3 +1,8 @@
+import { useTranslation } from 'react-i18next'
+
+import { useReferenceLabel } from '../../hooks/useReferenceLabel'
+import { formatPercent } from '../../utils/format'
+
 const CHART_WIDTH = 640
 const CHART_HEIGHT = 280
 const MARGIN = { top: 12, right: 16, bottom: 32, left: 40 }
@@ -74,7 +79,7 @@ function ChartGrid({ sessions, graduations, xOfSession, yOfRate }) {
             className="stroke-line"
           />
           <text x={MARGIN.left - 8} y={yOfRate(rate)} textAnchor="end" dominantBaseline="middle" className="fill-ink-soft text-xs">
-            {rate}%
+            {formatPercent(rate)}
           </text>
         </g>
       ))}
@@ -88,6 +93,8 @@ function ChartGrid({ sessions, graduations, xOfSession, yOfRate }) {
 }
 
 function SeriesLine({ series, xOfSession, yOfRate }) {
+  const { t } = useTranslation('profile')
+  const translateReference = useReferenceLabel()
   const linePoints = series.points
     .map((point) => `${xOfSession(point.sessionIndex)},${yOfRate(point.rate)}`)
     .join(' ')
@@ -97,7 +104,13 @@ function SeriesLine({ series, xOfSession, yOfRate }) {
       <polyline points={linePoints} fill="none" strokeWidth="2" strokeLinejoin="round" className={series.style.stroke} />
       {series.points.map((point) => (
         <circle key={point.session} cx={xOfSession(point.sessionIndex)} cy={yOfRate(point.rate)} r="3.5" className={`${series.style.fill} stroke-surface`} strokeWidth="1.5">
-          <title>{`${series.exam}, ${point.session}: ${point.rate}%`}</title>
+          <title>
+            {t('results.pointTitle', {
+              exam: translateReference('exams', series.exam),
+              session: point.session,
+              rate: formatPercent(point.rate),
+            })}
+          </title>
         </circle>
       ))}
     </g>
@@ -108,6 +121,8 @@ function SeriesLine({ series, xOfSession, yOfRate }) {
 // examen. La légende nomme chaque courbe : l'information ne repose pas sur la
 // seule couleur.
 function ExamResultsChart({ examResults = [] }) {
+  const { t } = useTranslation('profile')
+  const translateReference = useReferenceLabel()
   const sessions = listSessions(examResults)
   if (sessions.length === 0) return null
 
@@ -121,7 +136,7 @@ function ExamResultsChart({ examResults = [] }) {
 
   return (
     <figure>
-      <svg viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`} role="img" aria-label="Pass rate by exam and by session" className="w-full">
+      <svg viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`} role="img" aria-label={t('results.chartLabel')} className="w-full">
         <ChartGrid
           sessions={sessions}
           graduations={rateScale.graduations}
@@ -137,7 +152,7 @@ function ExamResultsChart({ examResults = [] }) {
           {series.map((examSeries) => (
             <li key={examSeries.exam} className="flex items-center gap-2 text-sm text-ink">
               <span aria-hidden="true" className={`size-2.5 rounded-full ${examSeries.style.dot}`} />
-              {examSeries.exam}
+              {translateReference('exams', examSeries.exam)}
             </li>
           ))}
         </ul>

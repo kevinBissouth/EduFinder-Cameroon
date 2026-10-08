@@ -1,7 +1,10 @@
 import { Activity, BedDouble, BookOpen, Bus, FlaskConical, GraduationCap, Utensils, Wrench } from 'lucide-react'
 
+import { Trans, useTranslation } from 'react-i18next'
+
 import Container from '../ui/Container'
 import SectionHeading, { Emphasis } from '../ui/SectionHeading'
+import { useReferenceLabel } from '../../hooks/useReferenceLabel'
 
 // Icône d'un service déduite de son libellé, en français comme en anglais.
 // La première règle qui reconnaît le libellé l'emporte.
@@ -37,6 +40,8 @@ function ServiceRow({ service }) {
 }
 
 function OfferSection({ programs, services }) {
+  const { t } = useTranslation('profile')
+  const translateReference = useReferenceLabel()
   if (programs.length === 0 && services.length === 0) return null
 
   return (
@@ -44,21 +49,17 @@ function OfferSection({ programs, services }) {
       <Container>
         <SectionHeading
           size="md"
-          eyebrow="Programs and services"
-          title={
-            <>
-              The details that shape <Emphasis>daily</Emphasis> school life.
-            </>
-          }
+          eyebrow={t('offer.eyebrow')}
+          title={<Trans t={t} i18nKey="offer.title" components={{ emphasis: <Emphasis /> }} />}
         />
         <div className="mt-10 grid gap-12 lg:grid-cols-2 lg:gap-16">
           {programs.length > 0 && (
             <div>
-              <h3 className="text-lg font-bold text-navy">Programs</h3>
+              <h3 className="text-lg font-bold text-navy">{t('offer.programs')}</h3>
               <ul className="mt-4 flex flex-wrap gap-2">
                 {programs.map((program) => (
                   <li key={program} className="rounded-full border border-line bg-surface px-4 py-2 text-sm font-semibold text-navy">
-                    {program}
+                    {translateReference('programs', program)}
                   </li>
                 ))}
               </ul>
@@ -66,7 +67,7 @@ function OfferSection({ programs, services }) {
           )}
           {services.length > 0 && (
             <div>
-              <h3 className="text-lg font-bold text-navy">Services on site</h3>
+              <h3 className="text-lg font-bold text-navy">{t('offer.services')}</h3>
               <ul className="mt-2 divide-y divide-line border-y border-line">
                 {services.map((service) => (
                   <ServiceRow key={service.name} service={service} />

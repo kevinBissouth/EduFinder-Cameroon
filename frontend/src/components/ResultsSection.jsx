@@ -8,6 +8,7 @@ import RemovableChip from './ui/Chip'
 import Container from './ui/Container'
 import { Eyebrow } from './ui/SectionHeading'
 import StateMessage from './ui/StateMessage'
+import { useReferenceLabel } from '../hooks/useReferenceLabel'
 
 const PAGE_SIZE = 6
 const GRID_CLASSES = 'mt-10 grid gap-6 md:grid-cols-2 lg:grid-cols-3'
@@ -20,18 +21,31 @@ function describeBudget(minFee, maxFee, t) {
 
 // Chaque critère actif devient une pastille qui le retire. Les clés sont
 // celles qu'attend handleRemoveFilter dans useInstitutions.
-function listActiveFilters(filters, t) {
-  const examName = (examId) =>
-    filters.examMeta.find((exam) => String(exam.id) === String(examId))?.name ??
-    t('results.unknownExam', { id: examId })
+function listActiveFilters(filters, t, translateReference) {
+  const findExamName = (examId) => {
+    const examKey = filters.examMeta.find((exam) => String(exam.id) === String(examId))?.name
+    return examKey ? translateReference('exams', examKey) : t('results.unknownExam', { id: examId })
+  }
 
   return [
     filters.appliedSearch.trim() && { key: 'q', label: `"${filters.appliedSearch.trim()}"` },
     filters.activeCity && { key: 'city', label: filters.activeCity.name },
-    filters.activeType && { key: 'type', label: filters.activeType.name },
-    filters.activeLang && { key: 'lang', label: filters.activeLang.name },
-    filters.activeSector && { key: 'sector', label: filters.activeSector.name },
-    filters.activeRegion && { key: 'region', label: filters.activeRegion.name },
+    filters.activeType && {
+      key: 'type',
+      label: translateReference('types', filters.activeType.name),
+    },
+    filters.activeLang && {
+      key: 'lang',
+      label: translateReference('sections', filters.activeLang.name),
+    },
+    filters.activeSector && {
+      key: 'sector',
+      label: translateReference('sectors', filters.activeSector.name),
+    },
+    filters.activeRegion && {
+      key: 'region',
+      label: translateReference('regions', filters.activeRegion.name),
+    },
     (filters.minFee || filters.maxFee) && {
       key: 'budget',
       label: describeBudget(filters.minFee, filters.maxFee, t),
@@ -40,7 +54,7 @@ function listActiveFilters(filters, t) {
     ...filters.examRequirements.map((requirement) => ({
       key: 'exams',
       label: t('results.examAtLeast', {
-        exam: examName(requirement.examId),
+        exam: findExamName(requirement.examId),
         rate: requirement.minRate,
       }),
     })),
@@ -49,7 +63,8 @@ function listActiveFilters(filters, t) {
 
 function ActiveFilters({ filters, onRemoveFilter, onReset }) {
   const { t } = useTranslation('home')
-  const activeFilters = listActiveFilters(filters, t)
+  const translateReference = useReferenceLabel()
+  const activeFilters = listActiveFilters(filters, t, translateReference)
   if (activeFilters.length === 0) return null
 
   return (
@@ -72,6 +87,7 @@ function ActiveFilters({ filters, onRemoveFilter, onReset }) {
 // applique le filtre, un second clic le retire.
 function TypeTabs({ types, activeTypeId, onToggleType }) {
   const { t } = useTranslation('home')
+  const translateReference = useReferenceLabel()
   if (types.length === 0) return null
 
   return (
@@ -90,7 +106,7 @@ function TypeTabs({ types, activeTypeId, onToggleType }) {
                 : 'border-line bg-surface text-navy hover:border-primary hover:text-primary-deep'
             }`}
           >
-            {type.name}
+            {translateReference('types', type.name)}
           </button>
         )
       })}

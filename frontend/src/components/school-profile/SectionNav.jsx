@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next'
+
 import Container from '../ui/Container'
 import { useActiveSection } from '../../hooks/useActiveSection'
 import { scrollToSection } from '../../utils/scroll'
@@ -6,11 +8,12 @@ import { scrollToSection } from '../../utils/scroll'
 // des liens : le routage du site passe par le « # » de l'adresse, et un lien
 // d'ancre ferait quitter la fiche.
 function SectionNav({ sections }) {
+  const { t } = useTranslation('profile')
   const activeSectionId = useActiveSection(sections.map((section) => section.id))
 
   return (
     <nav
-      aria-label="Sections of this profile"
+      aria-label={t('sections.navigation')}
       className="sticky top-16 z-40 border-b border-line bg-surface/95 backdrop-blur-md lg:top-20"
     >
       <Container>

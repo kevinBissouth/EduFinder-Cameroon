@@ -7,6 +7,7 @@ import Container from './ui/Container'
 import SectionHeading, { Emphasis } from './ui/SectionHeading'
 import { API_URL } from '../constants'
 import { formatFcfa } from '../utils/format'
+import { useReferenceLabel } from '../hooks/useReferenceLabel'
 import { scrollToSection } from '../utils/scroll'
 
 const PREVIEW_SIZE = 3
@@ -54,6 +55,7 @@ function PreviewThumbnail({ institution }) {
 
 function PreviewRow({ institution, onView }) {
   const { t } = useTranslation('home')
+  const translateReference = useReferenceLabel()
 
   return (
     <li>
@@ -68,7 +70,7 @@ function PreviewRow({ institution, onView }) {
             {institution.name}
           </span>
           <span className="block text-sm text-ink">
-            {institution.city} · {institution.type}
+            {institution.city} · {translateReference('types', institution.type)}
           </span>
           {institution.min_tuition != null && (
             <span className="block text-xs tabular-nums text-ink-soft">

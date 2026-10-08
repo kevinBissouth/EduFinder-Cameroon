@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 
 import Button from './ui/Button'
 import Container from './ui/Container'
+import { useReferenceLabel } from '../hooks/useReferenceLabel'
 
 const FOOTER_LINK_CLASSES =
   'flex min-h-11 cursor-pointer items-center rounded-control text-left text-sm text-on-navy-soft transition-colors hover:text-white'
@@ -19,6 +20,7 @@ const DIRECTORY_LINKS = [
 // onNavigateToType (fiche d'établissement), la colonne n'est pas affichée.
 function Footer({ types = [], onNavigateToType }) {
   const { t } = useTranslation()
+  const translateReference = useReferenceLabel()
   const currentYear = new Date().getFullYear()
 
   return (
@@ -70,7 +72,7 @@ function Footer({ types = [], onNavigateToType }) {
                     onClick={() => onNavigateToType(type.id)}
                     className={FOOTER_LINK_CLASSES}
                   >
-                    {type.name}
+                    {translateReference('types', type.name)}
                   </button>
                 </li>
               ))}

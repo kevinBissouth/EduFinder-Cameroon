@@ -1,0 +1,136 @@
+{
+  "loading": "Chargement de la fiche",
+  "notFound": {
+    "title": "Cet établissement est introuvable",
+    "description": "Il n'est peut-être plus publié, ou le lien est incorrect.",
+    "action": "Retour à tous les établissements"
+  },
+  "sections": {
+    "navigation": "Sections de cette fiche",
+    "overview": "Aperçu",
+    "fees": "Frais",
+    "results": "Résultats aux examens",
+    "offer": "Filières et services",
+    "gallery": "Galerie",
+    "contact": "Localisation et contact"
+  },
+  "hero": {
+    "breadcrumb": "Fil d'Ariane",
+    "schools": "Établissements",
+    "eyebrow": "Fiche de l'établissement",
+    "linkCopied": "Lien copié",
+    "copyFailed": "Copiez l'adresse depuis la barre de votre navigateur",
+    "copyLink": "Copier le lien de cet établissement",
+    "visitWebsite": "Voir le site web",
+    "contact": "Contacter l'établissement",
+    "photoAlt": "{{name}}, {{city}}"
+  },
+  "facts": {
+    "label": "Informations clés",
+    "type": "Type d'établissement",
+    "section": "Section linguistique",
+    "sector": "Secteur",
+    "feesFrom": "Frais à partir de, par an",
+    "bestPassRate": "Meilleur taux de réussite, {{session}}"
+  },
+  "overview": {
+    "eyebrow": "En bref",
+    "title": "Ce qu'il faut savoir <emphasis>avant</emphasis> la visite.",
+    "showLess": "Réduire",
+    "readMore": "Lire toute la présentation",
+    "noDescription": "Cet établissement n'a pas encore publié de présentation.",
+    "location": "Localisation",
+    "programsOffered": "Filières proposées",
+    "servicesOnSite": "Services sur place",
+    "examSessions": "Sessions d'examen publiées",
+    "photos": "Photos"
+  },
+  "contact": {
+    "title": "Contacter l'établissement",
+    "none": "Cet établissement n'a pas encore publié ses coordonnées.",
+    "sendEnquiry": "Envoyer une demande",
+    "enquirySubject": "Demande d'admission : {{name}}"
+  },
+  "fees": {
+    "eyebrow": "Frais",
+    "title": "Les frais par classe, <emphasis>année</emphasis> après année.",
+    "classCount_one": "{{count}} classe",
+    "classCount_many": "{{count}} classes",
+    "classCount_other": "{{count}} classes",
+    "sameAmount": "{{amount}} par an, pour {{classes}}.",
+    "range": "De {{lowest}} à {{highest}} par an, pour {{classes}}.",
+    "schoolYear": "Année scolaire",
+    "askSchool": "À demander à l'établissement",
+    "caption": "Frais annuels pour {{year}}",
+    "class": "Classe",
+    "yearlyFee": "Frais annuels",
+    "paymentPlans": "Modalités de paiement"
+  },
+  "results": {
+    "eyebrow": "Résultats aux examens",
+    "title": "Les taux de réussite, <emphasis>session</emphasis> après session.",
+    "lead": "La dernière session publiée pour chaque examen, puis l'évolution de chaque taux dans le temps.",
+    "session": "session {{session}}",
+    "overTime": "Évolution du taux de réussite",
+    "chartLabel": "Taux de réussite par examen et par session",
+    "pointTitle": "{{exam}}, {{session}} : {{rate}}"
+  },
+  "offer": {
+    "eyebrow": "Filières et services",
+    "title": "Ce qui fait la vie de l'école <emphasis>au quotidien.</emphasis>",
+    "programs": "Filières",
+    "services": "Services sur place"
+  },
+  "gallery": {
+    "eyebrow": "Galerie",
+    "title": "Voyez l'établissement <emphasis>avant</emphasis> d'y aller.",
+    "enlarge": "Agrandir la photo",
+    "enlargeNamed": "Agrandir la photo : {{caption}}",
+    "enlarged": "Photo agrandie",
+    "close": "Fermer la photo",
+    "document": "Document"
+  },
+  "leadership": {
+    "eyebrow": "Direction"
+  },
+  "location": {
+    "eyebrow": "Localisation et contact",
+    "title": "Trouvez l'établissement et <emphasis>prenez contact.</emphasis>",
+    "noPosition": "{{place}}. Cet établissement n'a pas encore publié de position précise."
+  },
+  "cta": {
+    "title": "Continuez à comparer. Choisissez en toute <emphasis>confiance.</emphasis>",
+    "lead": "Regardez d'autres établissements de la même ville ou du même type avant de décider.",
+    "action": "Explorer d'autres établissements"
+  },
+  "questions": {
+    "eyebrow": "Questions et réponses",
+    "title": "Les questions à <emphasis>poser</emphasis> avant de vous renseigner.",
+    "fees": {
+      "question": "Combien coûte une année ?",
+      "none": "Cet établissement n'a pas encore publié ses frais. Contactez-le directement pour les connaître.",
+      "answer": "Pour {{year}}, les frais indiqués vont de {{lowest}} à {{highest}} par an, selon la classe."
+    },
+    "exams": {
+      "question": "Quels examens l'établissement publie-t-il ?",
+      "none": "Aucun résultat d'examen n'est encore publié pour cet établissement.",
+      "answer": "Il publie ses taux de réussite pour : {{exams}}. La session la plus récente est {{session}}."
+    },
+    "language": {
+      "question": "Dans quelle langue les cours sont-ils donnés ?",
+      "answer": "L'établissement est enregistré dans la section {{section}}."
+    },
+    "sector": {
+      "question": "Est-ce un établissement public ou privé ?",
+      "answer": "Il est enregistré comme établissement {{sector}}, dans la catégorie « {{type}} »."
+    },
+    "contact": {
+      "question": "Comment contacter l'établissement ?",
+      "none": "Cet établissement n'a pas encore publié de téléphone ni d'e-mail.",
+      "call": "appeler le {{phone}}",
+      "write": "écrire à {{email}}",
+      "or": " ou ",
+      "answer": "Vous pouvez {{ways}}."
+    }
+  }
+}

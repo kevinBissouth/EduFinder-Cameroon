@@ -4,8 +4,20 @@ import { useTranslation } from 'react-i18next'
 
 import Button from './ui/Button'
 import { CONTROL_CLASSES, SelectField, TextField } from './ui/Field'
+import { translateOptionNames, useReferenceLabel } from '../hooks/useReferenceLabel'
 
 const EMPTY_EXAM_REQUIREMENT = { examId: '', minRate: '' }
+
+// La base contient deux lignes pour le secteur privé (« private », « privé »)
+// et la recherche les regroupe déjà : je n'en propose qu'une dans la liste.
+function keepFirstOptionPerName(options) {
+  const seenNames = new Set()
+  return options.filter((option) => {
+    if (seenNames.has(option.name)) return false
+    seenNames.add(option.name)
+    return true
+  })
+}
 
 // Critère dont la saisie demande plus qu'une liste : le bouton ouvre un
 // panneau de la même largeur que lui, qui se referme au clic extérieur ou
@@ -114,6 +126,7 @@ function ServicesPanel({ services, selectedNames, onToggle }) {
 
 function ExamRequirementRow({ requirement, exams, onChange, onRemove }) {
   const { t } = useTranslation('home')
+  const translateReference = useReferenceLabel()
 
   return (
     <div className="flex items-center gap-2">
@@ -126,7 +139,7 @@ function ExamRequirementRow({ requirement, exams, onChange, onRemove }) {
         <option value="">{t('filters.exam')}</option>
         {exams.map((exam) => (
           <option key={exam.id} value={exam.id}>
-            {exam.name}
+            {translateReference('exams', exam.name)}
           </option>
         ))}
       </select>
@@ -198,6 +211,7 @@ function ExamPanel({ exams, requirements, onApply }) {
 
 function AdvancedFilters({ advancedFilters }) {
   const { t } = useTranslation('home')
+  const translateReference = useReferenceLabel()
   const {
     meta,
     sectionId,
@@ -222,21 +236,23 @@ function AdvancedFilters({ advancedFilters }) {
         value={sectionId}
         onChange={(event) => onSectionChange(event.target.value)}
         placeholder={t('filters.allSections')}
-        options={meta.languages}
+        options={translateOptionNames(meta.languages, 'sections', translateReference)}
       />
       <SelectField
         label={t('filters.sector')}
         value={sectorId}
         onChange={(event) => onSectorChange(event.target.value)}
         placeholder={t('filters.allSectors')}
-        options={meta.sectors}
+        options={keepFirstOptionPerName(
+          translateOptionNames(meta.sectors, 'sectors', translateReference),
+        )}
       />
       <SelectField
         label={t('filters.region')}
         value={regionId}
         onChange={(event) => onRegionChange(event.target.value)}
         placeholder={t('filters.allRegions')}
-        options={meta.regions}
+        options={translateOptionNames(meta.regions, 'regions', translateReference)}
       />
       <PopoverFilter label={t('filters.yearlyBudget')} activeCount={minFee || maxFee ? 1 : 0}>
         {({ close }) => (
