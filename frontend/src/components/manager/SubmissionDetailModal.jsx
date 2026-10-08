@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next'
+
 import Button from '../ui/Button'
 import Modal from '../workspace/Modal'
 import Notice from '../workspace/Notice'
@@ -7,10 +9,11 @@ import { formatShortDate } from '../../utils/format'
 
 // Le responsable relit ici exactement ce qu'il a proposé.
 function SubmissionDetailModal({ submission, meta, onClose }) {
+  const { t } = useTranslation('manager')
   const headerExtra = (
     <p className="mt-2 flex flex-wrap items-center gap-2 text-sm text-ink-soft">
       <span className="capitalize">{submission.submission_type}</span>
-      <span>submitted {formatShortDate(submission.submitted_at)}</span>
+      <span>{t('submissions.submittedOn', { date: formatShortDate(submission.submitted_at) })}</span>
       <StatusBadge status={submission.submission_status} />
     </p>
   )
@@ -22,7 +25,7 @@ function SubmissionDetailModal({ submission, meta, onClose }) {
       onClose={onClose}
       footer={
         <Button variant="secondary" onClick={onClose} className="w-full sm:w-auto">
-          Close
+          {t('actions.close')}
         </Button>
       }
     >

@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next'
+
 import {
   Building2,
   ChartNoAxesColumn,
@@ -26,6 +28,7 @@ import SchoolLeadership from './SchoolLeadership'
 import { useModificationProposal } from '../../hooks/useModificationProposal'
 import { typeSupportsExamResults, typeSupportsPrograms } from '../../utils/establishmentType'
 import { toExternalUrl } from '../school-profile/helpers'
+import { useReferenceLabel } from '../../hooks/useReferenceLabel'
 
 const GALLERY_NARROW_GRID = 'grid-cols-2 sm:grid-cols-3 xl:grid-cols-2'
 const GALLERY_WIDE_GRID = 'grid-cols-2 sm:grid-cols-3 xl:grid-cols-5'
@@ -67,11 +70,13 @@ function placeCell(cellClasses, rowIndex) {
 }
 
 function ComparePanel({ benchmarks, showExamResults, className }) {
+  const { t } = useTranslation('manager')
+
   return (
     <Panel
       icon={Scale}
       tone="violet"
-      title="How you compare"
+      title={t('detail.compare')}
       description={benchmarks ? describeBenchmarkSample(benchmarks) : ''}
       className={className}
     >
@@ -79,7 +84,7 @@ function ComparePanel({ benchmarks, showExamResults, className }) {
         <BenchmarkComparisons benchmarks={benchmarks} showExamResults={showExamResults} />
       ) : (
         <p role="status" className="text-sm text-ink-soft">
-          Loading the comparison…
+          {t('detail.loadingComparison')}
         </p>
       )}
     </Panel>
@@ -93,6 +98,8 @@ function SchoolDetailContent({
   onEditSchool,
   onProposalSubmitted,
 }) {
+  const { t } = useTranslation('manager')
+  const translateReference = useReferenceLabel()
   const proposal = useModificationProposal(detail.uuid, onProposalSubmitted)
   const showExamResults = typeSupportsExamResults(detail.type)
   const submitField = (fieldName) => (fieldValue) =>
@@ -108,12 +115,12 @@ function SchoolDetailContent({
         <Panel
           icon={FileText}
           tone="blue"
-          title="About the school"
+          title={t('detail.about')}
           className={placeCell(WIDE_CELL, 0)}
         >
           <InlineField
             {...inlineFieldProps}
-            label="Description"
+            label={t('detail.description')}
             value={detail.description}
             isMultiline
             onSubmit={submitField('description')}
@@ -123,7 +130,7 @@ function SchoolDetailContent({
         <Panel
           icon={UserRound}
           tone="violet"
-          title="Head of school"
+          title={t('detail.headOfSchool')}
           className={placeCell(WIDE_CELL, 1)}
         >
           <SchoolLeadership detail={detail} onProposalSubmitted={onProposalSubmitted} />
@@ -132,8 +139,8 @@ function SchoolDetailContent({
         <Panel
           icon={WalletCards}
           tone="green"
-          title="School fees"
-          description="You can change the most recent school year. Each change is reviewed before it goes public."
+          title={t('fees.title')}
+          description={t('fees.panelDescription')}
           className={placeCell(WIDE_CELL, 2)}
         >
           <ManagerFeesSection
@@ -149,7 +156,7 @@ function SchoolDetailContent({
           <Panel
             icon={ChartNoAxesColumn}
             tone="blue"
-            title="Exam results"
+            title={t('detail.examResults')}
             className={placeCell(WIDE_CELL, 3)}
           >
             <ExamResultsChart examResults={detail.exam_results} />
@@ -160,8 +167,8 @@ function SchoolDetailContent({
         <Panel
           icon={Images}
           tone="amber"
-          title="Photos and videos"
-          description="Each file you add or remove is reviewed before the public page changes."
+          title={t('detail.media')}
+          description={t('detail.mediaDescription')}
           className={placeCell(hasExamChart ? NARROW_CELL : FULL_ROW_CELL, 3)}
         >
           <SchoolGallery
@@ -173,30 +180,30 @@ function SchoolDetailContent({
           />
         </Panel>
 
-        <Panel icon={Phone} tone="blue" title="Contact" className={placeCell(NARROW_CELL, 0)}>
+        <Panel icon={Phone} tone="blue" title={t('detail.contact')} className={placeCell(NARROW_CELL, 0)}>
           <div className="divide-y divide-line">
             <InlineField
               {...inlineFieldProps}
-              label="Phone"
+              label={t('detail.phone')}
               value={detail.phone}
               onSubmit={submitField('phone')}
             />
             <InlineField
               {...inlineFieldProps}
-              label="Email"
+              label={t('detail.email')}
               value={detail.contact_email}
               onSubmit={submitField('contact_email')}
             />
             <InlineField
               {...inlineFieldProps}
-              label="Website"
+              label={t('detail.website')}
               value={detail.website}
               href={toExternalUrl(detail.website)}
               onSubmit={submitField('website')}
             />
             <InlineField
               {...inlineFieldProps}
-              label="Address"
+              label={t('detail.address')}
               value={detail.address}
               onSubmit={submitField('address')}
             />
@@ -205,19 +212,19 @@ function SchoolDetailContent({
 
         {/* Services et programmes se partagent la hauteur du bloc voisin. */}
         <div className={`flex flex-col gap-6 ${placeCell(NARROW_CELL, 1)}`}>
-          <Panel icon={Wrench} tone="violet" title="Services" className="flex-1">
+          <Panel icon={Wrench} tone="violet" title={t('detail.services')} className="flex-1">
             <TagList
-              title="Services"
+              title={t('detail.services')}
               tags={detail.services.map((service) => service.name)}
-              emptyMessage="No service is listed yet."
+              emptyMessage={t('detail.noService')}
             />
           </Panel>
           {typeSupportsPrograms(detail.type) && (
-            <Panel icon={GraduationCap} tone="green" title="Programmes" className="flex-1">
+            <Panel icon={GraduationCap} tone="green" title={t('detail.programmes')} className="flex-1">
               <TagList
-                title="Programmes"
-                tags={detail.programs}
-                emptyMessage="No programme is listed yet."
+                title={t('detail.programmes')}
+                tags={detail.programs.map((program) => translateReference('programs', program))}
+                emptyMessage={t('detail.noProgramme')}
               />
             </Panel>
           )}
@@ -236,14 +243,15 @@ function SchoolDetailContent({
 // Fiche d'un établissement vue par son responsable : il y relit ce qui est
 // publié et propose ses changements, tous soumis à validation.
 function ManagerSchoolDetail({ detail, detailStatus, onRetry, ...contentProps }) {
+  const { t } = useTranslation('manager')
   if (detailStatus === 'error') {
     return (
       <StateMessage
         icon={Building2}
         tone="danger"
-        title="This school could not be loaded"
-        description="The server did not answer. Check your connection, then try again."
-        actionLabel="Try again"
+        title={t('page.schoolErrorTitle')}
+        description={t('page.serverError')}
+        actionLabel={t('workspace:retry')}
         onAction={onRetry}
       />
     )
@@ -251,7 +259,7 @@ function ManagerSchoolDetail({ detail, detailStatus, onRetry, ...contentProps })
   if (!detail) {
     return (
       <p role="status" className="py-16 text-center text-sm text-ink-soft">
-        Loading the school…
+        {t('page.loadingSchool')}
       </p>
     )
   }

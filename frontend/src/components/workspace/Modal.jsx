@@ -1,11 +1,13 @@
 import { useEffect, useId } from 'react'
 import { X } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 // Fenêtre modale des espaces privés : plein bas d'écran sur téléphone, centrée
 // au-delà. Elle se ferme par Échap, par le bouton ou par un clic sur le voile.
 const SIZE_CLASSES = { md: 'max-w-xl', lg: 'max-w-4xl' }
 
 function Modal({ title, headerExtra, footer, size = 'md', onClose, children }) {
+  const { t } = useTranslation('workspace')
   const titleId = useId()
 
   useEffect(() => {
@@ -40,7 +42,7 @@ function Modal({ title, headerExtra, footer, size = 'md', onClose, children }) {
           <button
             type="button"
             autoFocus
-            aria-label="Close"
+            aria-label={t('close')}
             onClick={onClose}
             className="flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-full text-ink-soft hover:bg-muted hover:text-navy"
           >

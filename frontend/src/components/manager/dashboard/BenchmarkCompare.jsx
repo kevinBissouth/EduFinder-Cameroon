@@ -1,4 +1,5 @@
 import { Scale } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 import ChartCard from '../../charts/ChartCard'
 import { describeBenchmarkSample } from './benchmarkText'
@@ -26,11 +27,12 @@ function CompareBar({ label, value, highestValue, barClass, formatValue }) {
 // Deux barres côte à côte : l'établissement et la moyenne du même type. Sans
 // l'une des deux valeurs il n'y a rien à comparer, la ligne le dit.
 function Comparison({ label, schoolValue, averageValue, formatValue }) {
+  const { t } = useTranslation('manager')
   if (schoolValue == null || averageValue == null) {
     return (
       <div>
         <p className="text-sm font-semibold text-navy">{label}</p>
-        <p className="mt-1 text-sm text-ink-soft">Not enough data to compare yet.</p>
+        <p className="mt-1 text-sm text-ink-soft">{t('dashboard.notEnoughData')}</p>
       </div>
     )
   }
@@ -41,14 +43,14 @@ function Comparison({ label, schoolValue, averageValue, formatValue }) {
       <p className="text-sm font-semibold text-navy">{label}</p>
       <div className="mt-2 space-y-2">
         <CompareBar
-          label="You"
+          label={t('dashboard.you')}
           value={schoolValue}
           highestValue={highestValue}
           barClass="bg-primary"
           formatValue={formatValue}
         />
         <CompareBar
-          label="Average"
+          label={t('dashboard.average')}
           value={averageValue}
           highestValue={highestValue}
           barClass="bg-violet"
@@ -62,17 +64,19 @@ function Comparison({ label, schoolValue, averageValue, formatValue }) {
 // Les deux comparaisons, sans leur cadre : le tableau de bord et la fiche
 // détaillée les posent chacun dans leur propre bloc.
 export function BenchmarkComparisons({ benchmarks, showExamResults }) {
+  const { t } = useTranslation('manager')
+
   return (
     <div className="flex h-full flex-col justify-center gap-6">
       <Comparison
-        label="Lowest yearly fee"
+        label={t('dashboard.lowestFee')}
         schoolValue={benchmarks.your_min_tuition}
         averageValue={benchmarks.avg_min_tuition_same_type}
         formatValue={formatFcfa}
       />
       {showExamResults && (
         <Comparison
-          label="Best exam pass rate"
+          label={t('dashboard.bestPassRate')}
           schoolValue={benchmarks.your_best_pass_rate}
           averageValue={benchmarks.avg_best_pass_rate_same_type}
           formatValue={formatPercent}
@@ -83,11 +87,13 @@ export function BenchmarkComparisons({ benchmarks, showExamResults }) {
 }
 
 function BenchmarkCompare({ benchmarks, showExamResults }) {
+  const { t } = useTranslation('manager')
+
   return (
     <ChartCard
       icon={Scale}
       tone="violet"
-      title="Against similar schools"
+      title={t('dashboard.benchmarkTitle')}
       description={benchmarks ? describeBenchmarkSample(benchmarks) : ''}
       status={benchmarks ? 'ready' : 'loading'}
     >

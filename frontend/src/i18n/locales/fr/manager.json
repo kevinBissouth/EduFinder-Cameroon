@@ -1,0 +1,277 @@
+{
+  "nav": {
+    "dashboard": "Tableau de bord",
+    "home": "Accueil",
+    "yourSchools": "Vos établissements",
+    "schools": "Écoles",
+    "submissions": "Soumissions",
+    "feesAndPayments": "Frais et paiements",
+    "fees": "Frais",
+    "examResults": "Résultats aux examens",
+    "exams": "Examens",
+    "services": "Services",
+    "account": "Compte"
+  },
+  "views": {
+    "school-detail": "Détails de l'établissement",
+    "form-creation": "Proposer un établissement",
+    "form-modification": "Proposer des modifications"
+  },
+  "roles": {
+    "super_admin": "Super administrateur",
+    "manager": "Responsable d'établissement"
+  },
+  "actions": {
+    "sendForReview": "Envoyer pour validation",
+    "cancel": "Annuler",
+    "edit": "Modifier",
+    "open": "Ouvrir",
+    "proposeChanges": "Proposer des modifications",
+    "proposeSchool": "Proposer un établissement",
+    "viewPublicPage": "Voir la page publique",
+    "openSchoolDetails": "Ouvrir les détails",
+    "close": "Fermer"
+  },
+  "page": {
+    "proposalSent": "Proposition envoyée. Un super administrateur va l'examiner.",
+    "changesSent": "Modifications envoyées pour validation.",
+    "noSchoolTitle": "Aucun établissement pour l'instant",
+    "noSchoolDescription": "Proposez votre premier établissement. Un super administrateur l'examine avant qu'il devienne public.",
+    "noSchoolSection": "Dès qu'un établissement que vous avez proposé est approuvé, vous gérez cette partie de sa page ici.",
+    "changeHint": "Pour changer votre nom, votre e-mail ou votre mot de passe, adressez-vous à un super administrateur.",
+    "schoolsYouManage": "Établissements que vous gérez",
+    "loadingWorkspace": "Chargement de votre espace…",
+    "workspaceErrorTitle": "Votre espace n'a pas pu être chargé",
+    "serverError": "Le serveur n'a pas répondu. Vérifiez votre connexion, puis réessayez.",
+    "hello": "Bonjour, {{name}}",
+    "subtitle": "Ce qui se passe sur la page de votre établissement.",
+    "loadingSchoolDetails": "Chargement des détails…",
+    "loadingSchool": "Chargement de l'établissement…",
+    "schoolErrorTitle": "Cet établissement n'a pas pu être chargé",
+    "awaitingReview": "Modifications en attente de validation",
+    "school": "Établissement"
+  },
+  "dashboard": {
+    "passRatesTitle": "Taux de réussite aux examens",
+    "passRatesDescription": "Par examen, session après session.",
+    "noExamResult": "Aucun résultat d'examen n'est encore enregistré.",
+    "visitsTotal": "Visites au total",
+    "changesAwaiting": "Modifications en attente",
+    "changesApproved": "Modifications approuvées",
+    "activityTitle": "Visites et demandes de contact",
+    "activityDescription": "Les familles qui ont ouvert la page publique, et celles qui ont pris contact.",
+    "submissionsTitle": "Soumissions",
+    "submissionsDescription": "Examinées par un super administrateur avant d'être publiées.",
+    "submissionsEmpty": "Rien n'a encore été soumis pour cet établissement.",
+    "viewAll": "Tout voir",
+    "benchmarkTitle": "Face aux établissements similaires",
+    "benchmarkSample_one": "{{count}} établissement publié du même type",
+    "benchmarkSample_many": "{{count}} établissements publiés du même type",
+    "benchmarkSample_other": "{{count}} établissements publiés du même type",
+    "you": "Vous",
+    "average": "Moyenne",
+    "lowestFee": "Frais annuels les plus bas",
+    "bestPassRate": "Meilleur taux de réussite",
+    "notEnoughData": "Pas encore assez de données pour comparer.",
+    "openDetailsSuffix": ", ouvrir les détails"
+  },
+  "exams": {
+    "rateLabel": "Taux de réussite {{exam}} pour {{session}} (%)",
+    "editRate": "Modifier le taux de réussite {{exam}} {{session}}",
+    "sessionsRecorded_one": "session enregistrée",
+    "sessionsRecorded_many": "sessions enregistrées",
+    "sessionsRecorded_other": "sessions enregistrées",
+    "latestSession": "dernière session",
+    "bestPassRate": "meilleur taux de réussite",
+    "rateRange": "Saisissez un taux de réussite entre 0 et {{maximum}}.",
+    "showLatest": "Afficher la dernière session seulement",
+    "showAll": "Afficher toutes les sessions",
+    "title": "Résultats aux examens",
+    "description": "Les taux de réussite que les familles voient sur la page de {{school}}. Chaque modification est examinée avant d'être publiée.",
+    "empty": "Aucun résultat d'examen n'est encore enregistré. Utilisez « Proposer des modifications » sur l'établissement pour en ajouter."
+  },
+  "fees": {
+    "amountLabel": "Montant pour {{year}} (FCFA)",
+    "paymentPlans": "Modalités de paiement",
+    "noPaymentPlan": "Aucune modalité de paiement",
+    "yearlyFee": "Frais annuels",
+    "editFee": "Modifier les frais de {{className}}",
+    "title": "Frais de scolarité",
+    "amountAboveZero": "Saisissez un montant supérieur à zéro.",
+    "unchanged": "Rien n'a été envoyé : le montant et les modalités de paiement sont inchangés.",
+    "empty": "Aucun frais n'est encore enregistré. Utilisez « Proposer des modifications » sur l'établissement pour en ajouter.",
+    "levelsIn_one": "niveau en {{year}}",
+    "levelsIn_many": "niveaux en {{year}}",
+    "levelsIn_other": "niveaux en {{year}}",
+    "perYear": "par an",
+    "lowest": "frais annuels les plus bas",
+    "highest": "frais annuels les plus élevés",
+    "description": "Ce que {{school}} facture par niveau. Vous pouvez modifier l'année scolaire la plus récente ; chaque modification est examinée avant d'être publiée.",
+    "panelDescription": "Vous pouvez modifier l'année scolaire la plus récente. Chaque modification est examinée avant d'être publiée."
+  },
+  "detail": {
+    "about": "À propos de l'établissement",
+    "description": "Description",
+    "headOfSchool": "Chef d'établissement",
+    "examResults": "Résultats aux examens",
+    "media": "Photos et vidéos",
+    "mediaDescription": "Chaque fichier ajouté ou retiré est examiné avant que la page publique change.",
+    "contact": "Contact",
+    "phone": "Téléphone",
+    "email": "E-mail",
+    "website": "Site web",
+    "address": "Adresse",
+    "services": "Services",
+    "noService": "Aucun service n'est encore indiqué.",
+    "programmes": "Filières",
+    "noProgramme": "Aucune filière n'est encore indiquée.",
+    "compare": "Votre position",
+    "loadingComparison": "Chargement de la comparaison…",
+    "editField": "Modifier : {{field}}",
+    "photoAlt": "{{name}}, {{city}}",
+    "notProvided": "Non renseigné"
+  },
+  "gallery": {
+    "confirmRemoval": "Demander le retrait de ce fichier de la page publique ? Un super administrateur examine la demande.",
+    "photos": "Photos",
+    "photoAlt": "Photo de {{school}}",
+    "remove": "Retirer",
+    "addPhoto": "Ajouter une photo",
+    "addVideo": "Ajouter une vidéo"
+  },
+  "leadership": {
+    "portraitAlt": "Portrait de {{name}}",
+    "portraitAltUnknown": "Portrait du chef d'établissement",
+    "none": "Aucun chef d'établissement n'est encore présenté. Utilisez « Proposer des modifications » pour en ajouter un.",
+    "changePhoto": "Changer la photo"
+  },
+  "schools": {
+    "summary_one": "Vous gérez {{count}} établissement, dont {{published}} visible par le public.",
+    "summary_many": "Vous gérez {{count}} établissements, dont {{published}} visibles par le public.",
+    "summary_other": "Vous gérez {{count}} établissements, dont {{published}} visibles par le public.",
+    "openNamed": "Ouvrir {{name}}",
+    "proposeNamed": "Proposer des modifications pour {{name}}",
+    "title": "Vos établissements"
+  },
+  "submissions": {
+    "summary_one": "Vous avez proposé {{count}} modification. Chacune est examinée par un super administrateur avant d'être publiée.",
+    "summary_many": "Vous avez proposé {{count}} modifications. Chacune est examinée par un super administrateur avant d'être publiée.",
+    "summary_other": "Vous avez proposé {{count}} modifications. Chacune est examinée par un super administrateur avant d'être publiée.",
+    "emptyTitle": "Aucune soumission pour l'instant",
+    "emptyDescription": "Proposez un établissement ou une modification sur l'un des vôtres. L'état de sa validation apparaîtra ici.",
+    "title": "Vos soumissions",
+    "view": "Voir ce qui a été proposé",
+    "viewNamed": "Voir ce qui a été proposé pour {{school}} le {{date}}",
+    "approved_one": "approuvée",
+    "approved_many": "approuvées",
+    "approved_other": "approuvées",
+    "awaiting_one": "en attente",
+    "awaiting_many": "en attente",
+    "awaiting_other": "en attente",
+    "rejected_one": "refusée",
+    "rejected_many": "refusées",
+    "rejected_other": "refusées",
+    "submittedOn": "soumis le {{date}}"
+  },
+  "services": {
+    "newName": "Nouveau nom pour {{name}}",
+    "rename": "Renommer",
+    "renameNamed": "Renommer {{name}}",
+    "enterName": "Saisissez le nom d'un service.",
+    "duplicate": "« {{name}} » figure déjà dans la liste.",
+    "title": "Services",
+    "description": "Ce que {{school}} propose en plus de l'enseignement. Chaque modification est examinée avant d'être publiée.",
+    "listed_one": "service indiqué",
+    "listed_many": "services indiqués",
+    "listed_other": "services indiqués",
+    "add": "Ajouter un service",
+    "empty": "Aucun service n'est encore indiqué."
+  },
+  "form": {
+    "step": "Étape {{current}} sur {{total}}",
+    "newSchool": "Un nouvel établissement",
+    "creationLead": "Un super administrateur examine la proposition avant que l'établissement devienne public.",
+    "modificationLead": "Remplissez seulement ce que vous voulez changer. Tout le reste de la page reste tel quel.",
+    "sending": "Envoi…",
+    "next": "Suivant",
+    "back": "Retour",
+    "required": " (obligatoire)",
+    "choose": "Choisir…",
+    "uploading": "Envoi du fichier…",
+    "steps": {
+      "general": {
+        "title": "L'établissement",
+        "lead": "Son nom, comment le joindre et comment il se présente."
+      },
+      "classification": {
+        "title": "Localisation et type",
+        "lead": "Où se trouve l'établissement et comment il est classé."
+      },
+      "programmes": {
+        "title": "Filières",
+        "lead": "Sélectionnez toutes les filières enseignées. Votre sélection remplace la liste actuelle."
+      },
+      "fees": {
+        "title": "Frais",
+        "lead": "Un montant annuel par niveau et par année scolaire. Les frais que vous n'indiquez pas restent tels quels."
+      },
+      "services": {
+        "title": "Services",
+        "lead": "Sélectionnez tout ce que l'établissement propose. Votre sélection remplace la liste actuelle."
+      },
+      "results": {
+        "title": "Résultats aux examens",
+        "lead": "Taux de réussite officiels par examen et par session. Les résultats que vous n'indiquez pas restent tels quels."
+      },
+      "leadership": {
+        "title": "Chef d'établissement",
+        "lead": "La personne qui dirige l'établissement, présentée sur sa page publique."
+      },
+      "media": {
+        "title": "Photos et vidéos",
+        "lead": "Les fichiers sont envoyés maintenant et apparaissent sur la page une fois la proposition approuvée."
+      }
+    },
+    "fields": {
+      "schoolName": "Nom de l'établissement",
+      "schoolNamePlaceholder": "Académie Bilingue de Douala",
+      "city": "Ville",
+      "schoolType": "Type d'établissement",
+      "sector": "Secteur",
+      "section": "Section linguistique",
+      "addressPlaceholder": "Bonanjo, B.P. 12345 Douala",
+      "noProgramme": "Aucune filière ne peut encore être sélectionnée.",
+      "noService": "Aucun service ne peut encore être sélectionné.",
+      "directorName": "Nom",
+      "directorNamePlaceholder": "Dr Marie Ngono",
+      "directorTitle": "Titre",
+      "directorTitlePlaceholder": "Proviseur",
+      "biography": "Biographie",
+      "portrait": "Portrait",
+      "coverPhoto": "Photo de couverture"
+    },
+    "rows": {
+      "removeFee": "Retirer ces frais",
+      "level": "Niveau",
+      "chooseLevel": "Choisir un niveau",
+      "yearlyAmount": "Montant annuel (FCFA)",
+      "schoolYear": "Année scolaire",
+      "addFee": "Ajouter des frais",
+      "removeResult": "Retirer ce résultat",
+      "exam": "Examen",
+      "chooseExam": "Choisir un examen",
+      "session": "Session",
+      "passRate": "Taux de réussite (%)",
+      "addResult": "Ajouter un résultat"
+    },
+    "files": {
+      "preview": "Aperçu : {{title}}",
+      "removeNamed": "Retirer : {{title}}",
+      "replacePhoto": "Remplacer la photo",
+      "choosePhoto": "Choisir une photo (JPG, PNG ou WebP)",
+      "videos": "Vidéos",
+      "removeVideo": "Retirer cette vidéo",
+      "addVideo": "Ajouter une vidéo (MP4 ou WebM)"
+    }
+  }
+}

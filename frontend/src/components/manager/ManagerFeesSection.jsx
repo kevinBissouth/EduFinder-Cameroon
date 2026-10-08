@@ -1,20 +1,25 @@
 import { useState } from 'react'
 import { Pencil } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 import Button from '../ui/Button'
 import { TextField } from '../ui/Field'
 import OverflowList from '../workspace/OverflowList'
 import PagedCards from '../workspace/PagedCards'
 import ToggleChipGroup from '../workspace/ToggleChipGroup'
-import { toChipOptions, toggleValue } from '../workspace/toggleChips'
+import { toggleValue } from '../workspace/toggleChips'
 import { findLatestYear } from './schoolYears'
 import { useModificationProposal } from '../../hooks/useModificationProposal'
+import { useReferenceLabel } from '../../hooks/useReferenceLabel'
+import { formatAmount } from '../../utils/format'
 
 function hasSameItems(firstList, secondList) {
   return [...firstList].sort().join('|') === [...secondList].sort().join('|')
 }
 
 function FeeEditor({ fee, paymentMethods, isSubmitting, onSubmit, onCancel }) {
+  const { t } = useTranslation('manager')
+  const translateReference = useReferenceLabel()
   const [amountDraft, setAmountDraft] = useState(String(Number(fee.amount)))
   const [selectedMethods, setSelectedMethods] = useState(fee.payment_methods)
 
@@ -26,7 +31,7 @@ function FeeEditor({ fee, paymentMethods, isSubmitting, onSubmit, onCancel }) {
   return (
     <form onSubmit={handleSubmit} className="mt-4 space-y-4 rounded-control bg-paper p-4">
       <TextField
-        label={`Amount for ${fee.school_year} (FCFA)`}
+        label={t('fees.amountLabel', { year: fee.school_year })}
         type="number"
         min="1"
         step="any"
@@ -36,17 +41,20 @@ function FeeEditor({ fee, paymentMethods, isSubmitting, onSubmit, onCancel }) {
         className="sm:max-w-xs"
       />
       <ToggleChipGroup
-        label="Payment plans"
-        options={toChipOptions(paymentMethods)}
+        label={t('fees.paymentPlans')}
+        options={paymentMethods.map((paymentMethod) => ({
+          value: paymentMethod,
+          label: translateReference('payment_methods', paymentMethod),
+        }))}
         selectedValues={selectedMethods}
         onToggle={(paymentMethod) => setSelectedMethods(toggleValue(selectedMethods, paymentMethod))}
       />
       <div className="flex flex-wrap gap-2">
         <Button type="submit" disabled={isSubmitting}>
-          Send for review
+          {t('actions.sendForReview')}
         </Button>
         <Button variant="secondary" onClick={onCancel} disabled={isSubmitting}>
-          Cancel
+          {t('actions.cancel')}
         </Button>
       </div>
     </form>
@@ -59,17 +67,19 @@ const CURRENT_YEAR_HEADER_CLASS = 'bg-linear-to-br from-primary-deep to-violet-d
 const PAST_YEAR_HEADER_CLASS = 'bg-ink-soft'
 
 function PaymentPlans({ paymentMethods }) {
+  const { t } = useTranslation('manager')
+  const translateReference = useReferenceLabel()
   if (paymentMethods.length === 0) {
-    return <p className="mt-4 text-sm text-ink-soft">No payment plan</p>
+    return <p className="mt-4 text-sm text-ink-soft">{t('fees.noPaymentPlan')}</p>
   }
   return (
-    <ul aria-label="Payment plans" className="mt-4 flex flex-wrap gap-2">
+    <ul aria-label={t('fees.paymentPlans')} className="mt-4 flex flex-wrap gap-2">
       {paymentMethods.map((paymentMethod) => (
         <li
           key={paymentMethod}
           className="rounded-full bg-primary-soft px-3 py-1 text-xs font-semibold text-primary-deep"
         >
-          {paymentMethod}
+          {translateReference('payment_methods', paymentMethod)}
         </li>
       ))}
     </ul>
@@ -80,6 +90,9 @@ function PaymentPlans({ paymentMethods }) {
 // pour l'année en cours, gris pour les années passées, non modifiables), puis
 // le montant en grand et les modalités de paiement.
 function FeeCard({ fee, isCurrentYear, isEditing, onEdit, children }) {
+  const { t } = useTranslation('manager')
+  const translateReference = useReferenceLabel()
+
   return (
     <li className="flex h-full flex-col overflow-hidden rounded-panel border border-line bg-surface shadow-soft">
       <div
@@ -88,7 +101,7 @@ function FeeCard({ fee, isCurrentYear, isEditing, onEdit, children }) {
         }`}
       >
         <div className="min-w-0">
-          <p className="text-xs font-semibold">{fee.stage}</p>
+          <p className="text-xs font-semibold">{translateReference('stages', fee.stage)}</p>
           <h3 className="mt-1 font-display text-2xl leading-display">{fee.class}</h3>
         </div>
         <span className="shrink-0 rounded-full bg-white/20 px-3 py-1 text-xs font-semibold">
@@ -96,18 +109,18 @@ function FeeCard({ fee, isCurrentYear, isEditing, onEdit, children }) {
         </span>
       </div>
       <div className="flex flex-1 flex-col p-5">
-        <p className="text-xs font-semibold text-ink-soft">Yearly fee</p>
+        <p className="text-xs font-semibold text-ink-soft">{t('fees.yearlyFee')}</p>
         <p className="mt-1 font-display text-4xl leading-display text-navy tabular-nums">
-          {Number(fee.amount).toLocaleString('en-US')}{' '}
+          {formatAmount(fee.amount)}{' '}
           <span className="font-sans text-base font-semibold text-ink-soft">FCFA</span>
         </p>
         <PaymentPlans paymentMethods={fee.payment_methods} />
         {children}
         {isCurrentYear && !isEditing && (
           <div className="mt-auto pt-5">
-            <Button variant="secondary" aria-label={`Edit the ${fee.class} fee`} onClick={onEdit}>
+            <Button variant="secondary" aria-label={t('fees.editFee', { className: fee.class })} onClick={onEdit}>
               <Pencil aria-hidden="true" className="size-4" />
-              Edit
+              {t('actions.edit')}
             </Button>
           </div>
         )}
@@ -119,6 +132,7 @@ function FeeCard({ fee, isCurrentYear, isEditing, onEdit, children }) {
 // Dans la fiche détaillée, seuls les premiers frais sont affichés et le reste
 // s'ouvre à la demande ; dans la vue des frais, ils sont paginés.
 function FeeCards({ fees, gridClassName, isCompact, renderCard }) {
+  const { t } = useTranslation('manager')
   if (!isCompact) {
     return <PagedCards items={fees} gridClassName={gridClassName} renderCard={renderCard} />
   }
@@ -126,7 +140,7 @@ function FeeCards({ fees, gridClassName, isCompact, renderCard }) {
     <OverflowList
       items={fees}
       collapsedCount={FEES_SHOWN_WHEN_COMPACT}
-      title="School fees"
+      title={t('fees.title')}
       modalSize="lg"
       renderItems={(shownFees) => (
         <ul className={`grid gap-4 ${COMPACT_GRID_CLASSES}`}>{shownFees.map(renderCard)}</ul>
@@ -146,17 +160,18 @@ function ManagerFeesSection({
   isCompact = false,
   onProposalSubmitted,
 }) {
+  const { t } = useTranslation('manager')
   const [editingLevelId, setEditingLevelId] = useState(null)
   const proposal = useModificationProposal(establishmentUuid, onProposalSubmitted)
   const currentYear = findLatestYear(fees.map((fee) => fee.school_year))
 
   async function submitFee(fee, { amount, paymentMethods: selectedMethods }) {
     if (!Number.isFinite(amount) || amount <= 0) {
-      proposal.showError('Enter an amount above zero.')
+      proposal.showError(t('fees.amountAboveZero'))
       return
     }
     if (amount === Number(fee.amount) && hasSameItems(fee.payment_methods, selectedMethods)) {
-      proposal.showInfo('Nothing was sent: the amount and payment plans are unchanged.')
+      proposal.showInfo(t('fees.unchanged'))
       setEditingLevelId(null)
       return
     }
@@ -200,7 +215,7 @@ function ManagerFeesSection({
   if (fees.length === 0) {
     return (
       <p className="rounded-panel border border-dashed border-line bg-surface p-8 text-center text-sm text-ink-soft">
-        No fee is recorded yet. Use “Propose changes” on the school to add them.
+        {t('fees.empty')}
       </p>
     )
   }

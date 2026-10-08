@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Pencil, Plus, Sparkles } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 import Button from '../ui/Button'
 import { TextField } from '../ui/Field'
@@ -15,6 +16,7 @@ function isSameName(firstName, secondName) {
 }
 
 function ServiceNameForm({ label, initialName, submitLabel, isSubmitting, onSubmit, onCancel }) {
+  const { t } = useTranslation('manager')
   const [nameDraft, setNameDraft] = useState(initialName)
 
   const handleSubmit = async (event) => {
@@ -38,7 +40,7 @@ function ServiceNameForm({ label, initialName, submitLabel, isSubmitting, onSubm
         </Button>
         {onCancel && (
           <Button variant="secondary" onClick={onCancel} disabled={isSubmitting}>
-            Cancel
+            {t('actions.cancel')}
           </Button>
         )}
       </div>
@@ -49,6 +51,8 @@ function ServiceNameForm({ label, initialName, submitLabel, isSubmitting, onSubm
 // Carte d'un service : un pictogramme en dégradé, le nom en grand, et le
 // renommage qui se fait dans la carte.
 function ServiceCard({ serviceName, isRenaming, isSubmitting, onStartRenaming, onRename, onCancel }) {
+  const { t } = useTranslation('manager')
+
   return (
     <li className="flex h-full flex-col rounded-panel border border-line bg-surface p-5 shadow-soft">
       <div className="flex items-center gap-4">
@@ -62,9 +66,9 @@ function ServiceCard({ serviceName, isRenaming, isSubmitting, onStartRenaming, o
       {isRenaming ? (
         <div className="mt-5">
           <ServiceNameForm
-            label={`New name for ${serviceName}`}
+            label={t('services.newName', { name: serviceName })}
             initialName={serviceName}
-            submitLabel="Send for review"
+            submitLabel={t('actions.sendForReview')}
             isSubmitting={isSubmitting}
             onSubmit={onRename}
             onCancel={onCancel}
@@ -72,9 +76,9 @@ function ServiceCard({ serviceName, isRenaming, isSubmitting, onStartRenaming, o
         </div>
       ) : (
         <div className="mt-auto pt-5">
-          <Button variant="secondary" aria-label={`Rename ${serviceName}`} onClick={onStartRenaming}>
+          <Button variant="secondary" aria-label={t('services.renameNamed', { name: serviceName })} onClick={onStartRenaming}>
             <Pencil aria-hidden="true" className="size-4" />
-            Rename
+            {t('services.rename')}
           </Button>
         </div>
       )}
@@ -83,6 +87,7 @@ function ServiceCard({ serviceName, isRenaming, isSubmitting, onStartRenaming, o
 }
 
 function ServicesContent({ detail, onProposalSubmitted }) {
+  const { t } = useTranslation('manager')
   const [renamedServiceName, setRenamedServiceName] = useState(null)
   const proposal = useModificationProposal(detail.uuid, onProposalSubmitted)
   const serviceNames = detail.services.map((service) => service.name)
@@ -91,12 +96,12 @@ function ServicesContent({ detail, onProposalSubmitted }) {
   // donc toujours la liste complète, jamais le seul service ajouté ou renommé.
   async function submitServiceNames(proposedNames, changedName) {
     if (!changedName) {
-      proposal.showError('Enter a service name.')
+      proposal.showError(t('services.enterName'))
       return false
     }
     const isAlreadyListed = serviceNames.some((serviceName) => isSameName(serviceName, changedName))
     if (isAlreadyListed) {
-      proposal.showError(`“${changedName}” is already in the list.`)
+      proposal.showError(t('services.duplicate', { name: changedName }))
       return false
     }
     return proposal.submitProposal({ services: proposedNames })
@@ -116,23 +121,23 @@ function ServicesContent({ detail, onProposalSubmitted }) {
   return (
     <>
       <ViewHero
-        title="Services"
-        description={`What ${detail.name} offers beyond teaching. Each change is reviewed before it goes public.`}
+        title={t('services.title')}
+        description={t('services.description', { school: detail.name })}
         figures={[
           {
             value: serviceNames.length,
-            label: serviceNames.length === 1 ? 'service listed' : 'services listed',
+            label: t('services.listed', { count: serviceNames.length }),
           },
         ]}
       />
       <section className="mb-6 rounded-panel border border-line bg-surface p-5 shadow-soft sm:p-6">
         <ServiceNameForm
-          label="Add a service"
+          label={t('services.add')}
           initialName=""
           submitLabel={
             <>
               <Plus aria-hidden="true" className="size-4" />
-              Send for review
+              {t('actions.sendForReview')}
             </>
           }
           isSubmitting={proposal.isSubmitting}
@@ -141,7 +146,7 @@ function ServicesContent({ detail, onProposalSubmitted }) {
       </section>
       {serviceNames.length === 0 ? (
         <p className="rounded-panel border border-dashed border-line bg-surface p-8 text-center text-sm text-ink-soft">
-          No service is listed yet.
+          {t('services.empty')}
         </p>
       ) : (
         <PagedCards

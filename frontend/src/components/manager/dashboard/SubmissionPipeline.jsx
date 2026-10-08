@@ -1,4 +1,5 @@
 import { ClipboardList } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 import ChartCard from '../../charts/ChartCard'
 import ShareBar from '../../charts/ShareBar'
@@ -10,16 +11,17 @@ import { countSubmissionsByStatus } from '../submissionCounts'
 import { formatShortDate } from '../../../utils/format'
 
 const OUTCOMES = [
-  { status: 'approved', label: 'Approved' },
-  { status: 'pending', label: 'Awaiting review' },
-  { status: 'rejected', label: 'Rejected' },
+  { status: 'approved', labelKey: 'workspace:charts.approved' },
+  { status: 'pending', labelKey: 'workspace:charts.pending' },
+  { status: 'rejected', labelKey: 'workspace:charts.rejected' },
 ]
 
 // Où en sont les soumissions de l'établissement : leur répartition par
 // issue, puis leur liste, qui défile dans le bloc.
 function SubmissionPipeline({ submissions, onViewAll }) {
+  const { t } = useTranslation('manager')
   const segments = OUTCOMES.map((outcome) => ({
-    label: outcome.label,
+    label: t(outcome.labelKey),
     color: findStatusTheme(outcome.status).chartColor,
     value: countSubmissionsByStatus(submissions, outcome.status),
   }))
@@ -28,19 +30,19 @@ function SubmissionPipeline({ submissions, onViewAll }) {
     <ChartCard
       icon={ClipboardList}
       tone="blue"
-      title="Submissions"
-      description="Reviewed by a super administrator before going public."
+      title={t('dashboard.submissionsTitle')}
+      description={t('dashboard.submissionsDescription')}
       count={submissions.length}
       status={submissions.length === 0 ? 'empty' : 'ready'}
-      emptyMessage="Nothing has been submitted for this school yet."
+      emptyMessage={t('dashboard.submissionsEmpty')}
       action={
         <Button variant="ghost" onClick={onViewAll}>
-          View all
+          {t('dashboard.viewAll')}
         </Button>
       }
     >
       <ShareBar segments={segments} />
-      <ScrollArea label="Submissions" className="mt-4">
+      <ScrollArea label={t('dashboard.submissionsTitle')} className="mt-4">
         <ul className="divide-y divide-line">
           {submissions.map((submission) => (
             <li
@@ -49,7 +51,9 @@ function SubmissionPipeline({ submissions, onViewAll }) {
             >
               <p className="text-sm text-ink">
                 <span className="font-semibold capitalize text-navy">
-                  {submission.submission_type}
+                  {t(`workspace:submissionType.${submission.submission_type}`, {
+                    defaultValue: submission.submission_type,
+                  })}
                 </span>
                 , {formatShortDate(submission.submitted_at)}
               </p>

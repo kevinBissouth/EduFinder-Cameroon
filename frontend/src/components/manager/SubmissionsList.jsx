@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { FileText } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
+import i18next from 'i18next'
 
 import StateMessage from '../ui/StateMessage'
 import PagedCards from '../workspace/PagedCards'
@@ -10,15 +12,20 @@ import { countSubmissionsByStatus } from './submissionCounts'
 import { formatShortDate } from '../../utils/format'
 
 function describeSubmissionCount(submissions) {
-  const submissionWord = submissions.length === 1 ? 'change' : 'changes'
-  return `You proposed ${submissions.length} ${submissionWord}. Each one is reviewed by a super administrator before it goes public.`
+  return i18next.t('manager:submissions.summary', { count: submissions.length })
+}
+
+// Chaque pastille accorde son libellé avec son propre nombre.
+function buildOutcomeFigure(submissions, status, labelKey) {
+  const count = countSubmissionsByStatus(submissions, status)
+  return { label: i18next.t(labelKey, { count }), value: count }
 }
 
 function buildOutcomeFigures(submissions) {
   return [
-    { label: 'approved', value: countSubmissionsByStatus(submissions, 'approved') },
-    { label: 'awaiting review', value: countSubmissionsByStatus(submissions, 'pending') },
-    { label: 'rejected', value: countSubmissionsByStatus(submissions, 'rejected') },
+    buildOutcomeFigure(submissions, 'approved', 'manager:submissions.approved'),
+    buildOutcomeFigure(submissions, 'pending', 'manager:submissions.awaiting'),
+    buildOutcomeFigure(submissions, 'rejected', 'manager:submissions.rejected'),
   ]
 }
 
@@ -26,6 +33,7 @@ function buildOutcomeFigures(submissions) {
 // (l'ordre vient de l'API). Chaque carte reprend la photo de l'établissement
 // concerné, retrouvée dans la liste des établissements gérés.
 function SubmissionsList({ submissions, establishments, meta }) {
+  const { t } = useTranslation('manager')
   const [selectedSubmission, setSelectedSubmission] = useState(null)
   const coverUrlBySchool = new Map(
     establishments.map((school) => [school.establishment_uuid, school.cover_url]),
@@ -35,8 +43,8 @@ function SubmissionsList({ submissions, establishments, meta }) {
     return (
       <StateMessage
         icon={FileText}
-        title="No submission yet"
-        description="Propose a school or a change to one of your schools. Its review status appears here."
+        title={t('submissions.emptyTitle')}
+        description={t('submissions.emptyDescription')}
       />
     )
   }
@@ -44,7 +52,7 @@ function SubmissionsList({ submissions, establishments, meta }) {
   return (
     <>
       <ViewHero
-        title="Your submissions"
+        title={t('submissions.title')}
         description={describeSubmissionCount(submissions)}
         figures={buildOutcomeFigures(submissions)}
       />
@@ -55,8 +63,11 @@ function SubmissionsList({ submissions, establishments, meta }) {
             key={submission.submission_uuid}
             submission={submission}
             coverUrl={coverUrlBySchool.get(submission.establishment_uuid)}
-            actionLabel="View what was proposed"
-            actionAriaLabel={`View what was proposed for ${submission.establishment_name} on ${formatShortDate(submission.submitted_at)}`}
+            actionLabel={t('submissions.view')}
+            actionAriaLabel={t('submissions.viewNamed', {
+              school: submission.establishment_name,
+              date: formatShortDate(submission.submitted_at),
+            })}
             onAction={setSelectedSubmission}
           />
         )}

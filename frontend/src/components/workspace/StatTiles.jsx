@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next'
+
 // Chaque tuile a sa couleur pleine ; le texte posé dessus garde un contraste
 // AA (blanc sur les teintes sombres, bleu nuit sur l'ambre).
 const TONE_CLASSES = {
@@ -56,11 +58,12 @@ const WIDE_GRID_CLASSES = { 3: 'lg:grid-cols-3', 4: 'xl:grid-cols-4' }
 // quand l'écran est étroit. Avec un nombre impair de tuiles, la dernière
 // prend alors toute la largeur plutôt que de laisser une case vide.
 function StatTiles({ tiles }) {
+  const { t } = useTranslation('workspace')
   const hasLonelyLastTile = tiles.length % 2 === 1
 
   return (
     <section
-      aria-label="Key figures"
+      aria-label={t('keyFigures')}
       className={`grid grid-cols-2 gap-4 ${WIDE_GRID_CLASSES[tiles.length]} ${
         hasLonelyLastTile ? 'max-lg:*:last:col-span-2' : ''
       }`}

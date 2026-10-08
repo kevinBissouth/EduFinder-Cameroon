@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
 import { Bell } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 import { presentNotification } from './notificationMessages'
 import { useDismiss } from '../../hooks/useDismiss'
@@ -12,6 +13,7 @@ function formatUnreadCount(unreadCount) {
 }
 
 function NotificationItem({ notification, onOpen }) {
+  const { t } = useTranslation('workspace')
   const { Icon, toneClass, message } = presentNotification(notification)
 
   return (
@@ -33,7 +35,9 @@ function NotificationItem({ notification, onOpen }) {
             {message}
           </span>
           {notification.reason && (
-            <span className="mt-0.5 block text-sm text-ink">Reason: {notification.reason}</span>
+            <span className="mt-0.5 block text-sm text-ink">
+              {t('notifications.reason', { reason: notification.reason })}
+            </span>
           )}
           <span className="mt-0.5 block text-xs text-ink-soft">
             {formatRelativeTime(notification.created_at)}
@@ -41,7 +45,7 @@ function NotificationItem({ notification, onOpen }) {
         </span>
         {!notification.is_read && (
           <span className="mt-1.5 size-2 shrink-0 rounded-full bg-primary">
-            <span className="sr-only">Unread</span>
+            <span className="sr-only">{t('notifications.unread')}</span>
           </span>
         )}
       </button>
@@ -50,25 +54,26 @@ function NotificationItem({ notification, onOpen }) {
 }
 
 function PanelBody({ inbox, onOpen }) {
+  const { t } = useTranslation('workspace')
   if (inbox.status === 'loading') {
-    return <p className="px-4 py-8 text-center text-sm text-ink-soft">Loading notifications…</p>
+    return <p className="px-4 py-8 text-center text-sm text-ink-soft">{t('notifications.loading')}</p>
   }
   if (inbox.status === 'error') {
     return (
       <div role="alert" className="px-4 py-8 text-center">
-        <p className="text-sm text-danger-deep">Notifications could not be loaded.</p>
+        <p className="text-sm text-danger-deep">{t('notifications.error')}</p>
         <button
           type="button"
           onClick={inbox.reload}
           className="mt-2 min-h-11 cursor-pointer rounded-control px-3 text-sm font-semibold text-primary-deep hover:bg-primary-soft"
         >
-          Try again
+          {t('retry')}
         </button>
       </div>
     )
   }
   if (inbox.notifications.length === 0) {
-    return <p className="px-4 py-8 text-center text-sm text-ink-soft">You have no notification yet.</p>
+    return <p className="px-4 py-8 text-center text-sm text-ink-soft">{t('notifications.empty')}</p>
   }
   return (
     <ul className="max-h-[60vh] divide-y divide-line overflow-y-auto">
@@ -87,6 +92,7 @@ function PanelBody({ inbox, onOpen }) {
 // notifications. Ouvrir une notification la marque lue puis laisse la page
 // décider où aller.
 function NotificationBell({ inbox, onOpenNotification }) {
+  const { t } = useTranslation('workspace')
   const [isOpen, setIsOpen] = useState(false)
   const containerRef = useRef(null)
   useDismiss(containerRef, isOpen, () => setIsOpen(false))
@@ -99,8 +105,8 @@ function NotificationBell({ inbox, onOpenNotification }) {
 
   const bellLabel =
     inbox.unreadCount === 0
-      ? 'Notifications'
-      : `Notifications, ${inbox.unreadCount} unread`
+      ? t('notifications.title')
+      : t('notifications.unreadCount', { count: inbox.unreadCount })
 
   return (
     // Sur téléphone le panneau se cale sur la barre du haut (toute la largeur) ;
@@ -125,18 +131,18 @@ function NotificationBell({ inbox, onOpenNotification }) {
       </button>
       {isOpen && (
         <section
-          aria-label="Notifications"
+          aria-label={t('notifications.title')}
           className="absolute inset-x-4 top-full z-40 mt-2 overflow-hidden rounded-panel border border-line bg-surface shadow-raised sm:inset-x-auto sm:right-0 sm:w-96"
         >
           <div className="flex items-center justify-between gap-3 border-b border-line px-4 py-2">
-            <h2 className="text-base font-bold text-navy">Notifications</h2>
+            <h2 className="text-base font-bold text-navy">{t('notifications.title')}</h2>
             <button
               type="button"
               disabled={inbox.unreadCount === 0}
               onClick={inbox.markAllRead}
               className="min-h-11 cursor-pointer rounded-control px-2 text-sm font-semibold text-primary-deep hover:bg-primary-soft disabled:cursor-not-allowed disabled:text-ink-soft disabled:hover:bg-transparent"
             >
-              Mark all as read
+              {t('notifications.markAllRead')}
             </button>
           </div>
           <PanelBody inbox={inbox} onOpen={openNotification} />

@@ -1,10 +1,12 @@
 import { Plus, Trash2 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 import Button from '../../ui/Button'
 import { SelectField, TextField } from '../../ui/Field'
 import ToggleChipGroup from '../../workspace/ToggleChipGroup'
-import { toChipOptions, toggleValue } from '../../workspace/toggleChips'
+import { toggleValue } from '../../workspace/toggleChips'
 import { createExamResultRow, createFeeRow, removeRow, replaceRow } from './proposalDraft'
+import { useReferenceLabel } from '../../../hooks/useReferenceLabel'
 
 const SEPTEMBER_MONTH_INDEX = 8
 const MAX_PASS_RATE = 100
@@ -44,6 +46,8 @@ function AddRowButton({ label, onAdd }) {
 }
 
 export function FeeRowsEditor({ feeRows, levels, paymentMethods, onChange }) {
+  const { t } = useTranslation('manager')
+  const translateReference = useReferenceLabel()
   const changeRow = (rowId, changes) => onChange(replaceRow(feeRows, rowId, changes))
 
   return (
@@ -52,26 +56,26 @@ export function FeeRowsEditor({ feeRows, levels, paymentMethods, onChange }) {
         {feeRows.map((feeRow) => (
           <RowFrame
             key={feeRow.rowId}
-            removeLabel="Remove this fee"
+            removeLabel={t('form.rows.removeFee')}
             onRemove={() => onChange(removeRow(feeRows, feeRow.rowId))}
           >
             <div className="grid gap-3 sm:grid-cols-3">
               <SelectField
-                label="Level"
-                placeholder="Choose a level"
+                label={t('form.rows.level')}
+                placeholder={t('form.rows.chooseLevel')}
                 options={levels}
                 value={feeRow.id_level}
                 onChange={(event) => changeRow(feeRow.rowId, { id_level: event.target.value })}
               />
               <TextField
-                label="Yearly amount (FCFA)"
+                label={t('form.rows.yearlyAmount')}
                 type="number"
                 min="1"
                 value={feeRow.amount}
                 onChange={(event) => changeRow(feeRow.rowId, { amount: event.target.value })}
               />
               <TextField
-                label="School year"
+                label={t('form.rows.schoolYear')}
                 placeholder={findCurrentSchoolYear()}
                 value={feeRow.school_year}
                 onChange={(event) => changeRow(feeRow.rowId, { school_year: event.target.value })}
@@ -80,8 +84,13 @@ export function FeeRowsEditor({ feeRows, levels, paymentMethods, onChange }) {
             <div className="mt-3">
               {/* Un plan déjà enregistré mais absent de la liste de référence reste proposé. */}
               <ToggleChipGroup
-                label="Payment plans"
-                options={toChipOptions([...new Set([...paymentMethods, ...feeRow.payment_methods])])}
+                label={t('fees.paymentPlans')}
+                options={[...new Set([...paymentMethods, ...feeRow.payment_methods])].map(
+                  (paymentMethod) => ({
+                    value: paymentMethod,
+                    label: translateReference('payment_methods', paymentMethod),
+                  }),
+                )}
                 selectedValues={feeRow.payment_methods}
                 onToggle={(paymentMethod) =>
                   changeRow(feeRow.rowId, {
@@ -93,12 +102,13 @@ export function FeeRowsEditor({ feeRows, levels, paymentMethods, onChange }) {
           </RowFrame>
         ))}
       </ul>
-      <AddRowButton label="Add a fee" onAdd={() => onChange([...feeRows, createFeeRow()])} />
+      <AddRowButton label={t('form.rows.addFee')} onAdd={() => onChange([...feeRows, createFeeRow()])} />
     </>
   )
 }
 
 export function ExamResultRowsEditor({ examResultRows, exams, onChange }) {
+  const { t } = useTranslation('manager')
   const changeRow = (rowId, changes) => onChange(replaceRow(examResultRows, rowId, changes))
 
   return (
@@ -107,25 +117,25 @@ export function ExamResultRowsEditor({ examResultRows, exams, onChange }) {
         {examResultRows.map((examResultRow) => (
           <RowFrame
             key={examResultRow.rowId}
-            removeLabel="Remove this result"
+            removeLabel={t('form.rows.removeResult')}
             onRemove={() => onChange(removeRow(examResultRows, examResultRow.rowId))}
           >
             <div className="grid gap-3 sm:grid-cols-3">
               <SelectField
-                label="Exam"
-                placeholder="Choose an exam"
+                label={t('form.rows.exam')}
+                placeholder={t('form.rows.chooseExam')}
                 options={exams}
                 value={examResultRow.id_exam}
                 onChange={(event) => changeRow(examResultRow.rowId, { id_exam: event.target.value })}
               />
               <TextField
-                label="Session"
+                label={t('form.rows.session')}
                 placeholder={String(new Date().getFullYear())}
                 value={examResultRow.session}
                 onChange={(event) => changeRow(examResultRow.rowId, { session: event.target.value })}
               />
               <TextField
-                label="Pass rate (%)"
+                label={t('form.rows.passRate')}
                 type="number"
                 min="0"
                 max={MAX_PASS_RATE}
@@ -139,7 +149,7 @@ export function ExamResultRowsEditor({ examResultRows, exams, onChange }) {
         ))}
       </ul>
       <AddRowButton
-        label="Add a result"
+        label={t('form.rows.addResult')}
         onAdd={() => onChange([...examResultRows, createExamResultRow()])}
       />
     </>

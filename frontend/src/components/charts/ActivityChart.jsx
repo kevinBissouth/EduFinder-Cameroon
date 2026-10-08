@@ -1,4 +1,5 @@
 import { Area, AreaChart, CartesianGrid, Tooltip, XAxis, YAxis } from 'recharts'
+import { useTranslation } from 'react-i18next'
 
 import ChartCard from './ChartCard'
 import ChartFrame from './ChartFrame'
@@ -12,8 +13,10 @@ import { formatShortDate } from '../../utils/format'
 const TICK_COUNT = 6
 
 function PeriodToggle({ periodInDays, onChange }) {
+  const { t } = useTranslation('workspace')
+
   return (
-    <div role="group" aria-label="Period" className="flex rounded-full border border-line p-1">
+    <div role="group" aria-label={t('charts.period')} className="flex rounded-full border border-line p-1">
       {ACTIVITY_PERIODS_IN_DAYS.map((period) => (
         <button
           key={period}
@@ -24,7 +27,7 @@ function PeriodToggle({ periodInDays, onChange }) {
             period === periodInDays ? 'bg-navy text-white' : 'text-ink hover:text-primary-deep'
           }`}
         >
-          {period} days
+          {t('charts.days', { count: period })}
         </button>
       ))}
     </div>
@@ -39,6 +42,7 @@ function findChartStatus(activityState) {
 // Visites et demandes de contact, jour par jour. Tant que rien n'a été
 // compté, le bloc le dit au lieu de tracer une courbe plate trompeuse.
 function ActivityChart({ icon, tone, title, description, activityState, className }) {
+  const { t } = useTranslation('workspace')
   const status = findChartStatus(activityState)
   const days = activityState.activity?.days ?? []
   const totals = sumActivity(days)
@@ -50,7 +54,7 @@ function ActivityChart({ icon, tone, title, description, activityState, classNam
       description={description}
       className={className}
       status={status}
-      emptyMessage="Nothing has been counted yet. The curve starts with the first visit to the public page."
+      emptyMessage={t('charts.activityEmpty')}
       onRetry={activityState.reload}
       icon={icon}
       tone={tone}
@@ -58,8 +62,8 @@ function ActivityChart({ icon, tone, title, description, activityState, classNam
       <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
         <ChartLegend
           items={[
-            { label: 'Visits', color: CHART_COLORS.primary, value: totals.views },
-            { label: 'Contact requests', color: CHART_COLORS.accent, value: totals.inquiries },
+            { label: t('charts.visits'), color: CHART_COLORS.primary, value: totals.views },
+            { label: t('charts.contactRequests'), color: CHART_COLORS.accent, value: totals.inquiries },
           ]}
         />
         <PeriodToggle
@@ -83,7 +87,7 @@ function ActivityChart({ icon, tone, title, description, activityState, classNam
             isAnimationActive={false}
             type="monotone"
             dataKey="views"
-            name="Visits"
+            name={t('charts.visits')}
             stroke={CHART_COLORS.primary}
             strokeWidth={2}
             fill={CHART_COLORS.primary}
@@ -93,7 +97,7 @@ function ActivityChart({ icon, tone, title, description, activityState, classNam
             isAnimationActive={false}
             type="monotone"
             dataKey="inquiries"
-            name="Contact requests"
+            name={t('charts.contactRequests')}
             stroke={CHART_COLORS.accent}
             strokeWidth={2}
             fill={CHART_COLORS.accent}
@@ -103,7 +107,9 @@ function ActivityChart({ icon, tone, title, description, activityState, classNam
       </ChartFrame>
       {activityState.activity?.collected_since && (
         <p className="mt-3 text-xs text-ink-soft">
-          Counted since {formatShortDate(activityState.activity.collected_since)}.
+          {t('charts.countedSince', {
+            date: formatShortDate(activityState.activity.collected_since),
+          })}
         </p>
       )}
     </ChartCard>

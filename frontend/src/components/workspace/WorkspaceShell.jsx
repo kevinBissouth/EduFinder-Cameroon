@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next'
+
 import NotificationBell from './NotificationBell'
 import LanguageSwitch from '../ui/LanguageSwitch'
 import { WorkspaceRail, WorkspaceTabBar } from './WorkspaceNavigation'
@@ -10,6 +12,7 @@ const AVATAR_CLASSES =
 // Pastille aux initiales du compte. Quand l'espace a une vue « compte », la
 // pastille est un bouton qui l'ouvre ; sinon c'est un simple repère.
 function Avatar({ fullName, onOpenAccount }) {
+  const { t } = useTranslation('workspace')
   if (!onOpenAccount) {
     return (
       <span aria-hidden="true" className={AVATAR_CLASSES}>
@@ -21,7 +24,7 @@ function Avatar({ fullName, onOpenAccount }) {
   return (
     <button
       type="button"
-      aria-label="Open your account"
+      aria-label={t('account.open')}
       onClick={onOpenAccount}
       className={`${AVATAR_CLASSES} cursor-pointer transition-transform hover:scale-105`}
     >

@@ -1,13 +1,15 @@
 // Mise en forme des données pour les graphiques : fonctions pures, sans
 // affichage, pour pouvoir les vérifier seules.
 
+import { getActiveLanguage } from '../../i18n'
+
 const DAYS_PER_WEEK = 7
 const MILLISECONDS_PER_DAY = 86_400_000
 const SUBMISSION_STATUSES = ['approved', 'pending', 'rejected']
 const DAY_LABEL_FORMAT = { day: 'numeric', month: 'short' }
 
 export function formatDayLabel(isoDay) {
-  return new Date(isoDay).toLocaleDateString('en-GB', { ...DAY_LABEL_FORMAT, timeZone: 'UTC' })
+  return new Date(isoDay).toLocaleDateString(getActiveLanguage().dateLocale, { ...DAY_LABEL_FORMAT, timeZone: 'UTC' })
 }
 
 export function sumActivity(days) {

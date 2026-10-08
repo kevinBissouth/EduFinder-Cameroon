@@ -1,3 +1,6 @@
+import { useTranslation } from 'react-i18next'
+import i18next from 'i18next'
+
 import ViewHero from '../workspace/ViewHero'
 import ManagerFeesSection from './ManagerFeesSection'
 import { listPaymentMethodsForLanguage } from './paymentPlans'
@@ -14,30 +17,34 @@ function buildFeeFigures(fees) {
   const currentAmounts = fees
     .filter((fee) => fee.school_year === currentYear)
     .map((fee) => Number(fee.amount))
-  const levelWord = currentAmounts.length === 1 ? 'level' : 'levels'
-  const levelFigure = { value: currentAmounts.length, label: `${levelWord} in ${currentYear}` }
+  const levelFigure = {
+    value: currentAmounts.length,
+    label: i18next.t('manager:fees.levelsIn', { count: currentAmounts.length, year: currentYear }),
+  }
   const lowestAmount = Math.min(...currentAmounts)
   const highestAmount = Math.max(...currentAmounts)
   // Avec un seul montant, « le plus bas » et « le plus haut » diraient deux
   // fois la même chose.
   if (lowestAmount === highestAmount) {
-    return [levelFigure, { value: formatFcfa(lowestAmount), label: 'per year' }]
+    return [levelFigure, { value: formatFcfa(lowestAmount), label: i18next.t('manager:fees.perYear') }]
   }
   return [
     levelFigure,
-    { value: formatFcfa(lowestAmount), label: 'lowest yearly fee' },
-    { value: formatFcfa(highestAmount), label: 'highest yearly fee' },
+    { value: formatFcfa(lowestAmount), label: i18next.t('manager:fees.lowest') },
+    { value: formatFcfa(highestAmount), label: i18next.t('manager:fees.highest') },
   ]
 }
 
 function ManagerFeesView({ paymentMethods, onProposalSubmitted, ...sectionProps }) {
+  const { t } = useTranslation('manager')
+
   return (
     <SchoolSection {...sectionProps}>
       {(detail) => (
         <>
           <ViewHero
-            title="School fees"
-            description={`What ${detail.name} charges per level. You can change the most recent school year; each change is reviewed before it goes public.`}
+            title={t('fees.title')}
+            description={t('fees.description', { school: detail.name })}
             figures={buildFeeFigures(detail.fees)}
           />
           <ManagerFeesSection
