@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Ban, RotateCcw } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 import Button from '../ui/Button'
 import Notice from '../workspace/Notice'
@@ -9,21 +10,23 @@ import { readApiErrorMessage } from '../../utils/apiError'
 import { authedRequest } from '../../utils/auth'
 
 const ACTION_BY_STATUS = { published: 'suspend', suspended: 'reactivate' }
-const SUCCESS_MESSAGES = {
-  suspend: 'School suspended. Its managers have been notified.',
-  reactivate: 'School reactivated. Its managers have been notified.',
+const SUCCESS_MESSAGE_KEYS = {
+  suspend: 'schools.suspendedMessage',
+  reactivate: 'schools.reactivatedMessage',
 }
 
 function ReactivationConfirm({ isBusy, onConfirm, onCancel }) {
+  const { t } = useTranslation('admin')
+
   return (
     <div className="space-y-3 rounded-control bg-muted p-4">
-      <p className="text-sm text-navy">This school becomes visible to the public again.</p>
+      <p className="text-sm text-navy">{t('schools.visibleAgain')}</p>
       <div className="flex flex-wrap gap-2">
         <Button disabled={isBusy} onClick={onConfirm}>
-          {isBusy ? 'Reactivating…' : 'Reactivate the school'}
+          {isBusy ? t('schools.reactivating') : t('schools.reactivate')}
         </Button>
         <Button variant="secondary" disabled={isBusy} onClick={onCancel}>
-          Cancel
+          {t('manager:actions.cancel')}
         </Button>
       </div>
     </div>
@@ -34,6 +37,7 @@ function ReactivationConfirm({ isBusy, onConfirm, onCancel }) {
 // confirmation, jamais par un simple clic. Seuls un établissement publié
 // (à suspendre) ou suspendu (à réactiver) ont une action.
 function EstablishmentStatusActions({ establishment, onStatusChanged }) {
+  const { t } = useTranslation('admin')
   const [isConfirming, setIsConfirming] = useState(false)
   const [isBusy, setIsBusy] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
@@ -54,7 +58,7 @@ function EstablishmentStatusActions({ establishment, onStatusChanged }) {
       setIsBusy(false)
       return
     }
-    showToast({ tone: 'success', message: SUCCESS_MESSAGES[availableAction] })
+    showToast({ tone: 'success', message: t(SUCCESS_MESSAGE_KEYS[availableAction]) })
     await onStatusChanged()
   }
 
@@ -69,7 +73,7 @@ function EstablishmentStatusActions({ establishment, onStatusChanged }) {
         ) : (
           <RotateCcw aria-hidden="true" className="size-4" />
         )}
-        {isSuspension ? 'Suspend the school' : 'Reactivate the school'}
+        {isSuspension ? t('schools.suspend') : t('schools.reactivate')}
       </Button>
     )
   }
@@ -79,8 +83,8 @@ function EstablishmentStatusActions({ establishment, onStatusChanged }) {
       {errorMessage && <Notice tone="danger">{errorMessage}</Notice>}
       {availableAction === 'suspend' ? (
         <ReasonForm
-          label="Reason for the suspension (the school leaves the public site)"
-          confirmLabel={isBusy ? 'Suspending…' : 'Suspend the school'}
+          label={t('schools.suspensionReasonLabel')}
+          confirmLabel={isBusy ? t('schools.suspending') : t('schools.suspend')}
           isBusy={isBusy}
           onConfirm={(reason) => applyAction({ reason })}
           onCancel={() => setIsConfirming(false)}

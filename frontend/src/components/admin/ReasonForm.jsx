@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 import Button from '../ui/Button'
 import { TextAreaField } from '../ui/Field'
@@ -9,6 +10,7 @@ const REASON_ROWS = 3
 // Motif obligatoire d'un refus ou d'une suspension : le responsable le lit,
 // donc l'envoi reste bloqué tant qu'il est vide.
 function ReasonForm({ label, confirmLabel, isBusy, onConfirm, onCancel }) {
+  const { t } = useTranslation('admin')
   const [reason, setReason] = useState('')
 
   const handleSubmit = (event) => {
@@ -34,7 +36,7 @@ function ReasonForm({ label, confirmLabel, isBusy, onConfirm, onCancel }) {
           {confirmLabel}
         </Button>
         <Button variant="secondary" onClick={onCancel} disabled={isBusy}>
-          Cancel
+          {t('manager:actions.cancel')}
         </Button>
       </div>
     </form>

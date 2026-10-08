@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { MapPin, UserRound } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
+import i18next from 'i18next'
 
 import Button from '../ui/Button'
 import Modal from '../workspace/Modal'
@@ -8,14 +10,20 @@ import SchoolCover from '../workspace/SchoolCover'
 import ViewHero from '../workspace/ViewHero'
 import StatusBadge from '../workspace/StatusBadge'
 import EstablishmentStatusActions from './EstablishmentStatusActions'
+import { useReferenceLabel } from '../../hooks/useReferenceLabel'
 
 function describeManagers(owners) {
-  if (owners.length === 0) return 'No manager assigned'
+  if (owners.length === 0) return i18next.t('admin:schools.noManager')
   return owners.join(', ')
 }
 
 function EstablishmentCard({ establishment, onOpen }) {
-  const tags = [establishment.type, establishment.sector].filter(Boolean)
+  const { t } = useTranslation('admin')
+  const translateReference = useReferenceLabel()
+  const tags = [
+    translateReference('types', establishment.type),
+    translateReference('sectors', establishment.sector),
+  ].filter(Boolean)
 
   return (
     <li className="group flex h-full flex-col overflow-hidden rounded-panel border border-line bg-surface shadow-soft transition-shadow hover:shadow-raised">
@@ -47,10 +55,10 @@ function EstablishmentCard({ establishment, onOpen }) {
           <Button
             variant="secondary"
             className="w-full"
-            aria-label={`Open ${establishment.name}`}
+            aria-label={t('manager:schools.openNamed', { name: establishment.name })}
             onClick={() => onOpen(establishment)}
           >
-            Open
+            {t('manager:actions.open')}
           </Button>
         </div>
       </div>
@@ -64,13 +72,21 @@ function countByStatus(establishments, establishmentStatus) {
   ).length
 }
 
+// Chaque pastille accorde son libellé avec son propre nombre.
+function buildStatusFigure(establishments, establishmentStatus, labelKey) {
+  const count = countByStatus(establishments, establishmentStatus)
+  return { value: count, label: i18next.t(labelKey, { count }) }
+}
+
 function EstablishmentModal({ establishment, onClose, onStatusChanged }) {
+  const { t } = useTranslation('admin')
+  const translateReference = useReferenceLabel()
   const facts = [
-    { label: 'City', value: establishment.city },
-    { label: 'School type', value: establishment.type },
-    { label: 'Sector', value: establishment.sector },
-    { label: 'Managers', value: describeManagers(establishment.owners) },
-    { label: 'Suspension reason', value: establishment.suspension_reason },
+    { label: t('schools.city'), value: establishment.city },
+    { label: t('schools.schoolType'), value: translateReference('types', establishment.type) },
+    { label: t('schools.sector'), value: translateReference('sectors', establishment.sector) },
+    { label: t('schools.managers'), value: describeManagers(establishment.owners) },
+    { label: t('schools.suspensionReason'), value: establishment.suspension_reason },
   ].filter((fact) => fact.value)
 
   return (
@@ -103,6 +119,7 @@ function EstablishmentModal({ establishment, onClose, onStatusChanged }) {
 
 // Tous les établissements de la plateforme, quel que soit leur état.
 function AdminEstablishmentsView({ establishments, onStatusChanged }) {
+  const { t } = useTranslation('admin')
   const [openedEstablishment, setOpenedEstablishment] = useState(null)
 
   // La fenêtre montre l'ancien état : je la ferme avant de recharger la
@@ -115,17 +132,17 @@ function AdminEstablishmentsView({ establishments, onStatusChanged }) {
   return (
     <>
       <ViewHero
-        title="Schools"
-        description="Every school on the platform. Only published schools are visible to the public."
+        title={t('schools.title')}
+        description={t('schools.description')}
         figures={[
-          { value: countByStatus(establishments, 'published'), label: 'published' },
-          { value: countByStatus(establishments, 'pending'), label: 'awaiting review' },
-          { value: countByStatus(establishments, 'suspended'), label: 'suspended' },
+          buildStatusFigure(establishments, 'published', 'admin:schools.published'),
+          buildStatusFigure(establishments, 'pending', 'admin:schools.awaiting'),
+          buildStatusFigure(establishments, 'suspended', 'admin:schools.suspended'),
         ]}
       />
       {establishments.length === 0 ? (
         <p className="rounded-panel border border-dashed border-line bg-surface p-8 text-center text-sm text-ink-soft">
-          No school has been proposed yet.
+          {t('dashboard.noSchool')}
         </p>
       ) : (
         <PagedCards
