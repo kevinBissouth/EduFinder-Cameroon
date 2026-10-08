@@ -19,6 +19,10 @@ class LabelledReferenceSerializer(serializers.Serializer):
 class StudyLevelReferenceSerializer(serializers.Serializer):
     id = serializers.IntegerField(source="pk")
     name = serializers.SerializerMethodField()
+    # Cycle et libellé séparés : le frontend traduit le cycle et garde le nom
+    # officiel de la classe.
+    stage = serializers.CharField(source="stage.label")
+    label = serializers.CharField()
 
     # Un même libellé de niveau peut exister dans deux étapes : je préfixe par
     # l'étape pour que le choix reste sans ambiguïté dans les listes.
@@ -40,6 +44,24 @@ class FiltersMetaSerializer(serializers.Serializer):
     # choisir, côté gestionnaire, les plans rattachés au frais d'une classe.
     payment_methods = serializers.ListField(child=serializers.CharField())
     featured_type_ids = serializers.ListField(child=serializers.IntegerField())
+
+
+class TranslatedLabelSerializer(serializers.Serializer):
+    fr = serializers.CharField()
+    en = serializers.CharField()
+
+
+# Table de correspondance clé -> libellés, une entrée par liste de référence.
+# Les clés sont les valeurs que les autres réponses de l'API renvoient déjà.
+class ReferenceLabelsSerializer(serializers.Serializer):
+    regions = serializers.DictField(child=TranslatedLabelSerializer())
+    types = serializers.DictField(child=TranslatedLabelSerializer())
+    sections = serializers.DictField(child=TranslatedLabelSerializer())
+    sectors = serializers.DictField(child=TranslatedLabelSerializer())
+    exams = serializers.DictField(child=TranslatedLabelSerializer())
+    stages = serializers.DictField(child=TranslatedLabelSerializer())
+    programs = serializers.DictField(child=TranslatedLabelSerializer())
+    payment_methods = serializers.DictField(child=TranslatedLabelSerializer())
 
 
 class PlatformStatsSerializer(serializers.Serializer):

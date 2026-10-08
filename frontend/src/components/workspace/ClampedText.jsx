@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 import Modal from './Modal'
 import { useIsDesktop } from '../../hooks/useIsDesktop'
@@ -11,6 +12,7 @@ const COLLAPSE_THRESHOLD_ON_DESKTOP = 480
 // Texte long replié, avec un bouton pour le lire en entier : sur téléphone il
 // se déplie sur place, sur grand écran il s'ouvre dans une fenêtre défilante.
 function ClampedText({ text, title, className = '' }) {
+  const { t } = useTranslation('workspace')
   const isDesktop = useIsDesktop()
   const [isOpen, setIsOpen] = useState(false)
   const threshold = isDesktop ? COLLAPSE_THRESHOLD_ON_DESKTOP : COLLAPSE_THRESHOLD_ON_PHONE
@@ -34,7 +36,7 @@ function ClampedText({ text, title, className = '' }) {
           onClick={() => setIsOpen(!isOpen)}
           className="-ml-2 mt-1 min-h-11 cursor-pointer rounded-control px-2 text-sm font-semibold text-primary-deep hover:bg-primary-soft"
         >
-          {isExpandedInPlace ? 'Show less' : 'Show more'}
+          {isExpandedInPlace ? t('showLess') : t('showMore')}
         </button>
       )}
       {isOpen && isDesktop && (

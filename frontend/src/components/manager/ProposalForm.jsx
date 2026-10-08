@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { ArrowLeft, ArrowRight, Check, Send } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 import Button from '../ui/Button'
 import Notice from '../workspace/Notice'
@@ -41,12 +42,14 @@ function listVisibleSteps(isCreation, typeName) {
 
 // Bandeau du formulaire : ce qu'on propose, et où on en est.
 function FormHero({ title, description, currentStepIndex, stepCount }) {
+  const { t } = useTranslation('manager')
+
   return (
     <section className="rounded-panel bg-linear-to-br from-primary-deep to-violet-deep p-6 text-white shadow-glow sm:p-8">
       <h2 className="font-display text-3xl leading-display text-balance">{title}</h2>
       <p className="mt-2 max-w-2xl text-sm text-white text-pretty">{description}</p>
       <p className="mt-5 text-sm font-semibold">
-        Step {currentStepIndex + 1} of {stepCount}
+        {t('form.step', { current: currentStepIndex + 1, total: stepCount })}
       </p>
       <div aria-hidden="true" className="mt-2 h-2 overflow-hidden rounded-full bg-white/25">
         <div
@@ -83,6 +86,8 @@ function StepMarker({ stepIndex, currentStepIndex }) {
 // Liste des étapes, sur grand écran. On peut revenir à une étape déjà faite ;
 // les suivantes s'ouvrent en avançant, pour passer par les champs obligatoires.
 function StepList({ steps, currentStepIndex, onSelectStep }) {
+  const { t } = useTranslation('manager')
+
   return (
     <ol className="hidden rounded-panel border border-line bg-surface p-3 shadow-soft xl:block">
       {steps.map((step, stepIndex) => {
@@ -101,7 +106,7 @@ function StepList({ steps, currentStepIndex, onSelectStep }) {
               }`}
             >
               <StepMarker stepIndex={stepIndex} currentStepIndex={currentStepIndex} />
-              {step.title}
+              {t(`form.steps.${step.id}.title`)}
             </button>
           </li>
         )
@@ -111,6 +116,7 @@ function StepList({ steps, currentStepIndex, onSelectStep }) {
 }
 
 function StepHeader({ step }) {
+  const { t } = useTranslation('manager')
   const Icon = step.icon
 
   return (
@@ -121,8 +127,8 @@ function StepHeader({ step }) {
         <Icon aria-hidden="true" className="size-6" />
       </span>
       <div className="min-w-0">
-        <h3 className="font-display text-2xl leading-display text-navy">{step.title}</h3>
-        <p className="mt-1 text-sm text-ink-soft text-pretty">{step.lead}</p>
+        <h3 className="font-display text-2xl leading-display text-navy">{t(`form.steps.${step.id}.title`)}</h3>
+        <p className="mt-1 text-sm text-ink-soft text-pretty">{t(`form.steps.${step.id}.lead`)}</p>
       </div>
     </div>
   )
@@ -132,6 +138,7 @@ function StepHeader({ step }) {
 // modification d'une fiche existante. Rien n'est écrit sur la fiche ici, le
 // contenu part en validation.
 function ProposalForm({ mode, meta, school = null, submitting, serverError, onSubmit, onClose }) {
+  const { t } = useTranslation('manager')
   const isCreation = mode === 'creation'
   const [currentStepIndex, setCurrentStepIndex] = useState(0)
   const { draft, setField, setValue, setList } = useProposalDraft(school, meta.programs ?? [])
@@ -159,11 +166,11 @@ function ProposalForm({ mode, meta, school = null, submitting, serverError, onSu
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <FormHero
-        title={isCreation ? 'A new school' : school.name}
+        title={isCreation ? t('form.newSchool') : school.name}
         description={
           isCreation
-            ? 'A super administrator reviews the proposal before the school becomes public.'
-            : 'Fill in only what you want to change. Everything else on the page stays as it is.'
+            ? t('form.creationLead')
+            : t('form.modificationLead')
         }
         currentStepIndex={currentStepIndex}
         stepCount={visibleSteps.length}
@@ -195,7 +202,7 @@ function ProposalForm({ mode, meta, school = null, submitting, serverError, onSu
               onClick={isFirstStep ? onClose : () => setCurrentStepIndex(currentStepIndex - 1)}
             >
               <ArrowLeft aria-hidden="true" className="size-4" />
-              {isFirstStep ? 'Cancel' : 'Back'}
+              {isFirstStep ? t('actions.cancel') : t('form.back')}
             </Button>
             <Button
               type="submit"
@@ -205,11 +212,11 @@ function ProposalForm({ mode, meta, school = null, submitting, serverError, onSu
               {isLastStep ? (
                 <>
                   <Send aria-hidden="true" className="size-4" />
-                  {submitting ? 'Sending…' : 'Send for review'}
+                  {submitting ? t('form.sending') : t('actions.sendForReview')}
                 </>
               ) : (
                 <>
-                  Next
+                  {t('form.next')}
                   <ArrowRight aria-hidden="true" className="size-4" />
                 </>
               )}

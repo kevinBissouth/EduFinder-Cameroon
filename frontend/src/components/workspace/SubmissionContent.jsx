@@ -1,4 +1,7 @@
+import { useTranslation } from 'react-i18next'
+
 import { describeSubmissionContent } from './submissionContent'
+import { useReferenceLabel } from '../../hooks/useReferenceLabel'
 
 function ContentValue({ line }) {
   if (!line.items) return <dd className="mt-1 whitespace-pre-line text-sm text-navy">{line.text}</dd>
@@ -16,10 +19,12 @@ function ContentValue({ line }) {
 
 // Ce qu'une soumission propose, ligne par ligne.
 function SubmissionContent({ content, meta }) {
-  const contentLines = describeSubmissionContent(content, meta)
+  const { t } = useTranslation('workspace')
+  const translateReference = useReferenceLabel()
+  const contentLines = describeSubmissionContent(content, meta, translateReference)
 
   if (contentLines.length === 0) {
-    return <p className="text-sm text-ink-soft">This submission carries no detail.</p>
+    return <p className="text-sm text-ink-soft">{t('submission.noDetail')}</p>
   }
 
   return (

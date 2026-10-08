@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react'
 import { CircleAlert, CircleCheck, X } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 import { ToastContext } from './toastContext'
 
@@ -10,6 +11,7 @@ const TONE_PRESENTATION = {
 }
 
 function Toast({ toast, onDismiss }) {
+  const { t } = useTranslation('workspace')
   const { Icon, iconClass } = TONE_PRESENTATION[toast.tone]
 
   return (
@@ -21,7 +23,7 @@ function Toast({ toast, onDismiss }) {
       <p className="flex-1 text-sm text-pretty">{toast.message}</p>
       <button
         type="button"
-        aria-label="Dismiss"
+        aria-label={t('dismiss')}
         onClick={() => onDismiss(toast.id)}
         className="-m-2 flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-full text-on-navy-soft hover:text-white"
       >

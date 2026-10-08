@@ -1,11 +1,9 @@
 import { useState } from 'react'
+import i18next from 'i18next'
 
 import { useToast } from '../components/workspace/toastContext'
 import { readApiErrorMessage } from '../utils/apiError'
 import { authedRequest } from '../utils/auth'
-
-const SENT_MESSAGE =
-  'Sent for review. The public page changes once a super administrator approves it.'
 
 // Toute demande du responsable qui ouvre une soumission (champ, frais, média)
 // passe par ici : même message de confirmation ou d'erreur partout.
@@ -26,7 +24,7 @@ export function useReviewRequest(onSubmitted) {
     } finally {
       setIsSubmitting(false)
     }
-    showInfo(SENT_MESSAGE)
+    showInfo(i18next.t('workspace:sentForReview'))
     onSubmitted()
     return true
   }

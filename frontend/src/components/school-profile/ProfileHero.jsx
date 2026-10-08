@@ -1,11 +1,13 @@
 import { useState } from 'react'
 import { ArrowUpRight, Check, Mail, MapPin, Share2 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 import Button from '../ui/Button'
 import Container from '../ui/Container'
 import { Emphasis, Eyebrow } from '../ui/SectionHeading'
 import { buildContactHref, toExternalUrl } from './helpers'
 import { API_URL } from '../../constants'
+import { useReferenceLabel } from '../../hooks/useReferenceLabel'
 import { trackInstitutionEvent } from '../../utils/tracking'
 
 const COPY_FEEDBACK_MILLISECONDS = 2500
@@ -34,12 +36,14 @@ function ProfileTitle({ name }) {
 }
 
 function Breadcrumb({ institution }) {
+  const { t } = useTranslation('profile')
+
   return (
-    <nav aria-label="Breadcrumb">
+    <nav aria-label={t('hero.breadcrumb')}>
       <ol className="flex flex-wrap items-center gap-x-2 text-sm text-ink-soft">
         <li>
           <a href="#/" className="inline-flex min-h-11 items-center rounded-control transition-colors hover:text-primary-deep">
-            Schools
+            {t('hero.schools')}
           </a>
         </li>
         <li aria-hidden="true">/</li>
@@ -56,6 +60,7 @@ function Breadcrumb({ institution }) {
 // Copie l'adresse de la fiche dans le presse-papiers et le confirme. Si le
 // navigateur refuse, le bouton le dit au lieu d'échouer en silence.
 function ShareButton() {
+  const { t } = useTranslation('profile')
   const [copyStatus, setCopyStatus] = useState('idle')
 
   const copyProfileLink = async () => {
@@ -70,16 +75,16 @@ function ShareButton() {
 
   const statusMessages = {
     idle: '',
-    copied: 'Link copied',
-    failed: 'Copy the address from your browser bar',
+    copied: t('hero.linkCopied'),
+    failed: t('hero.copyFailed'),
   }
 
   return (
     <div className="flex items-center gap-3">
       <button
         type="button"
-        aria-label="Copy the link to this school"
-        title="Copy the link to this school"
+        aria-label={t('hero.copyLink')}
+        title={t('hero.copyLink')}
         onClick={copyProfileLink}
         className="flex size-11 cursor-pointer items-center justify-center rounded-button border border-line bg-surface text-navy transition-colors hover:border-primary hover:text-primary-deep"
       >
@@ -97,6 +102,7 @@ function ShareButton() {
 }
 
 function ProfileActions({ institution }) {
+  const { t } = useTranslation('profile')
   const websiteUrl = toExternalUrl(institution.website)
   const contactHref = buildContactHref(institution)
 
@@ -104,7 +110,7 @@ function ProfileActions({ institution }) {
     <div className="mt-8 flex flex-wrap items-center gap-3">
       {websiteUrl && (
         <Button as="a" href={websiteUrl} target="_blank" rel="noopener noreferrer">
-          Visit website
+          {t('hero.visitWebsite')}
           <ArrowUpRight aria-hidden="true" className="size-4" />
         </Button>
       )}
@@ -116,7 +122,7 @@ function ProfileActions({ institution }) {
           onClick={() => trackInstitutionEvent(institution.uuid, 'inquiry')}
         >
           <Mail aria-hidden="true" className="size-4" />
-          Contact the school
+          {t('hero.contact')}
         </Button>
       )}
       <ShareButton />
@@ -128,13 +134,14 @@ function ProfileActions({ institution }) {
 // rectangle ; un fondu vers la couleur de la page la raccorde au texte qui
 // suit. Sans photo, rien ne s'affiche : le titre ouvre alors la page.
 function MobileCover({ institution, photoUrl, onPhotoError }) {
+  const { t } = useTranslation('profile')
   if (!photoUrl) return null
 
   return (
     <div className="relative h-60 sm:h-80 lg:hidden">
       <img
         src={photoUrl}
-        alt={`${institution.name}, ${institution.city}`}
+        alt={t('hero.photoAlt', { name: institution.name, city: institution.city })}
         onError={onPhotoError}
         className="size-full object-cover"
       />
@@ -149,6 +156,8 @@ function MobileCover({ institution, photoUrl, onPhotoError }) {
 // Sur grand écran, la photo est dans une forme de galet, entourée d'une
 // orbite pointillée. Sans photo, la forme reste, en bleu nuit, avec le nom.
 function ProfilePhoto({ institution, photoUrl, onPhotoError }) {
+  const { t } = useTranslation('profile')
+
   return (
     <div className="relative mx-auto hidden aspect-5/4 w-full max-w-md lg:block">
       <span aria-hidden="true" className="absolute -inset-5 rounded-full border border-dashed border-line" />
@@ -157,7 +166,7 @@ function ProfilePhoto({ institution, photoUrl, onPhotoError }) {
       {photoUrl ? (
         <img
           src={photoUrl}
-          alt={`${institution.name}, ${institution.city}`}
+          alt={t('hero.photoAlt', { name: institution.name, city: institution.city })}
           onError={onPhotoError}
           className="shape-blob relative size-full object-cover shadow-raised"
         />
@@ -172,8 +181,16 @@ function ProfilePhoto({ institution, photoUrl, onPhotoError }) {
 }
 
 function ProfileHero({ institution, coverUrl }) {
-  const tags = [capitalize(institution.sector), institution.type, institution.linguistic_section].filter(Boolean)
-  const location = [institution.city, institution.region].filter(Boolean).join(', ')
+  const { t } = useTranslation('profile')
+  const translateReference = useReferenceLabel()
+  const tags = [
+    capitalize(translateReference('sectors', institution.sector)),
+    translateReference('types', institution.type),
+    translateReference('sections', institution.linguistic_section),
+  ].filter(Boolean)
+  const location = [institution.city, translateReference('regions', institution.region)]
+    .filter(Boolean)
+    .join(', ')
   // Une photo qui ne se charge pas est traitée comme une photo absente, pour
   // les deux mises en page à la fois.
   const [hasPhotoFailed, setHasPhotoFailed] = useState(false)
@@ -187,7 +204,7 @@ function ProfileHero({ institution, coverUrl }) {
         <div className="animate-settle">
           <Breadcrumb institution={institution} />
           <div className="mt-6">
-            <Eyebrow>School profile</Eyebrow>
+            <Eyebrow>{t('hero.eyebrow')}</Eyebrow>
           </div>
           <ProfileTitle name={institution.name} />
           <p className="mt-5 flex items-center gap-2 text-base text-ink">

@@ -4,6 +4,7 @@ from edufinder.models import (
     City,
     EstablishmentType,
     PaymentMethod,
+    Program,
     Region,
     Service,
     Stage,
@@ -89,7 +90,9 @@ def test_filters_meta_exposes_references_as_id_and_name(client, establishment):
     assert filters_meta["languages"] == [
         {"id": establishment.linguistic_section.pk, "name": "Francophone"}
     ]
-    assert filters_meta["levels"] == [{"id": study_level.pk, "name": "Primaire — CM2"}]
+    assert filters_meta["levels"] == [
+        {"id": study_level.pk, "name": "Primaire — CM2", "stage": "Primaire", "label": "CM2"}
+    ]
     assert filters_meta["payment_methods"] == ["2 tranches"]
     assert filters_meta["exams"] == []
     assert filters_meta["programs"] == []
@@ -149,3 +152,63 @@ def test_filters_meta_features_the_most_represented_types_first(
     response = client.get("/filters-meta")
 
     assert response.json()["featured_type_ids"] == [common_type.pk, rare_type.pk]
+
+
+# --- GET /reference-labels ----------------------------------------------------
+
+
+@pytest.mark.django_db
+def test_reference_labels_map_each_key_to_both_languages(client):
+    EstablishmentType.objects.create(
+        label="Nursery", label_fr="Maternelle", label_en="Nursery"
+    )
+    Region.objects.create(name="Far North", label_fr="Extrême-Nord", label_en="Far North")
+    Program.objects.create(
+        name="Sciences pures", label_fr="Sciences pures", label_en="Pure sciences"
+    )
+
+    response = client.get("/reference-labels")
+
+    assert response.status_code == 200
+    reference_labels = response.json()
+    assert reference_labels["types"] == {"Nursery": {"fr": "Maternelle", "en": "Nursery"}}
+    assert reference_labels["regions"] == {
+        "Far North": {"fr": "Extrême-Nord", "en": "Far North"}
+    }
+    assert reference_labels["programs"] == {
+        "Sciences pures": {"fr": "Sciences pures", "en": "Pure sciences"}
+    }
+
+
+@pytest.mark.django_db
+def test_reference_labels_fall_back_to_the_key_when_untranslated(client):
+    PaymentMethod.objects.create(label="Trimestriel")
+    Stage.objects.create(label="Lycée", label_en="Upper secondary")
+
+    reference_labels = client.get("/reference-labels").json()
+
+    assert reference_labels["payment_methods"] == {
+        "Trimestriel": {"fr": "Trimestriel", "en": "Trimestriel"}
+    }
+    assert reference_labels["stages"] == {
+        "Lycée": {"fr": "Lycée", "en": "Upper secondary"}
+    }
+
+
+@pytest.mark.django_db
+def test_reference_labels_list_every_translated_kind_even_when_empty(client):
+    assert client.get("/reference-labels").json() == {
+        "regions": {},
+        "types": {},
+        "sections": {},
+        "sectors": {},
+        "exams": {},
+        "stages": {},
+        "programs": {},
+        "payment_methods": {},
+    }
+
+
+@pytest.mark.django_db
+def test_reference_labels_reject_writes(client):
+    assert client.post("/reference-labels", {}, format="json").status_code == 405

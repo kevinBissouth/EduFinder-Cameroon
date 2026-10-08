@@ -1,9 +1,11 @@
+import { Check } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 import { chooseLanguage } from '../../i18n'
 import { SUPPORTED_LANGUAGES } from '../../i18n/languages'
 
-const TONE_CLASSES = {
+// Version compacte (sigles) pour les barres ; les deux tons suivent le fond.
+const COMPACT_TONE_CLASSES = {
   // Sur l'en-tête bleu nuit du site public.
   onDark: {
     group: 'border-white/20',
@@ -18,20 +20,20 @@ const TONE_CLASSES = {
   },
 }
 
-// Sélecteur à deux segments. Chaque segment garde 44 px de côté, la taille de
-// cible tactile recommandée.
-function LanguageSwitch({ tone = 'onDark' }) {
-  const { t, i18n } = useTranslation()
-  const toneClasses = TONE_CLASSES[tone]
+const SEGMENT_CLASSES =
+  'flex h-11 cursor-pointer items-center justify-center text-sm font-semibold transition-colors'
+
+function CompactSwitch({ tone, activeLanguage, groupLabel }) {
+  const toneClasses = COMPACT_TONE_CLASSES[tone]
 
   return (
     <div
       role="group"
-      aria-label={t('language.switchLabel')}
+      aria-label={groupLabel}
       className={`inline-flex rounded-full border ${toneClasses.group}`}
     >
       {SUPPORTED_LANGUAGES.map((language) => {
-        const isActive = i18n.resolvedLanguage === language.code
+        const isActive = activeLanguage === language.code
         return (
           <button
             key={language.code}
@@ -40,7 +42,7 @@ function LanguageSwitch({ tone = 'onDark' }) {
             title={language.name}
             aria-pressed={isActive}
             onClick={() => chooseLanguage(language.code)}
-            className={`flex h-11 min-w-11 cursor-pointer items-center justify-center rounded-full px-3 text-sm font-semibold transition-colors ${
+            className={`${SEGMENT_CLASSES} min-w-11 rounded-full px-3 ${
               isActive ? toneClasses.active : toneClasses.inactive
             }`}
           >
@@ -50,6 +52,49 @@ function LanguageSwitch({ tone = 'onDark' }) {
       })}
     </div>
   )
+}
+
+// Version large, pour une page de réglages : le nom complet de chaque langue,
+// sur toute la largeur, la langue active en dégradé avec une coche.
+function WideSwitch({ activeLanguage, groupLabel }) {
+  return (
+    <div
+      role="group"
+      aria-label={groupLabel}
+      className="flex gap-1 rounded-panel border border-line bg-paper p-1"
+    >
+      {SUPPORTED_LANGUAGES.map((language) => {
+        const isActive = activeLanguage === language.code
+        return (
+          <button
+            key={language.code}
+            type="button"
+            lang={language.code}
+            aria-pressed={isActive}
+            onClick={() => chooseLanguage(language.code)}
+            className={`${SEGMENT_CLASSES} flex-1 gap-2 rounded-control ${
+              isActive
+                ? 'bg-linear-to-br from-primary to-violet-deep text-white shadow-soft'
+                : 'text-navy hover:bg-surface'
+            }`}
+          >
+            {isActive && <Check aria-hidden="true" className="size-4" />}
+            {language.name}
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
+function LanguageSwitch({ tone = 'onDark', isWide = false }) {
+  const { t, i18n } = useTranslation()
+  const switchProps = {
+    activeLanguage: i18n.resolvedLanguage,
+    groupLabel: t('language.switchLabel'),
+  }
+
+  return isWide ? <WideSwitch {...switchProps} /> : <CompactSwitch tone={tone} {...switchProps} />
 }
 
 export default LanguageSwitch

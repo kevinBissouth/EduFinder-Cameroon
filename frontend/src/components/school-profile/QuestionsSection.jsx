@@ -1,70 +1,84 @@
 import { ChevronDown } from 'lucide-react'
+import { Trans, useTranslation } from 'react-i18next'
 
 import Container from '../ui/Container'
 import SectionHeading, { Emphasis } from '../ui/SectionHeading'
 import { groupFeesByYear } from './helpers'
+import { useReferenceLabel } from '../../hooks/useReferenceLabel'
 import { formatFcfa } from '../../utils/format'
 
-function answerAboutFees(institution) {
+function answerAboutFees(institution, t) {
   const feesByYear = groupFeesByYear(institution.fees ?? [])
-  if (feesByYear.length === 0) {
-    return 'This school has not published its fees yet. Contact it directly to ask.'
-  }
+  if (feesByYear.length === 0) return t('questions.fees.none')
   const [latestYear, latestFees] = feesByYear[0]
   const amounts = latestFees.map((fee) => Number(fee.amount))
-  return `For ${latestYear}, the fees listed go from ${formatFcfa(Math.min(...amounts))} to ${formatFcfa(Math.max(...amounts))} per year, depending on the class.`
+  return t('questions.fees.answer', {
+    year: latestYear,
+    lowest: formatFcfa(Math.min(...amounts)),
+    highest: formatFcfa(Math.max(...amounts)),
+  })
 }
 
-function answerAboutExams(institution) {
+function answerAboutExams(institution, t, translateReference) {
   const examResults = institution.exam_results ?? []
-  if (examResults.length === 0) return 'No exam result is published for this school yet.'
+  if (examResults.length === 0) return t('questions.exams.none')
   const exams = [...new Set(examResults.map((examResult) => examResult.exam))]
-  const latestSession = Math.max(...examResults.map((examResult) => Number(examResult.session)))
-  return `It publishes pass rates for ${exams.join(', ')}. The most recent session listed is ${latestSession}.`
+  return t('questions.exams.answer', {
+    exams: exams.map((exam) => translateReference('exams', exam)).join(', '),
+    session: Math.max(...examResults.map((examResult) => Number(examResult.session))),
+  })
 }
 
-function answerAboutContact(institution) {
+function answerAboutContact(institution, t) {
   const contactWays = [
-    institution.phone && `call ${institution.phone}`,
-    institution.contact_email && `write to ${institution.contact_email}`,
+    institution.phone && t('questions.contact.call', { phone: institution.phone }),
+    institution.contact_email && t('questions.contact.write', { email: institution.contact_email }),
   ].filter(Boolean)
-  if (contactWays.length === 0) return 'This school has not published a phone number or an e-mail yet.'
-  return `You can ${contactWays.join(' or ')}.`
+  if (contactWays.length === 0) return t('questions.contact.none')
+  return t('questions.contact.answer', { ways: contactWays.join(t('questions.contact.or')) })
 }
 
 // Chaque réponse est rédigée à partir des données publiées de la fiche :
-// aucune n'est écrite à la main ni inventée.
-function buildQuestions(institution) {
+// aucune n'est écrite à la main ni inventée. Section et secteur s'insèrent au
+// milieu d'une phrase, d'où les minuscules.
+function buildQuestions(institution, t, translateReference) {
   return [
-    { question: 'How much does a year cost?', answer: answerAboutFees(institution) },
-    { question: 'Which exams does the school report?', answer: answerAboutExams(institution) },
+    { question: t('questions.fees.question'), answer: answerAboutFees(institution, t) },
     {
-      question: 'In which language are classes taught?',
-      answer: `The school is listed in the ${institution.linguistic_section} section.`,
+      question: t('questions.exams.question'),
+      answer: answerAboutExams(institution, t, translateReference),
     },
     {
-      question: 'Is it a public or a private school?',
-      answer: `It is listed as a ${institution.sector} school, in the category "${institution.type}".`,
+      question: t('questions.language.question'),
+      answer: t('questions.language.answer', {
+        section: translateReference('sections', institution.linguistic_section).toLowerCase(),
+      }),
     },
-    { question: 'How do I contact the school?', answer: answerAboutContact(institution) },
+    {
+      question: t('questions.sector.question'),
+      answer: t('questions.sector.answer', {
+        sector: translateReference('sectors', institution.sector).toLowerCase(),
+        type: translateReference('types', institution.type),
+      }),
+    },
+    { question: t('questions.contact.question'), answer: answerAboutContact(institution, t) },
   ]
 }
 
 function QuestionsSection({ institution }) {
+  const { t } = useTranslation('profile')
+  const translateReference = useReferenceLabel()
+
   return (
     <section className="border-t border-line bg-surface py-16 sm:py-20">
       <Container>
         <SectionHeading
           size="md"
-          eyebrow="Questions and answers"
-          title={
-            <>
-              Questions to <Emphasis>ask</Emphasis> before you enquire.
-            </>
-          }
+          eyebrow={t('questions.eyebrow')}
+          title={<Trans t={t} i18nKey="questions.title" components={{ emphasis: <Emphasis /> }} />}
         />
         <div className="mt-8 grid gap-x-16 border-t border-line md:grid-cols-2">
-          {buildQuestions(institution).map((item) => (
+          {buildQuestions(institution, t, translateReference).map((item) => (
             <details key={item.question} className="group border-b border-line">
               <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-4 rounded-control text-sm font-bold text-navy [&::-webkit-details-marker]:hidden">
                 {item.question}

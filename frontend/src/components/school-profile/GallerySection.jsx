@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react'
 import { FileText, X } from 'lucide-react'
+import { Trans, useTranslation } from 'react-i18next'
 
 import Container from '../ui/Container'
 import SectionHeading, { Emphasis } from '../ui/SectionHeading'
 import { API_URL } from '../../constants'
 
 function PhotoTile({ image, isFeatured, onOpen }) {
+  const { t } = useTranslation('profile')
   const [hasImageFailed, setHasImageFailed] = useState(false)
   if (hasImageFailed) return null
 
@@ -13,7 +15,11 @@ function PhotoTile({ image, isFeatured, onOpen }) {
     <li className={isFeatured ? 'col-span-2 row-span-2' : ''}>
       <button
         type="button"
-        aria-label={`Enlarge photo${image.caption ? `: ${image.caption}` : ''}`}
+        aria-label={
+          image.caption
+            ? t('gallery.enlargeNamed', { caption: image.caption })
+            : t('gallery.enlarge')
+        }
         onClick={() => onOpen(image)}
         className="group block size-full cursor-pointer overflow-hidden rounded-panel bg-muted"
       >
@@ -32,6 +38,7 @@ function PhotoTile({ image, isFeatured, onOpen }) {
 // Photo agrandie par-dessus la page. Elle se ferme avec le bouton, un clic
 // sur le fond ou la touche Échap.
 function Lightbox({ image, onClose }) {
+  const { t } = useTranslation('profile')
   useEffect(() => {
     const closeOnEscape = (event) => {
       if (event.key === 'Escape') onClose()
@@ -44,13 +51,13 @@ function Lightbox({ image, onClose }) {
     <div
       role="dialog"
       aria-modal="true"
-      aria-label="Enlarged photo"
+      aria-label={t('gallery.enlarged')}
       onClick={onClose}
       className="fixed inset-0 z-50 flex items-center justify-center bg-navy/90 p-4 [--focus-ring:var(--color-accent)]"
     >
       <button
         type="button"
-        aria-label="Close the photo"
+        aria-label={t('gallery.close')}
         autoFocus
         onClick={onClose}
         className="absolute right-4 top-4 flex size-11 cursor-pointer items-center justify-center rounded-full border border-white/30 text-white transition-colors hover:bg-white/10"
@@ -68,6 +75,7 @@ function Lightbox({ image, onClose }) {
 }
 
 function GallerySection({ media }) {
+  const { t } = useTranslation('profile')
   const [enlargedImage, setEnlargedImage] = useState(null)
   const images = media.filter((mediaItem) => mediaItem.type === 'image')
   const videos = media.filter((mediaItem) => mediaItem.type === 'video')
@@ -79,12 +87,8 @@ function GallerySection({ media }) {
       <Container>
         <SectionHeading
           size="md"
-          eyebrow="Gallery"
-          title={
-            <>
-              See the school <Emphasis>before</Emphasis> you go.
-            </>
-          }
+          eyebrow={t('gallery.eyebrow')}
+          title={<Trans t={t} i18nKey="gallery.title" components={{ emphasis: <Emphasis /> }} />}
         />
         {images.length > 0 && (
           <ul className="mt-10 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
@@ -118,7 +122,7 @@ function GallerySection({ media }) {
                   className="inline-flex min-h-11 items-center gap-2 rounded-full border border-line bg-surface px-4 text-sm font-semibold text-navy transition-colors hover:border-primary hover:text-primary-deep"
                 >
                   <FileText aria-hidden="true" className="size-4" />
-                  {document.caption ?? 'Document'}
+                  {document.caption ?? t('gallery.document')}
                 </a>
               </li>
             ))}

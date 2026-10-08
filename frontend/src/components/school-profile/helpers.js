@@ -1,4 +1,6 @@
 // Utilitaires partagés par les sections de la fiche d'établissement.
+import i18next from 'i18next'
+
 
 const URL_SCHEME_PATTERN = /^([a-z][a-z0-9+.-]*):/i
 const SAFE_SCHEMES = ['http', 'https']
@@ -19,7 +21,8 @@ export function toExternalUrl(website) {
 // téléphone à défaut.
 export function buildContactHref({ name, contact_email: contactEmail, phone }) {
   if (contactEmail) {
-    return `mailto:${contactEmail}?subject=${encodeURIComponent(`Admission enquiry: ${name}`)}`
+    const subject = i18next.t('profile:contact.enquirySubject', { name })
+    return `mailto:${contactEmail}?subject=${encodeURIComponent(subject)}`
   }
   return phone ? `tel:${phone}` : null
 }

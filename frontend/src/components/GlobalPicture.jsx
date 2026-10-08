@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import Container from './ui/Container'
 import SectionHeading from './ui/SectionHeading'
 import { formatPercent } from '../utils/format'
+import { useReferenceLabel } from '../hooks/useReferenceLabel'
 
 const DONUT_RADIUS = 80
 const PERCENT_SCALE = 100
@@ -102,12 +103,14 @@ function TypeDonut({ shares, schoolCount }) {
 }
 
 function TypeLegend({ shares }) {
+  const translateReference = useReferenceLabel()
+
   return (
     <ul className="w-full divide-y divide-white/10">
       {shares.map((share) => (
         <li key={share.typeName} className="flex items-center gap-3 py-2.5 text-sm">
           <span aria-hidden="true" className={`size-2.5 shrink-0 rounded-full ${share.style.dot}`} />
-          <span className="text-white">{share.typeName}</span>
+          <span className="text-white">{translateReference('types', share.typeName)}</span>
           <span className="ml-auto tabular-nums text-on-navy-soft">
             {share.schoolCount} ({formatPercent(Math.round(share.fraction * PERCENT_SCALE))})
           </span>

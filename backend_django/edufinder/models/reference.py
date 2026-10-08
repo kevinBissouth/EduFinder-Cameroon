@@ -9,8 +9,20 @@ from django.db import models
 LABEL_MAX_LENGTH = 100
 
 
+# Libellés d'affichage dans les deux langues du site. La colonne d'origine
+# (name ou label) reste la clé métier : les règles de cohérence et les
+# propositions la comparent telle quelle, je ne la traduis donc jamais sur
+# place. Un libellé vide signifie « pas encore traduit ».
+class BilingualLabels(models.Model):
+    label_fr = models.CharField(max_length=LABEL_MAX_LENGTH, blank=True, default="")
+    label_en = models.CharField(max_length=LABEL_MAX_LENGTH, blank=True, default="")
+
+    class Meta:
+        abstract = True
+
+
 # Découpage administratif : une région regroupe plusieurs villes.
-class Region(models.Model):
+class Region(BilingualLabels):
     id_region = models.AutoField(primary_key=True)
     name = models.CharField(max_length=LABEL_MAX_LENGTH)
 
@@ -22,7 +34,7 @@ class Region(models.Model):
 
 
 # Type d'établissement : maternelle, primaire, secondaire, université…
-class EstablishmentType(models.Model):
+class EstablishmentType(BilingualLabels):
     id_type = models.AutoField(primary_key=True)
     label = models.CharField(max_length=LABEL_MAX_LENGTH)
 
@@ -55,7 +67,7 @@ class City(models.Model):
 
 # Étape de scolarité (maternelle, primaire, secondaire, supérieur) qui
 # regroupe les niveaux d'étude.
-class Stage(models.Model):
+class Stage(BilingualLabels):
     id_stage = models.AutoField(primary_key=True)
     label = models.CharField(max_length=LABEL_MAX_LENGTH)
 
@@ -88,7 +100,7 @@ class StudyLevel(models.Model):
 
 
 # Filière ou programme offert par un établissement (Informatique, Santé…).
-class Program(models.Model):
+class Program(BilingualLabels):
     id_program = models.AutoField(primary_key=True)
     name = models.CharField(max_length=LABEL_MAX_LENGTH)
 
@@ -102,7 +114,7 @@ class Program(models.Model):
 
 
 # Examen officiel (CEP, BEPC, Probatoire, Bac…).
-class Exam(models.Model):
+class Exam(BilingualLabels):
     id_exam = models.AutoField(primary_key=True)
     label = models.CharField(max_length=LABEL_MAX_LENGTH)
 
@@ -111,7 +123,7 @@ class Exam(models.Model):
 
 
 # Modalité de paiement des frais (1 tranche, 2 tranches, trimestriel…).
-class PaymentMethod(models.Model):
+class PaymentMethod(BilingualLabels):
     id_payment_method = models.AutoField(primary_key=True)
     label = models.CharField(max_length=LABEL_MAX_LENGTH)
 
@@ -122,7 +134,7 @@ class PaymentMethod(models.Model):
 # Secteur de l'établissement : public ou privé. Le regroupement public/privé
 # repose sur cette colonne dédiée et jamais sur le texte du libellé : les
 # libellés réels sont hétérogènes (« private », « privé »…).
-class Sector(models.Model):
+class Sector(BilingualLabels):
     id_sector = models.AutoField(primary_key=True)
     label = models.CharField(max_length=LABEL_MAX_LENGTH)
     is_public = models.BooleanField(default=False)
@@ -132,7 +144,7 @@ class Sector(models.Model):
 
 
 # Section linguistique de l'établissement : francophone, anglophone, bilingue.
-class LinguisticSection(models.Model):
+class LinguisticSection(BilingualLabels):
     id_linguistic_section = models.AutoField(primary_key=True)
     label = models.CharField(max_length=LABEL_MAX_LENGTH)
 

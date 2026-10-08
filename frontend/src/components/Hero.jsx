@@ -6,6 +6,7 @@ import AdvancedFilters from './AdvancedFilters'
 import Button from './ui/Button'
 import Container from './ui/Container'
 import { Emphasis, Eyebrow } from './ui/SectionHeading'
+import { useReferenceLabel } from '../hooks/useReferenceLabel'
 
 const PILL_SELECT_CLASSES =
   'h-12 w-full cursor-pointer appearance-none bg-transparent text-sm font-medium text-navy outline-none'
@@ -27,6 +28,7 @@ function countActiveAdvancedFilters(advancedFilters) {
 // l'icône de recherche tombe exactement à l'aplomb du titre.
 function SearchBar({ searchState, cities, types }) {
   const { t } = useTranslation('home')
+  const translateReference = useReferenceLabel()
 
   return (
     <form
@@ -63,7 +65,7 @@ function SearchBar({ searchState, cities, types }) {
           <option value="">{t('hero.allTypes')}</option>
           {types.map((type) => (
             <option key={type.id} value={type.id}>
-              {type.name}
+              {translateReference('types', type.name)}
             </option>
           ))}
         </select>
@@ -77,6 +79,8 @@ function SearchBar({ searchState, cities, types }) {
 }
 
 // Chiffres clés sous la recherche : séparés par des filets, en chiffres serif.
+// Sur téléphone les libellés restent en minuscules et sans espacement : en
+// capitales espacées, « Établissements » ne tient pas à côté des deux autres.
 function KeyCounters({ figures }) {
   const { t } = useTranslation('home')
   const counters = [
@@ -88,9 +92,9 @@ function KeyCounters({ figures }) {
   return (
     <dl className="mt-8 flex divide-x divide-line border-t border-line pt-6">
       {counters.map((counter) => (
-        <div key={counter.label} className="px-6 first:pl-0">
+        <div key={counter.label} className="px-4 first:pl-0 sm:px-6">
           <dd className="font-display text-3xl tabular-nums text-navy">{counter.value}</dd>
-          <dt className="mt-1 text-xs font-semibold uppercase tracking-eyebrow text-ink-soft">
+          <dt className="mt-1 text-xs font-semibold text-ink-soft sm:uppercase sm:tracking-eyebrow">
             {counter.label}
           </dt>
         </div>
@@ -138,7 +142,7 @@ function Hero({ searchState, cities, types, advancedFilters, figures }) {
 
   return (
     <section id="search" className="scroll-mt-20 bg-surface">
-      <Container className="grid items-center gap-12 py-12 sm:py-16 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,0.75fr)] lg:gap-20 lg:py-24">
+      <Container className="grid grid-cols-1 items-center gap-12 py-12 sm:py-16 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,0.75fr)] lg:gap-20 lg:py-24">
         <div className="animate-settle">
           <Eyebrow>{t('hero.eyebrow')}</Eyebrow>
           <h1 className="mt-5 text-balance font-display text-4xl leading-display tracking-tight text-navy sm:text-5xl xl:text-6xl">

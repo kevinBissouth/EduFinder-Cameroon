@@ -1,11 +1,13 @@
 import { useState } from 'react'
 import { ChevronRight, Eye, PencilLine } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 import Button from '../../ui/Button'
 import StatusBadge from '../../workspace/StatusBadge'
 import { useMediaQuery } from '../../../hooks/useMediaQuery'
 import { navigateToSchool } from '../../../routes'
 import { toMediaUrl } from '../../../utils/media'
+import { useReferenceLabel } from '../../../hooks/useReferenceLabel'
 
 // Même seuil que le point de rupture sm de Tailwind.
 const FROM_TABLET_QUERY = '(min-width: 640px)'
@@ -37,14 +39,16 @@ function SidePhoto({ photoUrl, altText, onPhotoError }) {
 }
 
 function BannerActions({ detail, onEditSchool, onOpenSchool }) {
+  const { t } = useTranslation('manager')
+
   return (
     <div className="mt-5 flex flex-wrap gap-2">
       <Button variant="accent" onClick={() => onEditSchool(detail)}>
         <PencilLine aria-hidden="true" className="size-4" />
-        Propose changes
+        {t('actions.proposeChanges')}
       </Button>
       <Button variant="inverse" onClick={() => onOpenSchool(detail.uuid)}>
-        Open school details
+        {t('actions.openSchoolDetails')}
       </Button>
       {detail.status === 'published' && (
         <button
@@ -53,7 +57,7 @@ function BannerActions({ detail, onEditSchool, onOpenSchool }) {
           className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-button px-4 text-sm font-semibold text-white hover:bg-white/10"
         >
           <Eye aria-hidden="true" className="size-4" />
-          View public page
+          {t('actions.viewPublicPage')}
         </button>
       )}
     </div>
@@ -68,6 +72,8 @@ function BannerActions({ detail, onEditSchool, onOpenSchool }) {
 // carte n'a plus de boutons : elle est elle-même le bouton qui ouvre la fiche
 // détaillée, où se trouvent les autres actions.
 function SchoolBanner({ detail, onEditSchool, onOpenSchool }) {
+  const { t } = useTranslation('manager')
+  const translateReference = useReferenceLabel()
   const isPhone = !useMediaQuery(FROM_TABLET_QUERY)
   // Une photo qui ne se charge pas est traitée comme une photo absente.
   const [hasPhotoFailed, setHasPhotoFailed] = useState(false)
@@ -75,7 +81,7 @@ function SchoolBanner({ detail, onEditSchool, onOpenSchool }) {
   const photoProps = coverImage &&
     !hasPhotoFailed && {
       photoUrl: toMediaUrl(coverImage.url),
-      altText: `${detail.name}, ${detail.city}`,
+      altText: t('detail.photoAlt', { name: detail.name, city: detail.city }),
       onPhotoError: () => setHasPhotoFailed(true),
     }
 
@@ -95,18 +101,25 @@ function SchoolBanner({ detail, onEditSchool, onOpenSchool }) {
                 className="cursor-pointer text-left after:absolute after:inset-0"
               >
                 {detail.name}
-                <span className="sr-only">, open school details</span>
+                <span className="sr-only">{t('dashboard.openDetailsSuffix')}</span>
               </button>
             ) : (
               detail.name
             )}
           </h2>
           <p className="mt-2 text-sm text-white text-pretty">
-            {[detail.city, detail.region, detail.type, detail.sector].filter(Boolean).join(', ')}
+            {[
+              detail.city,
+              translateReference('regions', detail.region),
+              translateReference('types', detail.type),
+              translateReference('sectors', detail.sector),
+            ]
+              .filter(Boolean)
+              .join(', ')}
           </p>
           {isPhone ? (
             <p aria-hidden="true" className="mt-4 flex items-center gap-1 text-sm font-semibold">
-              Open school details
+              {t('actions.openSchoolDetails')}
               <ChevronRight className="size-4" />
             </p>
           ) : (

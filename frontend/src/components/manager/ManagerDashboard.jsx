@@ -1,3 +1,6 @@
+import { useTranslation } from 'react-i18next'
+import i18next from 'i18next'
+
 import {
   ChartNoAxesColumn,
   CircleCheck,
@@ -19,6 +22,7 @@ import { countSubmissionsByStatus } from './submissionCounts'
 import { useActivity } from '../../hooks/useActivity'
 import { typeSupportsExamResults } from '../../utils/establishmentType'
 import { formatPercent } from '../../utils/format'
+import { useReferenceLabel } from '../../hooks/useReferenceLabel'
 
 // Un graphique n'a de sens qu'avec au moins deux points : en dessous,
 // j'affiche les valeurs en clair.
@@ -28,22 +32,24 @@ const MINIMUM_CHART_POINTS = 2
 const ROW_CLASSES = 'grid grid-cols-1 gap-6 *:h-[26rem]'
 
 function PassRatesCard({ examResults }) {
+  const { t } = useTranslation('manager')
+  const translateReference = useReferenceLabel()
   const sessionCount = new Set(examResults.map((examResult) => examResult.session)).size
 
   return (
     <ChartCard
       icon={ChartNoAxesColumn}
       tone="blue"
-      title="Exam pass rates"
-      description="By exam, session after session."
+      title={t('dashboard.passRatesTitle')}
+      description={t('dashboard.passRatesDescription')}
       status={examResults.length === 0 ? 'empty' : 'ready'}
-      emptyMessage="No exam result is recorded yet."
+      emptyMessage={t('dashboard.noExamResult')}
     >
       {sessionCount < MINIMUM_CHART_POINTS ? (
-        <ScrollArea label="Exam pass rates">
+        <ScrollArea label={t('dashboard.passRatesTitle')}>
           <RankedBars
             rows={examResults.map((examResult) => ({
-              label: `${examResult.exam}, ${examResult.session}`,
+              label: `${translateReference('exams', examResult.exam)}, ${examResult.session}`,
               value: Number(examResult.pass_rate),
             }))}
             formatValue={formatPercent}
@@ -59,18 +65,18 @@ function PassRatesCard({ examResults }) {
 function buildTiles(detail, schoolSubmissions, onNavigate) {
   const openSubmissions = () => onNavigate('submissions')
   return [
-    { icon: Eye, tone: 'harmonyBlue', label: 'Visits in total', value: detail.views_count },
+    { icon: Eye, tone: 'harmonyBlue', label: i18next.t('manager:dashboard.visitsTotal'), value: detail.views_count },
     {
       icon: Clock,
       tone: 'harmonyBlend',
-      label: 'Changes awaiting review',
+      label: i18next.t('manager:dashboard.changesAwaiting'),
       value: countSubmissionsByStatus(schoolSubmissions, 'pending'),
       onOpen: openSubmissions,
     },
     {
       icon: CircleCheck,
       tone: 'harmonyViolet',
-      label: 'Changes approved',
+      label: i18next.t('manager:dashboard.changesApproved'),
       value: countSubmissionsByStatus(schoolSubmissions, 'approved'),
       onOpen: openSubmissions,
     },
@@ -87,6 +93,7 @@ function ManagerDashboard({
   onEditSchool,
   onOpenSchool,
 }) {
+  const { t } = useTranslation('manager')
   const activityState = useActivity(`/my/establishments/${detail.uuid}/activity`)
   const schoolSubmissions = submissions.filter(
     (submission) => submission.establishment_uuid === detail.uuid,
@@ -102,8 +109,8 @@ function ManagerDashboard({
         <ActivityChart
           icon={TrendingUp}
           tone="blue"
-          title="Visits and contact requests"
-          description="Families who opened the public page, and those who reached out."
+          title={t('dashboard.activityTitle')}
+          description={t('dashboard.activityDescription')}
           activityState={activityState}
         />
       </div>

@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 
 import { API_URL } from '../constants'
 import { formatFcfa, formatPercent } from '../utils/format'
+import { useReferenceLabel } from '../hooks/useReferenceLabel'
 
 function capitalize(text) {
   return text ? text.charAt(0).toUpperCase() + text.slice(1) : ''
@@ -103,8 +104,13 @@ function IconToggle({ isActive, label, icon: Icon, onToggle }) {
 
 function InstitutionCard({ institution, isCompared, onToggleCompare, onView }) {
   const { t } = useTranslation('home')
+  const translateReference = useReferenceLabel()
   const [isSaved, setIsSaved] = useState(false)
-  const categories = [capitalize(institution.sector), institution.type, institution.linguistic_section]
+  const categories = [
+    capitalize(translateReference('sectors', institution.sector)),
+    translateReference('types', institution.type),
+    translateReference('sections', institution.linguistic_section),
+  ]
     .filter(Boolean)
     .join(' · ')
   const openProfile = () => onView(institution.uuid)

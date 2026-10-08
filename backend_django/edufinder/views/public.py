@@ -13,6 +13,7 @@ from edufinder.serializers.public import (
     InstitutionDetailSerializer,
     InstitutionSummarySerializer,
     PlatformStatsSerializer,
+    ReferenceLabelsSerializer,
 )
 from edufinder.services.institution_search import (
     InstitutionSearchFilters,
@@ -21,6 +22,7 @@ from edufinder.services.institution_search import (
 from edufinder.services.public_catalog import (
     collect_filters_meta,
     collect_platform_stats,
+    collect_reference_labels,
 )
 from edufinder.services.public_institutions import (
     find_published_establishment,
@@ -39,6 +41,11 @@ def platform_stats(request):
 @api_view(["GET"])
 def filters_meta(request):
     return Response(FiltersMetaSerializer(collect_filters_meta()).data)
+
+
+@api_view(["GET"])
+def reference_labels(request):
+    return Response(ReferenceLabelsSerializer(collect_reference_labels()).data)
 
 
 @api_view(["GET"])

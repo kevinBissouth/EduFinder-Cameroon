@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
 import { Ellipsis, GraduationCap, LogOut } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 import { useDismiss } from '../../hooks/useDismiss'
 
@@ -72,16 +73,18 @@ function RailItem({ navItem, isActive, onSelect }) {
 // pas ce qui dépasse, sinon le bouton serait rogné. Sa largeur laisse la
 // place du plus long libellé (« Submissions ») à gauche de l'encoche.
 export function WorkspaceRail({ navItems, activeView, onSelectView, onSignOut }) {
+  const { t } = useTranslation('workspace')
+
   return (
     <aside className="sticky top-0 z-40 hidden h-screen w-32 shrink-0 flex-col bg-navy [--focus-ring:var(--color-accent)] lg:flex">
       <a
         href="#/"
-        aria-label="EduFinder Cameroon, back to the public site"
+        aria-label={t('backToPublicSite')}
         className="flex h-20 items-center justify-center text-primary"
       >
         <GraduationCap aria-hidden="true" className="size-8" />
       </a>
-      <nav aria-label="Workspace" className="flex-1">
+      <nav aria-label={t('navigation')} className="flex-1">
         <ul>
           {navItems.map((navItem) => (
             <li key={navItem.id}>
@@ -101,7 +104,7 @@ export function WorkspaceRail({ navItems, activeView, onSelectView, onSignOut })
           className="flex h-16 w-full cursor-pointer flex-col items-center justify-center gap-1 text-xs font-medium text-on-navy-soft transition-colors hover:text-white"
         >
           <LogOut aria-hidden="true" className="size-5" />
-          Sign out
+          {t('signOut')}
         </button>
       </div>
     </aside>
@@ -198,6 +201,7 @@ function moveHomeToCentre(tabItems) {
 }
 
 function MoreSheet({ navItems, activeView, onSelect, onSignOut }) {
+  const { t } = useTranslation('workspace')
   const sheetItemClasses =
     'flex min-h-11 w-full cursor-pointer items-center gap-3 rounded-control px-3 text-left text-sm font-medium'
 
@@ -230,7 +234,7 @@ function MoreSheet({ navItems, activeView, onSelect, onSignOut }) {
             className={`${sheetItemClasses} text-navy hover:bg-muted`}
           >
             <LogOut aria-hidden="true" className="size-5" />
-            Sign out
+            {t('signOut')}
           </button>
         </li>
       </ul>
@@ -243,6 +247,7 @@ function MoreSheet({ navItems, activeView, onSelect, onSignOut }) {
 // sont des onglets ; les suivantes et la déconnexion passent sous « More »,
 // qui se surélève à son tour quand la vue ouverte en fait partie.
 export function WorkspaceTabBar({ navItems, activeView, onSelectView, onSignOut }) {
+  const { t } = useTranslation('workspace')
   const [isMoreOpen, setIsMoreOpen] = useState(false)
   const barRef = useRef(null)
   useDismiss(barRef, isMoreOpen, () => setIsMoreOpen(false))
@@ -269,7 +274,7 @@ export function WorkspaceTabBar({ navItems, activeView, onSelectView, onSignOut 
   return (
     <nav
       ref={barRef}
-      aria-label="Workspace"
+      aria-label={t('navigation')}
       className="fixed inset-x-0 bottom-0 z-40 [--focus-ring:var(--color-accent)] lg:hidden"
     >
       {isMoreOpen && (
@@ -300,7 +305,7 @@ export function WorkspaceTabBar({ navItems, activeView, onSelectView, onSignOut 
         ))}
         <Tab
           icon={Ellipsis}
-          label="More"
+          label={t('more')}
           isActive={isMoreActive}
           aria-expanded={isMoreOpen}
           onClick={() => setIsMoreOpen(!isMoreOpen)}

@@ -1,20 +1,30 @@
 import { ArrowRight, Clock, MapPin, PencilLine, Plus } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
+import i18next from 'i18next'
 
 import Button from '../ui/Button'
 import PagedCards from '../workspace/PagedCards'
 import SchoolCover from '../workspace/SchoolCover'
 import ViewHero from '../workspace/ViewHero'
+import { useReferenceLabel } from '../../hooks/useReferenceLabel'
 
 function describeSchoolCount(establishments) {
   const publishedCount = establishments.filter(
     (school) => school.establishment_status === 'published',
   ).length
-  const schoolWord = establishments.length === 1 ? 'school' : 'schools'
-  return `You manage ${establishments.length} ${schoolWord}, ${publishedCount} visible to the public.`
+  return i18next.t('manager:schools.summary', {
+    count: establishments.length,
+    published: publishedCount,
+  })
 }
 
 function SchoolCard({ school, onOpenSchool, onProposeModification }) {
-  const tags = [school.type, school.sector].filter(Boolean)
+  const { t } = useTranslation('manager')
+  const translateReference = useReferenceLabel()
+  const tags = [
+    translateReference('types', school.type),
+    translateReference('sectors', school.sector),
+  ].filter(Boolean)
 
   return (
     <li className="group flex h-full flex-col overflow-hidden rounded-panel border border-line bg-surface shadow-soft transition-shadow hover:shadow-raised">
@@ -41,26 +51,26 @@ function SchoolCard({ school, onOpenSchool, onProposeModification }) {
         {school.has_pending_submission && (
           <p className="mt-3 flex items-center gap-1.5 rounded-control bg-warning-soft px-3 py-2 text-sm font-medium text-warning">
             <Clock aria-hidden="true" className="size-4 shrink-0" />
-            Changes awaiting review
+            {t('page.awaitingReview')}
           </p>
         )}
         <div className="mt-auto flex flex-wrap gap-2 pt-5">
           <Button
             className="flex-1"
-            aria-label={`Open ${school.name}`}
+            aria-label={t('schools.openNamed', { name: school.name })}
             onClick={() => onOpenSchool(school.establishment_uuid)}
           >
-            Open
+            {t('actions.open')}
             <ArrowRight aria-hidden="true" className="size-4" />
           </Button>
           <Button
             variant="secondary"
             className="flex-1"
-            aria-label={`Propose changes to ${school.name}`}
+            aria-label={t('schools.proposeNamed', { name: school.name })}
             onClick={() => onProposeModification(school)}
           >
             <PencilLine aria-hidden="true" className="size-4" />
-            Edit
+            {t('actions.edit')}
           </Button>
         </div>
       </div>
@@ -70,15 +80,17 @@ function SchoolCard({ school, onOpenSchool, onProposeModification }) {
 
 // Vue « Your schools » : le bandeau, puis une carte par établissement géré.
 function SchoolList({ establishments, onOpenSchool, onProposeModification, onCreateProposal }) {
+  const { t } = useTranslation('manager')
+
   return (
     <>
       <ViewHero
-        title="Your schools"
+        title={t('schools.title')}
         description={describeSchoolCount(establishments)}
         action={
           <Button variant="accent" className="w-full sm:w-auto" onClick={onCreateProposal}>
             <Plus aria-hidden="true" className="size-4" />
-            Propose a school
+            {t('actions.proposeSchool')}
           </Button>
         }
       />

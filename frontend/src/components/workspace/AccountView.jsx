@@ -7,6 +7,8 @@ import Panel from './Panel'
 import { buildInitials } from '../../utils/format'
 
 function SignOutButton({ onSignOut, className = '' }) {
+  const { t } = useTranslation('workspace')
+
   return (
     <Button
       variant="secondary"
@@ -15,7 +17,7 @@ function SignOutButton({ onSignOut, className = '' }) {
       onClick={onSignOut}
     >
       <LogOut aria-hidden="true" className="size-4" />
-      Sign out
+      {t('signOut')}
     </Button>
   )
 }
@@ -74,7 +76,7 @@ function DetailRow({ icon: Icon, label, value }) {
 // son compte, suivies des lignes propres à l'espace (extraDetails). Rien ne
 // s'y modifie : les comptes sont créés et tenus à jour hors de l'application.
 function AccountView({ profile, roleLabel, changeHint, extraDetails = [], onSignOut }) {
-  const { t } = useTranslation()
+  const { t } = useTranslation('workspace')
 
   return (
     <div className="space-y-6">
@@ -82,22 +84,28 @@ function AccountView({ profile, roleLabel, changeHint, extraDetails = [], onSign
       <Panel
         icon={UserRound}
         tone="blue"
-        title="Account details"
+        title={t('account.details')}
         description={changeHint}
       >
         <dl className="divide-y divide-line">
-          <DetailRow icon={UserRound} label="Full name" value={profile.name} />
-          <DetailRow icon={Mail} label="Email" value={profile.email} />
-          <DetailRow icon={ShieldCheck} label="Role" value={roleLabel} />
+          <DetailRow icon={UserRound} label={t('account.fullName')} value={profile.name} />
+          <DetailRow icon={Mail} label={t('account.email')} value={profile.email} />
+          <DetailRow icon={ShieldCheck} label={t('account.role')} value={roleLabel} />
           {extraDetails.map((detail) => (
             <DetailRow key={detail.label} {...detail} />
           ))}
-          <DetailRow
-            icon={Languages}
-            label={t('language.switchLabel')}
-            value={<LanguageSwitch tone="onLight" />}
-          />
         </dl>
+      </Panel>
+      {/* Sur bureau la langue se règle dans la barre du haut : ce bloc n'existe
+          que là où la barre n'a pas la place de la porter. */}
+      <Panel
+        icon={Languages}
+        tone="violet"
+        title={t('common:language.switchLabel')}
+        description={t('account.languageHint')}
+        className="lg:hidden"
+      >
+        <LanguageSwitch isWide />
       </Panel>
       {/* Sur téléphone, la déconnexion ferme la vue : un bouton pleine largeur,
           séparé du reste, loin des informations du compte. */}

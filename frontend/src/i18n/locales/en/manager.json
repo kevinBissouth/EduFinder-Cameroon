@@ -1,0 +1,268 @@
+{
+  "nav": {
+    "dashboard": "Dashboard",
+    "home": "Home",
+    "yourSchools": "Your schools",
+    "schools": "Schools",
+    "submissions": "Submissions",
+    "feesAndPayments": "Fees and payments",
+    "fees": "Fees",
+    "examResults": "Exam results",
+    "exams": "Exams",
+    "services": "Services",
+    "account": "Account"
+  },
+  "views": {
+    "school-detail": "School details",
+    "form-creation": "Propose a school",
+    "form-modification": "Propose changes"
+  },
+  "roles": {
+    "super_admin": "Super administrator",
+    "manager": "School manager"
+  },
+  "actions": {
+    "sendForReview": "Send for review",
+    "cancel": "Cancel",
+    "edit": "Edit",
+    "open": "Open",
+    "proposeChanges": "Propose changes",
+    "proposeSchool": "Propose a school",
+    "viewPublicPage": "View public page",
+    "openSchoolDetails": "Open school details",
+    "close": "Close"
+  },
+  "page": {
+    "proposalSent": "Proposal sent. A super administrator will review it.",
+    "changesSent": "Changes sent for review.",
+    "noSchoolTitle": "No school yet",
+    "noSchoolDescription": "Propose your first school. A super administrator reviews it before it becomes public.",
+    "noSchoolSection": "Once a school you proposed is approved, you manage this part of its page here.",
+    "changeHint": "To change your name, email or password, ask a super administrator.",
+    "schoolsYouManage": "Schools you manage",
+    "loadingWorkspace": "Loading your workspace…",
+    "workspaceErrorTitle": "Your workspace could not be loaded",
+    "serverError": "The server did not answer. Check your connection, then try again.",
+    "hello": "Hello, {{name}}",
+    "subtitle": "What is happening on your school page.",
+    "loadingSchoolDetails": "Loading school details…",
+    "loadingSchool": "Loading the school…",
+    "schoolErrorTitle": "This school could not be loaded",
+    "awaitingReview": "Changes awaiting review",
+    "school": "School"
+  },
+  "dashboard": {
+    "passRatesTitle": "Exam pass rates",
+    "passRatesDescription": "By exam, session after session.",
+    "noExamResult": "No exam result is recorded yet.",
+    "visitsTotal": "Visits in total",
+    "changesAwaiting": "Changes awaiting review",
+    "changesApproved": "Changes approved",
+    "activityTitle": "Visits and contact requests",
+    "activityDescription": "Families who opened the public page, and those who reached out.",
+    "submissionsTitle": "Submissions",
+    "submissionsDescription": "Reviewed by a super administrator before going public.",
+    "submissionsEmpty": "Nothing has been submitted for this school yet.",
+    "viewAll": "View all",
+    "benchmarkTitle": "Against similar schools",
+    "benchmarkSample_one": "{{count}} published school of the same type",
+    "benchmarkSample_other": "{{count}} published schools of the same type",
+    "you": "You",
+    "average": "Average",
+    "lowestFee": "Lowest yearly fee",
+    "bestPassRate": "Best exam pass rate",
+    "notEnoughData": "Not enough data to compare yet.",
+    "openDetailsSuffix": ", open school details"
+  },
+  "exams": {
+    "rateLabel": "{{exam}} pass rate for {{session}} (%)",
+    "editRate": "Edit the {{exam}} {{session}} pass rate",
+    "sessionsRecorded_one": "session recorded",
+    "sessionsRecorded_other": "sessions recorded",
+    "latestSession": "latest session",
+    "bestPassRate": "best pass rate",
+    "rateRange": "Enter a pass rate between 0 and {{maximum}}.",
+    "showLatest": "Show latest session only",
+    "showAll": "Show all sessions",
+    "title": "Exam results",
+    "description": "The pass rates families see on the page of {{school}}. Each change is reviewed before it goes public.",
+    "empty": "No exam result is recorded yet. Use “Propose changes” on the school to add them."
+  },
+  "fees": {
+    "amountLabel": "Amount for {{year}} (FCFA)",
+    "paymentPlans": "Payment plans",
+    "noPaymentPlan": "No payment plan",
+    "yearlyFee": "Yearly fee",
+    "editFee": "Edit the {{className}} fee",
+    "title": "School fees",
+    "amountAboveZero": "Enter an amount above zero.",
+    "unchanged": "Nothing was sent: the amount and payment plans are unchanged.",
+    "empty": "No fee is recorded yet. Use “Propose changes” on the school to add them.",
+    "levelsIn_one": "level in {{year}}",
+    "levelsIn_other": "levels in {{year}}",
+    "perYear": "per year",
+    "lowest": "lowest yearly fee",
+    "highest": "highest yearly fee",
+    "description": "What {{school}} charges per level. You can change the most recent school year; each change is reviewed before it goes public.",
+    "panelDescription": "You can change the most recent school year. Each change is reviewed before it goes public."
+  },
+  "detail": {
+    "about": "About the school",
+    "description": "Description",
+    "headOfSchool": "Head of school",
+    "examResults": "Exam results",
+    "media": "Photos and videos",
+    "mediaDescription": "Each file you add or remove is reviewed before the public page changes.",
+    "contact": "Contact",
+    "phone": "Phone",
+    "email": "Email",
+    "website": "Website",
+    "address": "Address",
+    "services": "Services",
+    "noService": "No service is listed yet.",
+    "programmes": "Programmes",
+    "noProgramme": "No programme is listed yet.",
+    "compare": "How you compare",
+    "loadingComparison": "Loading the comparison…",
+    "editField": "Edit {{field}}",
+    "photoAlt": "{{name}}, {{city}}",
+    "notProvided": "Not provided"
+  },
+  "gallery": {
+    "confirmRemoval": "Ask for this file to be removed from the public page? A super administrator reviews the request.",
+    "photos": "Photos",
+    "photoAlt": "Photo of {{school}}",
+    "remove": "Remove",
+    "addPhoto": "Add a photo",
+    "addVideo": "Add a video"
+  },
+  "leadership": {
+    "portraitAlt": "Portrait of {{name}}",
+    "portraitAltUnknown": "Portrait of the head of school",
+    "none": "No head of school is presented yet. Use “Propose changes” to add one.",
+    "changePhoto": "Change the photo"
+  },
+  "schools": {
+    "summary_one": "You manage {{count}} school, {{published}} visible to the public.",
+    "summary_other": "You manage {{count}} schools, {{published}} visible to the public.",
+    "openNamed": "Open {{name}}",
+    "proposeNamed": "Propose changes to {{name}}",
+    "title": "Your schools"
+  },
+  "submissions": {
+    "summary_one": "You proposed {{count}} change. Each one is reviewed by a super administrator before it goes public.",
+    "summary_other": "You proposed {{count}} changes. Each one is reviewed by a super administrator before it goes public.",
+    "emptyTitle": "No submission yet",
+    "emptyDescription": "Propose a school or a change to one of your schools. Its review status appears here.",
+    "title": "Your submissions",
+    "view": "View what was proposed",
+    "viewNamed": "View what was proposed for {{school}} on {{date}}",
+    "approved_one": "approved",
+    "approved_other": "approved",
+    "awaiting_one": "awaiting review",
+    "awaiting_other": "awaiting review",
+    "rejected_one": "rejected",
+    "rejected_other": "rejected",
+    "submittedOn": "submitted {{date}}"
+  },
+  "services": {
+    "newName": "New name for {{name}}",
+    "rename": "Rename",
+    "renameNamed": "Rename {{name}}",
+    "enterName": "Enter a service name.",
+    "duplicate": "“{{name}}” is already in the list.",
+    "title": "Services",
+    "description": "What {{school}} offers beyond teaching. Each change is reviewed before it goes public.",
+    "listed_one": "service listed",
+    "listed_other": "services listed",
+    "add": "Add a service",
+    "empty": "No service is listed yet."
+  },
+  "form": {
+    "step": "Step {{current}} of {{total}}",
+    "newSchool": "A new school",
+    "creationLead": "A super administrator reviews the proposal before the school becomes public.",
+    "modificationLead": "Fill in only what you want to change. Everything else on the page stays as it is.",
+    "sending": "Sending…",
+    "next": "Next",
+    "back": "Back",
+    "required": " (required)",
+    "choose": "Choose…",
+    "uploading": "Uploading the file…",
+    "steps": {
+      "general": {
+        "title": "The school",
+        "lead": "Its name, how to reach it, and how it presents itself."
+      },
+      "classification": {
+        "title": "Location and type",
+        "lead": "Where the school is and how it is classified."
+      },
+      "programmes": {
+        "title": "Programmes",
+        "lead": "Select every programme the school teaches. Your selection replaces the current list."
+      },
+      "fees": {
+        "title": "Fees",
+        "lead": "One yearly amount per level and school year. Fees you do not list stay as they are."
+      },
+      "services": {
+        "title": "Services",
+        "lead": "Select everything the school offers. Your selection replaces the current list."
+      },
+      "results": {
+        "title": "Exam results",
+        "lead": "Official pass rates per exam and session. Results you do not list stay as they are."
+      },
+      "leadership": {
+        "title": "Head of school",
+        "lead": "The person who leads the school, shown on its public page."
+      },
+      "media": {
+        "title": "Photos and videos",
+        "lead": "Files are uploaded now and appear on the page once the proposal is approved."
+      }
+    },
+    "fields": {
+      "schoolName": "School name",
+      "schoolNamePlaceholder": "Bilingual Academy of Douala",
+      "city": "City",
+      "schoolType": "School type",
+      "sector": "Sector",
+      "section": "Language section",
+      "addressPlaceholder": "Bonanjo, P.O. Box 12345 Douala",
+      "noProgramme": "No programme can be selected yet.",
+      "noService": "No service can be selected yet.",
+      "directorName": "Name",
+      "directorNamePlaceholder": "Dr. Marie Ngono",
+      "directorTitle": "Title",
+      "directorTitlePlaceholder": "Principal",
+      "biography": "Biography",
+      "portrait": "Portrait",
+      "coverPhoto": "Cover photo"
+    },
+    "rows": {
+      "removeFee": "Remove this fee",
+      "level": "Level",
+      "chooseLevel": "Choose a level",
+      "yearlyAmount": "Yearly amount (FCFA)",
+      "schoolYear": "School year",
+      "addFee": "Add a fee",
+      "removeResult": "Remove this result",
+      "exam": "Exam",
+      "chooseExam": "Choose an exam",
+      "session": "Session",
+      "passRate": "Pass rate (%)",
+      "addResult": "Add a result"
+    },
+    "files": {
+      "preview": "{{title}} preview",
+      "removeNamed": "Remove: {{title}}",
+      "replacePhoto": "Replace the photo",
+      "choosePhoto": "Choose a photo (JPG, PNG or WebP)",
+      "videos": "Videos",
+      "removeVideo": "Remove this video",
+      "addVideo": "Add a video (MP4 or WebM)"
+    }
+  }
+}

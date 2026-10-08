@@ -105,6 +105,7 @@ urlpatterns = [
     ),
     path("stats", public.platform_stats, name="platform-stats"),
     path("filters-meta", public.filters_meta, name="filters-meta"),
+    path("reference-labels", public.reference_labels, name="reference-labels"),
     path("institutions", public.institution_list, name="institution-list"),
     path(
         "institutions/<str:institution_uuid>",

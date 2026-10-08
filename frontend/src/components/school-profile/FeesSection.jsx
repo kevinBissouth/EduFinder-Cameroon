@@ -1,27 +1,36 @@
 import { useState } from 'react'
+import { Trans, useTranslation } from 'react-i18next'
 
 import Container from '../ui/Container'
 import SectionHeading, { Emphasis } from '../ui/SectionHeading'
 import { groupFeesByYear } from './helpers'
+import { useReferenceLabel } from '../../hooks/useReferenceLabel'
 import { formatFcfa } from '../../utils/format'
 
 const HEADER_CELL_CLASSES = 'px-4 py-3 text-left text-xs font-semibold text-ink-soft first:pl-0 last:pr-0'
 const BODY_CELL_CLASSES = 'px-4 py-4 align-top first:pl-0 last:pr-0'
 
-function describeRange(fees) {
+function describeRange(fees, t) {
   const amounts = fees.map((fee) => Number(fee.amount))
   const lowestAmount = Math.min(...amounts)
   const highestAmount = Math.max(...amounts)
-  const classCount = `${fees.length} ${fees.length === 1 ? 'class' : 'classes'}`
-  if (lowestAmount === highestAmount) return `${formatFcfa(lowestAmount)} per year, for ${classCount}.`
-  return `From ${formatFcfa(lowestAmount)} to ${formatFcfa(highestAmount)} per year, across ${classCount}.`
+  const classes = t('fees.classCount', { count: fees.length })
+  if (lowestAmount === highestAmount) {
+    return t('fees.sameAmount', { amount: formatFcfa(lowestAmount), classes })
+  }
+  return t('fees.range', {
+    lowest: formatFcfa(lowestAmount),
+    highest: formatFcfa(highestAmount),
+    classes,
+  })
 }
 
 function YearTabs({ schoolYears, selectedYear, onSelect }) {
+  const { t } = useTranslation('profile')
   if (schoolYears.length < 2) return null
 
   return (
-    <div role="group" aria-label="School year" className="mt-6 flex flex-wrap gap-2">
+    <div role="group" aria-label={t('fees.schoolYear')} className="mt-6 flex flex-wrap gap-2">
       {schoolYears.map((schoolYear) => {
         const isSelected = schoolYear === selectedYear
         return (
@@ -45,11 +54,14 @@ function YearTabs({ schoolYears, selectedYear, onSelect }) {
 }
 
 function FeeRow({ fee }) {
+  const { t } = useTranslation('profile')
+  const translateReference = useReferenceLabel()
+
   return (
     <tr>
       <th scope="row" className={`${BODY_CELL_CLASSES} text-left`}>
         <span className="block text-sm font-bold text-navy">{fee.class}</span>
-        <span className="block text-xs font-normal text-ink-soft">{fee.stage}</span>
+        <span className="block text-xs font-normal text-ink-soft">{translateReference('stages', fee.stage)}</span>
       </th>
       <td className={`${BODY_CELL_CLASSES} whitespace-nowrap font-display text-lg tabular-nums text-navy`}>
         {formatFcfa(fee.amount)}
@@ -59,12 +71,12 @@ function FeeRow({ fee }) {
           <ul className="flex flex-wrap gap-1.5">
             {fee.payment_methods.map((paymentMethod) => (
               <li key={paymentMethod} className="rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-ink-soft">
-                {paymentMethod}
+                {translateReference('payment_methods', paymentMethod)}
               </li>
             ))}
           </ul>
         ) : (
-          <span className="text-sm text-ink-soft">Ask the school</span>
+          <span className="text-sm text-ink-soft">{t('fees.askSchool')}</span>
         )}
       </td>
     </tr>
@@ -74,6 +86,7 @@ function FeeRow({ fee }) {
 // Les frais sont présentés année par année : l'historique reste consultable,
 // et l'année la plus récente s'affiche d'abord.
 function FeesSection({ fees }) {
+  const { t } = useTranslation('profile')
   const feesByYear = groupFeesByYear(fees)
   const [chosenYear, setChosenYear] = useState(null)
   if (feesByYear.length === 0) return null
@@ -87,23 +100,19 @@ function FeesSection({ fees }) {
       <Container>
         <SectionHeading
           size="md"
-          eyebrow="Fees"
-          title={
-            <>
-              Tuition by class, <Emphasis>year</Emphasis> by year.
-            </>
-          }
-          lead={describeRange(selectedFees)}
+          eyebrow={t('fees.eyebrow')}
+          title={<Trans t={t} i18nKey="fees.title" components={{ emphasis: <Emphasis /> }} />}
+          lead={describeRange(selectedFees, t)}
         />
         <YearTabs schoolYears={schoolYears} selectedYear={selectedYear} onSelect={setChosenYear} />
         <div className="mt-8 overflow-x-auto">
           <table className="w-full border-y border-line">
-            <caption className="sr-only">Yearly fees for {selectedYear}</caption>
+            <caption className="sr-only">{t('fees.caption', { year: selectedYear })}</caption>
             <thead>
               <tr className="border-b border-line">
-                <th scope="col" className={HEADER_CELL_CLASSES}>Class</th>
-                <th scope="col" className={HEADER_CELL_CLASSES}>Yearly fee</th>
-                <th scope="col" className={HEADER_CELL_CLASSES}>Payment plans</th>
+                <th scope="col" className={HEADER_CELL_CLASSES}>{t('fees.class')}</th>
+                <th scope="col" className={HEADER_CELL_CLASSES}>{t('fees.yearlyFee')}</th>
+                <th scope="col" className={HEADER_CELL_CLASSES}>{t('fees.paymentPlans')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-line">

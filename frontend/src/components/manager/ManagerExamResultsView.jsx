@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { Pencil } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
+import i18next from 'i18next'
 
 import Button from '../ui/Button'
 import { TextField } from '../ui/Field'
@@ -9,6 +11,7 @@ import SchoolSection from './SchoolSection'
 import { findLatestYear } from './schoolYears'
 import { useModificationProposal } from '../../hooks/useModificationProposal'
 import { formatPercent } from '../../utils/format'
+import { useReferenceLabel } from '../../hooks/useReferenceLabel'
 
 const MAX_PASS_RATE = 100
 
@@ -19,6 +22,8 @@ function isSameResult(firstResult, secondResult) {
 }
 
 function PassRateEditor({ examResult, isSubmitting, onSubmit, onCancel }) {
+  const { t } = useTranslation('manager')
+  const translateReference = useReferenceLabel()
   const [passRateDraft, setPassRateDraft] = useState(String(Number(examResult.pass_rate)))
 
   const handleSubmit = (event) => {
@@ -29,7 +34,10 @@ function PassRateEditor({ examResult, isSubmitting, onSubmit, onCancel }) {
   return (
     <form onSubmit={handleSubmit} className="mt-4 space-y-4 rounded-control bg-paper p-4">
       <TextField
-        label={`${examResult.exam} pass rate for ${examResult.session} (%)`}
+        label={t('exams.rateLabel', {
+          exam: translateReference('exams', examResult.exam),
+          session: examResult.session,
+        })}
         type="number"
         min="0"
         max={MAX_PASS_RATE}
@@ -41,10 +49,10 @@ function PassRateEditor({ examResult, isSubmitting, onSubmit, onCancel }) {
       />
       <div className="flex flex-wrap gap-2">
         <Button type="submit" disabled={isSubmitting}>
-          Send for review
+          {t('actions.sendForReview')}
         </Button>
         <Button variant="secondary" onClick={onCancel} disabled={isSubmitting}>
-          Cancel
+          {t('actions.cancel')}
         </Button>
       </div>
     </form>
@@ -58,6 +66,9 @@ const OLDER_SESSION_HEADER_CLASS = 'bg-ink-soft'
 // dégradé pour la session la plus récente, gris pour les précédentes), puis
 // le taux en grand, doublé d'une jauge.
 function ExamResultCard({ examResult, isLatestSession, isEditing, onEdit, children }) {
+  const { t } = useTranslation('manager')
+  const translateReference = useReferenceLabel()
+
   return (
     <li className="flex h-full flex-col overflow-hidden rounded-panel border border-line bg-surface shadow-soft">
       <div
@@ -65,7 +76,7 @@ function ExamResultCard({ examResult, isLatestSession, isEditing, onEdit, childr
           isLatestSession ? LATEST_SESSION_HEADER_CLASS : OLDER_SESSION_HEADER_CLASS
         }`}
       >
-        <h3 className="min-w-0 font-display text-2xl leading-display">{examResult.exam}</h3>
+        <h3 className="min-w-0 font-display text-2xl leading-display">{translateReference('exams', examResult.exam)}</h3>
         <span className="shrink-0 rounded-full bg-white/20 px-3 py-1 text-xs font-semibold">
           {examResult.session}
         </span>
@@ -86,11 +97,14 @@ function ExamResultCard({ examResult, isLatestSession, isEditing, onEdit, childr
           <div className="mt-auto pt-5">
             <Button
               variant="secondary"
-              aria-label={`Edit the ${examResult.exam} ${examResult.session} pass rate`}
+              aria-label={t('exams.editRate', {
+                exam: translateReference('exams', examResult.exam),
+                session: examResult.session,
+              })}
               onClick={onEdit}
             >
               <Pencil aria-hidden="true" className="size-4" />
-              Edit
+              {t('actions.edit')}
             </Button>
           </div>
         )}
@@ -104,15 +118,18 @@ function buildExamFigures(examResults, latestSession) {
 
   const sessionCount = new Set(examResults.map((examResult) => examResult.session)).size
   const bestPassRate = Math.max(...examResults.map((examResult) => Number(examResult.pass_rate)))
-  const sessionWord = sessionCount === 1 ? 'session' : 'sessions'
   return [
-    { value: sessionCount, label: `${sessionWord} recorded` },
-    { value: latestSession, label: 'latest session' },
-    { value: formatPercent(bestPassRate), label: 'best pass rate' },
+    {
+      value: sessionCount,
+      label: i18next.t('manager:exams.sessionsRecorded', { count: sessionCount }),
+    },
+    { value: latestSession, label: i18next.t('manager:exams.latestSession') },
+    { value: formatPercent(bestPassRate), label: i18next.t('manager:exams.bestPassRate') },
   ]
 }
 
 function ExamResultsContent({ detail, onProposalSubmitted }) {
+  const { t } = useTranslation('manager')
   const [editedResult, setEditedResult] = useState(null)
   const [areAllSessionsShown, setAreAllSessionsShown] = useState(false)
   const proposal = useModificationProposal(detail.uuid, onProposalSubmitted)
@@ -126,7 +143,7 @@ function ExamResultsContent({ detail, onProposalSubmitted }) {
 
   async function submitPassRate(examResult, passRate) {
     if (!Number.isFinite(passRate) || passRate < 0 || passRate > MAX_PASS_RATE) {
-      proposal.showError(`Enter a pass rate between 0 and ${MAX_PASS_RATE}.`)
+      proposal.showError(t('exams.rateRange', { maximum: MAX_PASS_RATE }))
       return
     }
     const isSent = await proposal.submitProposal({
@@ -143,21 +160,21 @@ function ExamResultsContent({ detail, onProposalSubmitted }) {
       className="w-full sm:w-auto"
       onClick={() => setAreAllSessionsShown(!areAllSessionsShown)}
     >
-      {areAllSessionsShown ? 'Show latest session only' : 'Show all sessions'}
+      {areAllSessionsShown ? t('exams.showLatest') : t('exams.showAll')}
     </Button>
   )
 
   return (
     <>
       <ViewHero
-        title="Exam results"
-        description={`The pass rates families see on the page of ${detail.name}. Each change is reviewed before it goes public.`}
+        title={t('exams.title')}
+        description={t('exams.description', { school: detail.name })}
         figures={buildExamFigures(examResults, latestSession)}
         action={sessionToggle}
       />
       {examResults.length === 0 ? (
         <p className="rounded-panel border border-dashed border-line bg-surface p-8 text-center text-sm text-ink-soft">
-          No exam result is recorded yet. Use “Propose changes” on the school to add them.
+          {t('exams.empty')}
         </p>
       ) : (
         // La clé remet la pagination à la première page quand on change de sessions affichées.

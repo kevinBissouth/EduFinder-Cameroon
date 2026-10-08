@@ -1,7 +1,9 @@
 import { Building2, GraduationCap, Languages, TrendingUp, Wallet } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 import Container from '../ui/Container'
 import { listLatestExamResults } from './helpers'
+import { useReferenceLabel } from '../../hooks/useReferenceLabel'
 import { formatFcfa, formatPercent } from '../../utils/format'
 
 function capitalize(text) {
@@ -10,32 +12,42 @@ function capitalize(text) {
 
 // Seuls les faits réellement publiés sont affichés : une fiche sans frais ni
 // résultats montre une barre plus courte, jamais une valeur inventée.
-function listKeyFacts(institution) {
+function listKeyFacts(institution, t, translateReference) {
   const amounts = (institution.fees ?? []).map((fee) => Number(fee.amount))
   const latestResults = listLatestExamResults(institution.exam_results ?? [])
 
   return [
-    { icon: GraduationCap, label: 'Type of school', value: institution.type },
-    { icon: Languages, label: 'Language section', value: institution.linguistic_section },
-    { icon: Building2, label: 'Sector', value: capitalize(institution.sector) },
+    { icon: GraduationCap, label: t('facts.type'), value: translateReference('types', institution.type) },
+    {
+      icon: Languages,
+      label: t('facts.section'),
+      value: translateReference('sections', institution.linguistic_section),
+    },
+    {
+      icon: Building2,
+      label: t('facts.sector'),
+      value: capitalize(translateReference('sectors', institution.sector)),
+    },
     amounts.length > 0 && {
       icon: Wallet,
-      label: 'Fees from, per year',
+      label: t('facts.feesFrom'),
       value: formatFcfa(Math.min(...amounts)),
     },
     latestResults.length > 0 && {
       icon: TrendingUp,
-      label: `Best pass rate, ${latestResults[0].session}`,
-      value: `${formatPercent(latestResults[0].pass_rate)} (${latestResults[0].exam})`,
+      label: t('facts.bestPassRate', { session: latestResults[0].session }),
+      value: `${formatPercent(latestResults[0].pass_rate)} (${translateReference('exams', latestResults[0].exam)})`,
     },
   ].filter((fact) => fact && fact.value)
 }
 
 function KeyFacts({ institution }) {
-  const keyFacts = listKeyFacts(institution)
+  const { t } = useTranslation('profile')
+  const translateReference = useReferenceLabel()
+  const keyFacts = listKeyFacts(institution, t, translateReference)
 
   return (
-    <section aria-label="Key facts" className="border-y border-line bg-surface">
+    <section aria-label={t('facts.label')} className="border-y border-line bg-surface">
       <Container>
         <dl className="grid grid-cols-2 gap-x-6 gap-y-6 py-6 sm:grid-cols-3 lg:flex lg:divide-x lg:divide-line lg:gap-0">
           {keyFacts.map((fact) => (

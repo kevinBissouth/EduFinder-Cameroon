@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Clock, Eye, MapPin, PencilLine } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 import Button from '../ui/Button'
 import { Emphasis } from '../ui/SectionHeading'
@@ -7,6 +8,7 @@ import StatusBadge from '../workspace/StatusBadge'
 import { useIsDesktop } from '../../hooks/useIsDesktop'
 import { navigateToSchool } from '../../routes'
 import { toMediaUrl } from '../../utils/media'
+import { useReferenceLabel } from '../../hooks/useReferenceLabel'
 
 // Deux habillages pour le même contenu. Sur téléphone et tablette, le texte
 // est posé sur le fond clair de la page, comme sur la fiche publique. Sur
@@ -85,6 +87,8 @@ function SidePhoto({ photoUrl, altText, onPhotoError, orbitClass }) {
 }
 
 function HeroActions({ detail, theme, onEditSchool }) {
+  const { t } = useTranslation('manager')
+
   return (
     <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
       <Button
@@ -93,7 +97,7 @@ function HeroActions({ detail, theme, onEditSchool }) {
         onClick={() => onEditSchool(detail)}
       >
         <PencilLine aria-hidden="true" className="size-4" />
-        Propose changes
+        {t('actions.proposeChanges')}
       </Button>
       {detail.status === 'published' && (
         <Button
@@ -102,7 +106,7 @@ function HeroActions({ detail, theme, onEditSchool }) {
           onClick={() => navigateToSchool(detail.uuid)}
         >
           <Eye aria-hidden="true" className="size-4" />
-          View public page
+          {t('actions.viewPublicPage')}
         </Button>
       )}
     </div>
@@ -114,16 +118,22 @@ function HeroActions({ detail, theme, onEditSchool }) {
 // le dégradé du tableau de bord. Sous lg, le bloc annule les marges de la page pour toucher les bords
 // de l'écran.
 function SchoolDetailHero({ detail, onEditSchool }) {
+  const { t } = useTranslation('manager')
+  const translateReference = useReferenceLabel()
   // Une photo qui ne se charge pas est traitée comme une photo absente.
   const [hasPhotoFailed, setHasPhotoFailed] = useState(false)
   const coverImage = detail.media.find((mediaItem) => mediaItem.type === 'image')
   const photoProps = coverImage &&
     !hasPhotoFailed && {
       photoUrl: toMediaUrl(coverImage.url),
-      altText: `${detail.name}, ${detail.city}`,
+      altText: t('detail.photoAlt', { name: detail.name, city: detail.city }),
       onPhotoError: () => setHasPhotoFailed(true),
     }
-  const tags = [detail.sector, detail.type, detail.linguistic_section].filter(Boolean)
+  const tags = [
+    translateReference('sectors', detail.sector),
+    translateReference('types', detail.type),
+    translateReference('sections', detail.linguistic_section),
+  ].filter(Boolean)
   const theme = useIsDesktop() ? ON_GRADIENT_THEME : ON_PAGE_THEME
 
   return (
@@ -135,7 +145,7 @@ function SchoolDetailHero({ detail, onEditSchool }) {
           <HeroTitle name={detail.name} theme={theme} />
           <p className={`mt-4 flex items-center gap-2 text-base ${theme.location}`}>
             <MapPin aria-hidden="true" className={`size-4 shrink-0 ${theme.pin}`} />
-            {[detail.city, detail.region].filter(Boolean).join(', ')}
+            {[detail.city, translateReference('regions', detail.region)].filter(Boolean).join(', ')}
           </p>
           <ul className="mt-4 flex flex-wrap gap-2">
             {tags.map((tag) => (
@@ -150,7 +160,7 @@ function SchoolDetailHero({ detail, onEditSchool }) {
           {detail.has_pending_submission && (
             <p className="mt-4 flex items-center gap-1.5 rounded-control bg-warning-soft px-3 py-2 text-sm font-medium text-warning">
               <Clock aria-hidden="true" className="size-4 shrink-0" />
-              Changes awaiting review
+              {t('page.awaitingReview')}
             </p>
           )}
           <HeroActions detail={detail} theme={theme} onEditSchool={onEditSchool} />
