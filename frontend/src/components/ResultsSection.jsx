@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { CircleAlert, SearchX } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 import InstitutionCard from './InstitutionCard'
 import Button from './ui/Button'
@@ -11,17 +12,18 @@ import StateMessage from './ui/StateMessage'
 const PAGE_SIZE = 6
 const GRID_CLASSES = 'mt-10 grid gap-6 md:grid-cols-2 lg:grid-cols-3'
 
-function describeBudget(minFee, maxFee) {
-  if (minFee && maxFee) return `${minFee} to ${maxFee} FCFA`
-  if (minFee) return `From ${minFee} FCFA`
-  return `Up to ${maxFee} FCFA`
+function describeBudget(minFee, maxFee, t) {
+  if (minFee && maxFee) return t('results.budgetRange', { minimum: minFee, maximum: maxFee })
+  if (minFee) return t('results.budgetFrom', { minimum: minFee })
+  return t('results.budgetUpTo', { maximum: maxFee })
 }
 
 // Chaque critère actif devient une pastille qui le retire. Les clés sont
 // celles qu'attend handleRemoveFilter dans useInstitutions.
-function listActiveFilters(filters) {
+function listActiveFilters(filters, t) {
   const examName = (examId) =>
-    filters.examMeta.find((exam) => String(exam.id) === String(examId))?.name ?? `Exam ${examId}`
+    filters.examMeta.find((exam) => String(exam.id) === String(examId))?.name ??
+    t('results.unknownExam', { id: examId })
 
   return [
     filters.appliedSearch.trim() && { key: 'q', label: `"${filters.appliedSearch.trim()}"` },
@@ -32,18 +34,22 @@ function listActiveFilters(filters) {
     filters.activeRegion && { key: 'region', label: filters.activeRegion.name },
     (filters.minFee || filters.maxFee) && {
       key: 'budget',
-      label: describeBudget(filters.minFee, filters.maxFee),
+      label: describeBudget(filters.minFee, filters.maxFee, t),
     },
     ...filters.serviceNames.map((serviceName) => ({ key: 'services', label: serviceName })),
     ...filters.examRequirements.map((requirement) => ({
       key: 'exams',
-      label: `${examName(requirement.examId)} at least ${requirement.minRate}%`,
+      label: t('results.examAtLeast', {
+        exam: examName(requirement.examId),
+        rate: requirement.minRate,
+      }),
     })),
   ].filter(Boolean)
 }
 
 function ActiveFilters({ filters, onRemoveFilter, onReset }) {
-  const activeFilters = listActiveFilters(filters)
+  const { t } = useTranslation('home')
+  const activeFilters = listActiveFilters(filters, t)
   if (activeFilters.length === 0) return null
 
   return (
@@ -56,7 +62,7 @@ function ActiveFilters({ filters, onRemoveFilter, onReset }) {
         />
       ))}
       <Button variant="ghost" onClick={onReset} className="sm:h-9">
-        Clear all filters
+        {t('results.clearFilters')}
       </Button>
     </div>
   )
@@ -65,10 +71,11 @@ function ActiveFilters({ filters, onRemoveFilter, onReset }) {
 // Raccourcis vers les types d'établissement les plus représentés : un clic
 // applique le filtre, un second clic le retire.
 function TypeTabs({ types, activeTypeId, onToggleType }) {
+  const { t } = useTranslation('home')
   if (types.length === 0) return null
 
   return (
-    <div role="group" aria-label="Filter by type of school" className="mt-8 flex flex-wrap gap-2">
+    <div role="group" aria-label={t('results.filterByType')} className="mt-8 flex flex-wrap gap-2">
       {types.map((type) => {
         const isActive = String(type.id) === String(activeTypeId)
         return (
@@ -105,11 +112,6 @@ function SkeletonCard() {
   )
 }
 
-function buildHeading(status, schoolCount) {
-  if (status !== 'success') return 'Schools'
-  return `${schoolCount} ${schoolCount === 1 ? 'school' : 'schools'} found`
-}
-
 function ResultsSection({
   status,
   institutions,
@@ -122,6 +124,7 @@ function ResultsSection({
   comparedIds,
   onToggleCompare,
 }) {
+  const { t } = useTranslation('home')
   // Le nombre de cartes affichées est mémorisé AVEC la liste qu'il concerne :
   // dès que les résultats changent, on repart de la première page sans effet.
   const [expansion, setExpansion] = useState({ institutions: null, visibleCount: PAGE_SIZE })
@@ -130,19 +133,21 @@ function ResultsSection({
   const visibleInstitutions = institutions.slice(0, visibleCount)
   const hiddenCount = institutions.length - visibleInstitutions.length
   const showMore = () => setExpansion({ institutions, visibleCount: visibleCount + PAGE_SIZE })
+  const heading =
+    status === 'success' ? t('results.found', { count: institutions.length }) : t('results.heading')
 
   return (
     <section id="results" className="scroll-mt-20 bg-surface py-16 sm:py-20">
       <Container>
-        <Eyebrow>Explore</Eyebrow>
+        <Eyebrow>{t('results.eyebrow')}</Eyebrow>
         <h2
           aria-live="polite"
           className="mt-4 font-display text-3xl leading-display tracking-tight tabular-nums text-navy sm:text-5xl"
         >
-          {buildHeading(status, institutions.length)}
+          {heading}
         </h2>
         <p className="mt-4 text-base text-ink sm:text-lg">
-          Recommended schools are listed first.
+          {t('results.recommendedFirst')}
         </p>
         <TypeTabs
           types={typeTabs.types}
@@ -152,7 +157,7 @@ function ResultsSection({
         <ActiveFilters filters={filters} onRemoveFilter={onRemoveFilter} onReset={onReset} />
 
         {status === 'loading' && (
-          <div aria-busy="true" aria-label="Loading schools" className={GRID_CLASSES}>
+          <div aria-busy="true" aria-label={t('results.loading')} className={GRID_CLASSES}>
             {Array.from({ length: PAGE_SIZE }, (_, index) => (
               <SkeletonCard key={index} />
             ))}
@@ -164,9 +169,9 @@ function ResultsSection({
             <StateMessage
               tone="danger"
               icon={CircleAlert}
-              title="The schools could not be loaded"
-              description="The server did not answer. Check your connection, then try again."
-              actionLabel="Try again"
+              title={t('results.errorTitle')}
+              description={t('results.errorDescription')}
+              actionLabel={t('results.retry')}
               onAction={onRetry}
             />
           </div>
@@ -176,9 +181,9 @@ function ResultsSection({
           <div className="mt-8">
             <StateMessage
               icon={SearchX}
-              title="No school matches these filters"
-              description="Remove a filter or search in another city to see more schools."
-              actionLabel="Clear all filters"
+              title={t('results.emptyTitle')}
+              description={t('results.emptyDescription')}
+              actionLabel={t('results.clearFilters')}
               onAction={onReset}
             />
           </div>
@@ -200,7 +205,7 @@ function ResultsSection({
             {hiddenCount > 0 && (
               <div className="mt-8 flex justify-center">
                 <Button variant="secondary" onClick={showMore} className="rounded-full">
-                  Show {Math.min(PAGE_SIZE, hiddenCount)} more schools
+                  {t('results.showMore', { count: Math.min(PAGE_SIZE, hiddenCount) })}
                 </Button>
               </div>
             )}

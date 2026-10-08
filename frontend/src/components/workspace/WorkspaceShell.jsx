@@ -1,4 +1,5 @@
 import NotificationBell from './NotificationBell'
+import LanguageSwitch from '../ui/LanguageSwitch'
 import { WorkspaceRail, WorkspaceTabBar } from './WorkspaceNavigation'
 import { useNotifications } from '../../hooks/useNotifications'
 import { buildInitials } from '../../utils/format'
@@ -76,6 +77,10 @@ function WorkspaceShell({
               {subtitle && <p className="truncate text-xs text-ink sm:text-sm">{subtitle}</p>}
             </div>
             {toolbar}
+            {/* Sous lg la barre est trop étroite : la langue se règle dans la vue du compte. */}
+            <div className="hidden lg:block">
+              <LanguageSwitch tone="onLight" />
+            </div>
             <NotificationBell inbox={inbox} onOpenNotification={onOpenNotification} />
             <AccountBadge profile={profile} roleLabel={roleLabel} onOpenAccount={onOpenAccount} />
           </div>
