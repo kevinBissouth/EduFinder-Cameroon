@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { useTranslation } from 'react-i18next'
 
 import CriteriaSection from '../components/CriteriaSection'
 import CtaBand from '../components/CtaBand'
@@ -17,7 +16,6 @@ import { usePlatformStats } from '../hooks/usePlatformStats'
 import { navigateToSchool } from '../routes'
 
 function HomePage() {
-  const { t } = useTranslation('home')
   const api = useInstitutions()
   const { stats: platformStats, error: statsError } = usePlatformStats()
   const [comparedIds, setComparedIds] = useState([])
@@ -51,7 +49,7 @@ function HomePage() {
               role="alert"
               className="rounded-control border border-warning bg-warning-soft px-4 py-3 text-sm text-warning"
             >
-              {t('loadWarning')}
+              Some filters or figures could not be loaded. Refresh the page to try again.
             </p>
           </Container>
         )}

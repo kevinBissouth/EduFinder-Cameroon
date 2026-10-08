@@ -1,14 +1,25 @@
 import { Bookmark, Scale, Search } from 'lucide-react'
-import { useTranslation } from 'react-i18next'
 
 import Container from './ui/Container'
 
 // Les trois étapes se suivent réellement, d'où la ligne qui les relie et
 // leur numéro.
 const STEPS = [
-  { id: 'search', icon: Search },
-  { id: 'compare', icon: Scale },
-  { id: 'decide', icon: Bookmark },
+  {
+    icon: Search,
+    title: 'Search',
+    description: 'Find schools by name, city, type or language.',
+  },
+  {
+    icon: Scale,
+    title: 'Compare',
+    description: 'Read fees, payment plans and exam results side by side.',
+  },
+  {
+    icon: Bookmark,
+    title: 'Decide',
+    description: 'Contact the schools that fit and choose together.',
+  },
 ]
 
 // Ligne ondulée qui relie les trois étapes, visible à partir de la tablette.
@@ -41,8 +52,6 @@ function WavyLine() {
 // Sur mobile, un filet vertical relie chaque pastille à la suivante : il
 // joue le rôle de la ligne ondulée, réservée aux écrans plus larges.
 function Step({ step, position }) {
-  const { t } = useTranslation('home')
-
   return (
     <li className="relative flex gap-5 pb-8 last:pb-0 md:flex-col md:items-center md:gap-0 md:pb-0 md:text-center">
       <span
@@ -54,27 +63,25 @@ function Step({ step, position }) {
       </span>
       <div className="md:mt-5">
         <p className="text-xs font-semibold uppercase tracking-eyebrow text-primary-deep">
-          {t('steps.position', { position })}
+          Step {position}
         </p>
-        <h3 className="mt-1 font-display text-2xl text-navy">{t(`steps.${step.id}.title`)}</h3>
-        <p className="mt-2 max-w-xs text-balance text-sm text-ink">{t(`steps.${step.id}.description`)}</p>
+        <h3 className="mt-1 font-display text-2xl text-navy">{step.title}</h3>
+        <p className="mt-2 max-w-xs text-balance text-sm text-ink">{step.description}</p>
       </div>
     </li>
   )
 }
 
 function HeroSteps() {
-  const { t } = useTranslation('home')
-
   return (
     <section id="how-it-works" className="scroll-mt-20 border-b border-line bg-surface pb-16 pt-4 sm:pb-20 md:pt-0">
       <Container>
-        <h2 className="sr-only">{t('steps.heading')}</h2>
+        <h2 className="sr-only">How it works</h2>
         <div className="relative">
           <WavyLine />
           <ol className="relative grid md:grid-cols-3 md:gap-8">
             {STEPS.map((step, index) => (
-              <Step key={step.id} step={step} position={index + 1} />
+              <Step key={step.title} step={step} position={index + 1} />
             ))}
           </ol>
         </div>

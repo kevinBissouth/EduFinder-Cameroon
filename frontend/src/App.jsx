@@ -1,5 +1,4 @@
 import { lazy, Suspense, useEffect, useState } from 'react'
-import { useTranslation } from 'react-i18next'
 import HomePage from './pages/HomePage'
 import SchoolProfilePage from './pages/SchoolProfilePage'
 import LoginPage from './pages/LoginPage'
@@ -13,9 +12,6 @@ const ManagerHomePage = lazy(() => import('./pages/ManagerHomePage'))
 const AdminHomePage = lazy(() => import('./pages/AdminHomePage'))
 
 function App() {
-  // Abonne la racine à la langue : au changement, tout l'arbre se redessine,
-  // y compris les montants et les dates formatés hors des composants.
-  useTranslation()
   const [route, setRoute] = useState(() => parseCurrentRoute())
   // Profil restauré depuis /auth/me (le cookie httpOnly n'est pas lisible en
   // JS) ; authChecked évite un faux redirection vers /login le temps du test.
