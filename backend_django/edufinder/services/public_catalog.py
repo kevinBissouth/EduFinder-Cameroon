@@ -17,6 +17,7 @@ from edufinder.models import (
     SchoolFee,
     Sector,
     Service,
+    Stage,
     StudyLevel,
 )
 
@@ -52,6 +53,37 @@ def collect_filters_meta() -> dict:
             "label", flat=True
         ),
         "featured_type_ids": _list_featured_type_ids(),
+    }
+
+
+# Listes dont les valeurs s'affichent dans la langue du visiteur : le nom sous
+# lequel le frontend les demande, le modèle, et la colonne qui porte la clé.
+TRANSLATED_REFERENCES = (
+    ("regions", Region, "name"),
+    ("types", EstablishmentType, "label"),
+    ("sections", LinguisticSection, "label"),
+    ("sectors", Sector, "label"),
+    ("exams", Exam, "label"),
+    ("stages", Stage, "label"),
+    ("programs", Program, "name"),
+    ("payment_methods", PaymentMethod, "label"),
+)
+
+
+def collect_reference_labels() -> dict:
+    return {
+        reference_kind: _map_labels_by_key(reference_model, key_column)
+        for reference_kind, reference_model, key_column in TRANSLATED_REFERENCES
+    }
+
+
+# Une valeur pas encore traduite s'affiche avec sa clé plutôt qu'avec un vide.
+def _map_labels_by_key(reference_model, key_column: str) -> dict:
+    return {
+        key: {"fr": label_fr or key, "en": label_en or key}
+        for key, label_fr, label_en in reference_model.objects.values_list(
+            key_column, "label_fr", "label_en"
+        )
     }
 
 
