@@ -1,6 +1,7 @@
 import { useRef, useEffect, useState } from 'react'
 import { Eye, EyeOff, ArrowRight, GraduationCap, AlertCircle } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
 
 import LanguageSwitch from '../components/ui/LanguageSwitch'
 import {
@@ -172,6 +173,7 @@ const DotMap = () => {
 }
 
 function LoginPage({ onAuthenticated }) {
+  const { t } = useTranslation('auth')
   const [isPasswordVisible, setIsPasswordVisible] = useState(false)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -195,7 +197,7 @@ function LoginPage({ onAuthenticated }) {
       // Le serveur renvoie volontairement le même message pour email inconnu
       // et mot de passe erroné : on l'affiche tel quel, sans en dire plus.
       const apiDetail = error?.response?.data?.detail
-      setErrorMessage(apiDetail || 'Unable to sign in right now. Please try again.')
+      setErrorMessage(apiDetail || t('failed'))
       setSubmitStatus('error')
     }
   }
@@ -238,8 +240,7 @@ function LoginPage({ onAuthenticated }) {
                 transition={{ delay: 0.8, duration: 0.5 }}
                 className="max-w-xs text-center text-sm text-ink"
               >
-                Sign in to manage your school information and help families find
-                the right institution across Cameroon.
+                {t('tagline')}
               </motion.p>
             </div>
           </div>
@@ -263,10 +264,10 @@ function LoginPage({ onAuthenticated }) {
               </span>
             </p>
             <h1 className="mb-1 font-display text-2xl text-navy md:text-3xl">
-              Welcome back
+              {t('title')}
             </h1>
             <p className="mb-8 text-ink">
-              Access reserved for school managers and administrators.
+              {t('lead')}
             </p>
 
             <AnimatePresence>
@@ -290,14 +291,14 @@ function LoginPage({ onAuthenticated }) {
             <form className="space-y-5" onSubmit={handleSubmit}>
               <div>
                 <label htmlFor="email" className="mb-1 block text-sm font-semibold text-navy">
-                  Email <span className="text-primary">*</span>
+                  {t('email')} <span className="text-primary">*</span>
                 </label>
                 <input
                   id="email"
                   type="email"
                   value={email}
                   onChange={(event) => setEmail(event.target.value)}
-                  placeholder="Enter your email address"
+                  placeholder={t('emailPlaceholder')}
                   required
                   autoComplete="off"
                   className="flex h-11 w-full rounded-control border border-line bg-paper px-3 py-2 text-sm text-navy placeholder:text-ink-soft focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30 disabled:cursor-not-allowed disabled:opacity-50"
@@ -306,7 +307,7 @@ function LoginPage({ onAuthenticated }) {
 
               <div>
                 <label htmlFor="password" className="mb-1 block text-sm font-semibold text-navy">
-                  Password <span className="text-primary">*</span>
+                  {t('password')} <span className="text-primary">*</span>
                 </label>
                 <div className="relative">
                   <input
@@ -314,7 +315,7 @@ function LoginPage({ onAuthenticated }) {
                     type={isPasswordVisible ? 'text' : 'password'}
                     value={password}
                     onChange={(event) => setPassword(event.target.value)}
-                    placeholder="Enter your password"
+                    placeholder={t('passwordPlaceholder')}
                     required
                     autoComplete="new-password"
                     className="flex h-11 w-full rounded-control border border-line bg-paper px-3 py-2 pr-12 text-sm text-navy placeholder:text-ink-soft focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30 disabled:cursor-not-allowed disabled:opacity-50"
@@ -323,7 +324,7 @@ function LoginPage({ onAuthenticated }) {
                     type="button"
                     className="absolute inset-y-0 right-0 flex w-11 cursor-pointer items-center justify-center rounded-control text-ink-soft hover:text-navy"
                     onClick={() => setIsPasswordVisible(!isPasswordVisible)}
-                    aria-label={isPasswordVisible ? 'Hide password' : 'Show password'}
+                    aria-label={isPasswordVisible ? t('hidePassword') : t('showPassword')}
                   >
                     {isPasswordVisible ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
@@ -346,7 +347,7 @@ function LoginPage({ onAuthenticated }) {
                   )}
                 >
                   <span className="flex items-center justify-center">
-                    {submitStatus === 'submitting' ? 'Signing in…' : 'Sign in'}
+                    {submitStatus === 'submitting' ? t('submitting') : t('submit')}
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </span>
                   {isHovered && submitStatus !== 'submitting' && (
@@ -363,15 +364,14 @@ function LoginPage({ onAuthenticated }) {
             </form>
 
             <p className="mt-6 text-center text-xs text-ink-soft">
-              EduFinder never claims a school is “the best” — it helps each
-              family find the one that matches its own criteria.
+              {t('principle')}
             </p>
 
             <a
               href="#/"
               className="mt-2 flex min-h-11 items-center justify-center gap-1.5 rounded-control text-sm font-semibold text-primary-deep transition-colors hover:text-primary"
             >
-              Back to EduFinder search
+              {t('backToSearch')}
             </a>
           </motion.div>
         </div>

@@ -1,4 +1,5 @@
 import { Trash2, Upload, Video } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 import FileButton from '../workspace/FileButton'
 import OverflowList from '../workspace/OverflowList'
@@ -35,6 +36,7 @@ function SchoolGallery({
   gridClassName = DEFAULT_GRID_CLASSES,
   onProposalSubmitted,
 }) {
+  const { t } = useTranslation('manager')
   const reviewRequest = useReviewRequest(onProposalSubmitted)
   const mediaUrl = `/my/establishments/${establishmentUuid}/media`
   const images = media.filter((mediaItem) => mediaItem.type === 'image')
@@ -48,7 +50,7 @@ function SchoolGallery({
 
   const proposeRemoval = (mediaItem) => {
     const isConfirmed = window.confirm(
-      'Ask for this file to be removed from the public page? A super administrator reviews the request.',
+      t('gallery.confirmRemoval'),
     )
     if (isConfirmed) reviewRequest.sendForReview('delete', `${mediaUrl}/${mediaItem.id_media}`)
   }
@@ -59,7 +61,7 @@ function SchoolGallery({
       <OverflowList
         items={images}
         collapsedCount={PHOTOS_SHOWN_WHEN_COLLAPSED}
-        title="Photos"
+        title={t('gallery.photos')}
         modalSize="lg"
         renderItems={(shownImages) => (
           <ul className={`grid gap-3 ${gridClassName}`}>
@@ -67,12 +69,12 @@ function SchoolGallery({
               <li key={image.id_media}>
                 <img
                   src={toMediaUrl(image.url)}
-                  alt={image.caption || `Photo of ${schoolName}`}
+                  alt={image.caption || t('gallery.photoAlt', { school: schoolName })}
                   loading="lazy"
                   className="aspect-[4/3] w-full rounded-control bg-muted object-cover"
                 />
                 <RemoveButton
-                  label="Remove"
+                  label={t('gallery.remove')}
                   disabled={reviewRequest.isSubmitting}
                   onRemove={() => proposeRemoval(image)}
                 />
@@ -89,7 +91,7 @@ function SchoolGallery({
               <span className="truncate">{video.caption || findFileName(video.url)}</span>
             </span>
             <RemoveButton
-              label="Remove"
+              label={t('gallery.remove')}
               disabled={reviewRequest.isSubmitting}
               onRemove={() => proposeRemoval(video)}
             />
@@ -103,7 +105,7 @@ function SchoolGallery({
           onSelectFile={proposeFile}
         >
           <Upload aria-hidden="true" className="size-4" />
-          Add a photo
+          {t('gallery.addPhoto')}
         </FileButton>
         <FileButton
           accept={VIDEO_FILE_TYPES}
@@ -111,7 +113,7 @@ function SchoolGallery({
           onSelectFile={proposeFile}
         >
           <Video aria-hidden="true" className="size-4" />
-          Add a video
+          {t('gallery.addVideo')}
         </FileButton>
       </div>
     </>

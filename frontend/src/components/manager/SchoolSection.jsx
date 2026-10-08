@@ -1,4 +1,5 @@
 import { Building2 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 import StateMessage from '../ui/StateMessage'
 
@@ -12,12 +13,13 @@ function SchoolSection({
   onRetry,
   children,
 }) {
+  const { t } = useTranslation('manager')
   if (establishments.length === 0) {
     return (
       <StateMessage
         icon={Building2}
-        title="No school yet"
-        description="Once a school you proposed is approved, you manage this part of its page here."
+        title={t('page.noSchoolTitle')}
+        description={t('page.noSchoolSection')}
       />
     )
   }
@@ -26,9 +28,9 @@ function SchoolSection({
       <StateMessage
         icon={Building2}
         tone="danger"
-        title="This school could not be loaded"
-        description="The server did not answer. Check your connection, then try again."
-        actionLabel="Try again"
+        title={t('page.schoolErrorTitle')}
+        description={t('page.serverError')}
+        actionLabel={t('workspace:retry')}
         onAction={onRetry}
       />
     )
@@ -36,7 +38,7 @@ function SchoolSection({
   if (!detail) {
     return (
       <p role="status" className="py-16 text-center text-sm text-ink-soft">
-        Loading the school…
+        {t('page.loadingSchool')}
       </p>
     )
   }

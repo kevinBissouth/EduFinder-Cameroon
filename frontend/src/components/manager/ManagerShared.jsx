@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Pencil } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 import Button from '../ui/Button'
 import { TextAreaField, TextField } from '../ui/Field'
@@ -8,6 +9,7 @@ import ClampedText from '../workspace/ClampedText'
 const DESCRIPTION_ROWS = 5
 
 function InlineFieldEditor({ label, initialValue, isMultiline, isSubmitting, onSubmit, onCancel }) {
+  const { t } = useTranslation('manager')
   const [valueDraft, setValueDraft] = useState(initialValue)
   const DraftField = isMultiline ? TextAreaField : TextField
 
@@ -27,10 +29,10 @@ function InlineFieldEditor({ label, initialValue, isMultiline, isSubmitting, onS
       />
       <div className="flex flex-wrap gap-2">
         <Button type="submit" disabled={isSubmitting}>
-          Send for review
+          {t('actions.sendForReview')}
         </Button>
         <Button variant="secondary" onClick={onCancel} disabled={isSubmitting}>
-          Cancel
+          {t('actions.cancel')}
         </Button>
       </div>
     </form>
@@ -40,6 +42,7 @@ function InlineFieldEditor({ label, initialValue, isMultiline, isSubmitting, onS
 // Champ de la fiche modifiable sur place. Enregistrer n'écrit pas la fiche :
 // cela envoie une proposition que le super administrateur valide.
 export function InlineField({ label, value, href, isMultiline = false, isSubmitting, onSubmit }) {
+  const { t } = useTranslation('manager')
   const [isEditing, setIsEditing] = useState(false)
   const currentValue = value ?? ''
 
@@ -80,7 +83,7 @@ export function InlineField({ label, value, href, isMultiline = false, isSubmitt
       </div>
       <button
         type="button"
-        aria-label={`Edit ${label.toLowerCase()}`}
+        aria-label={t('detail.editField', { field: label.toLowerCase() })}
         onClick={() => setIsEditing(true)}
         className="flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-full border border-line text-navy transition-colors hover:border-primary hover:text-primary-deep"
       >
@@ -91,7 +94,8 @@ export function InlineField({ label, value, href, isMultiline = false, isSubmitt
 }
 
 function InlineFieldValue({ label, value, href, isMultiline }) {
-  if (!value) return <p className="mt-1 text-sm text-ink-soft">Not provided</p>
+  const { t } = useTranslation('manager')
+  if (!value) return <p className="mt-1 text-sm text-ink-soft">{t('detail.notProvided')}</p>
   if (href) {
     return (
       <a

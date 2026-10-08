@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 import Modal from './Modal'
 import { useIsDesktop } from '../../hooks/useIsDesktop'
@@ -11,6 +12,7 @@ const SHOW_BUTTON_CLASSES =
 // grand écran, une fenêtre défilante s'ouvre par-dessus la page ; sur
 // téléphone, la liste se déplie simplement sur place.
 function OverflowList({ items, collapsedCount, title, modalSize, renderItems }) {
+  const { t } = useTranslation('workspace')
   const isDesktop = useIsDesktop()
   const [isOpen, setIsOpen] = useState(false)
 
@@ -27,7 +29,7 @@ function OverflowList({ items, collapsedCount, title, modalSize, renderItems }) 
         onClick={() => setIsOpen(!isOpen)}
         className={SHOW_BUTTON_CLASSES}
       >
-        {isExpandedInPlace ? 'Show less' : `Show all ${items.length}`}
+        {isExpandedInPlace ? t('showLess') : t('showAll', { count: items.length })}
       </button>
       {isOpen && isDesktop && (
         <Modal title={title} size={modalSize} onClose={() => setIsOpen(false)}>

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 import Container from '../ui/Container'
 import { Eyebrow } from '../ui/SectionHeading'
@@ -39,6 +40,7 @@ function DirectorPortrait({ name, photoUrl }) {
 
 // La personne qui dirige l'établissement, distincte du compte qui gère la fiche.
 function LeadershipSection({ institution }) {
+  const { t } = useTranslation('profile')
   if (!institution.director_name) return null
 
   return (
@@ -46,7 +48,7 @@ function LeadershipSection({ institution }) {
       <Container className="flex flex-col gap-6 sm:flex-row sm:items-center sm:gap-8">
         <DirectorPortrait name={institution.director_name} photoUrl={institution.director_photo_url} />
         <div>
-          <Eyebrow>Leadership</Eyebrow>
+          <Eyebrow>{t('leadership.eyebrow')}</Eyebrow>
           <p className="mt-3 font-display text-2xl text-navy sm:text-3xl">{institution.director_name}</p>
           {institution.director_title && (
             <p className="mt-1 text-sm font-semibold text-ink-soft">{institution.director_title}</p>

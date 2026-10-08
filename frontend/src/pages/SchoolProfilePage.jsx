@@ -1,4 +1,5 @@
 import { SearchX } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 import Footer from '../components/Footer'
 import Header from '../components/Header'
@@ -22,21 +23,23 @@ import { navigateToHome } from '../routes'
 const PAGE_CLASSES = 'min-h-screen overflow-x-clip bg-paper font-sans text-ink'
 
 // Onglets de la fiche : seules les sections qui ont un contenu y figurent.
-function listSections(institution) {
+function listSections(institution, t) {
   const hasOffer = institution.programs.length > 0 || institution.services.length > 0
   return [
-    { id: 'overview', label: 'Overview' },
-    institution.fees.length > 0 && { id: 'fees', label: 'Fees' },
-    institution.exam_results.length > 0 && { id: 'results', label: 'Exam results' },
-    hasOffer && { id: 'offer', label: 'Programs and services' },
-    institution.media.length > 0 && { id: 'gallery', label: 'Gallery' },
-    { id: 'contact', label: 'Location and contact' },
+    { id: 'overview', label: t('sections.overview') },
+    institution.fees.length > 0 && { id: 'fees', label: t('sections.fees') },
+    institution.exam_results.length > 0 && { id: 'results', label: t('sections.results') },
+    hasOffer && { id: 'offer', label: t('sections.offer') },
+    institution.media.length > 0 && { id: 'gallery', label: t('sections.gallery') },
+    { id: 'contact', label: t('sections.contact') },
   ].filter(Boolean)
 }
 
 function ProfileSkeleton() {
+  const { t } = useTranslation('profile')
+
   return (
-    <Container className="animate-pulse py-12" aria-busy="true" aria-label="Loading the school profile">
+    <Container className="animate-pulse py-12" aria-busy="true" aria-label={t('loading')}>
       <div className="h-4 w-48 rounded-full bg-muted" />
       <div className="mt-8 h-12 w-2/3 rounded-control bg-muted" />
       <div className="mt-4 h-5 w-1/3 rounded-control bg-muted" />
@@ -47,13 +50,15 @@ function ProfileSkeleton() {
 }
 
 function ProfileNotFound() {
+  const { t } = useTranslation('profile')
+
   return (
     <Container className="py-16">
       <StateMessage
         icon={SearchX}
-        title="This school could not be found"
-        description="It may not be published anymore, or the link may be incorrect."
-        actionLabel="Back to all schools"
+        title={t('notFound.title')}
+        description={t('notFound.description')}
+        actionLabel={t('notFound.action')}
         onAction={navigateToHome}
       />
     </Container>
@@ -61,13 +66,14 @@ function ProfileNotFound() {
 }
 
 function ProfileContent({ institution }) {
+  const { t } = useTranslation('profile')
   const coverUrl = institution.media.find((media) => media.type === 'image')?.url ?? null
 
   return (
     <>
       <ProfileHero institution={institution} coverUrl={coverUrl} />
       <KeyFacts institution={institution} />
-      <SectionNav sections={listSections(institution)} />
+      <SectionNav sections={listSections(institution, t)} />
       <OverviewSection institution={institution} />
       <LeadershipSection institution={institution} />
       <FeesSection fees={institution.fees} />

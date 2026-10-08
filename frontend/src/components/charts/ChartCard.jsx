@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next'
+
 const ICON_TONE_CLASSES = {
   blue: 'bg-primary-soft text-primary-deep',
   amber: 'bg-warning-soft text-warning',
@@ -14,17 +16,18 @@ function ChartMessage({ children }) {
 }
 
 function ChartBody({ status, emptyMessage, onRetry, children }) {
-  if (status === 'loading') return <ChartMessage>Loading…</ChartMessage>
+  const { t } = useTranslation('workspace')
+  if (status === 'loading') return <ChartMessage>{t('loading')}</ChartMessage>
   if (status === 'error') {
     return (
       <div role="alert" className="flex h-full min-h-32 flex-col items-center justify-center gap-2">
-        <p className="text-sm text-danger-deep">This block could not be loaded.</p>
+        <p className="text-sm text-danger-deep">{t('blockError')}</p>
         <button
           type="button"
           onClick={onRetry}
           className="min-h-11 cursor-pointer rounded-control px-3 text-sm font-semibold text-primary-deep hover:bg-primary-soft"
         >
-          Try again
+          {t('retry')}
         </button>
       </div>
     )

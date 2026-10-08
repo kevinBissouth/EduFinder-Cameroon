@@ -34,7 +34,7 @@ EduFinder-Cameroon/
 │   ├── edufinder/            # L'application
 │   │   ├── models/           # Modèles : reference, establishment, user, submission,
 │   │   │                     #   notification, enums (tous exportés dans __init__)
-│   │   ├── migrations/       # Migrations Django (head : 0003_daily_activity)
+│   │   ├── migrations/       # Migrations Django (head : 0006_university_type_without_sector)
 │   │   ├── serializers/      # Sérialiseurs DRF : entrées validées et sorties exposées
 │   │   ├── services/         # Logique métier : recherche, propositions, validation,
 │   │   │                     #   suspension, notifications, activité, médias, sécurité
@@ -61,6 +61,8 @@ EduFinder-Cameroon/
 │       ├── hooks/            # État et appels API (useInstitutions, useNotifications…)
 │       ├── utils/            # auth.js (appels authentifiés par cookie httpOnly),
 │       │                     #   format, media, tracking…
+│       ├── i18n/             # Choix de langue : configuration, langues proposées,
+│       │                     #   locales/<langue>/<espace>.json (les textes de l'interface)
 │       ├── index.css         # Jetons du design : couleurs, rayons, ombres, polices
 │       └── routes.js         # Routage minimal par hash (#/school/:id, #/login,
 │                             #   #/manager, #/school-admin), sans dépendance
@@ -84,10 +86,19 @@ Règle d'or API publique : **seuls les établissements `published` sont visibles
 ## 3. Conventions de code
 
 ### Langues
-- **Le site et tout le code sont en anglais** : identifiants, fonctions, messages API,
-  libellés UI, routes, noms de fichiers.
-- **Les données textuelles suivent la langue de l'établissement** : français pour les
-  établissements francophones ou bilingues, anglais pour les anglophones.
+- **Tout le code est en anglais** : identifiants, fonctions, messages API, routes,
+  noms de fichiers.
+- **L'interface est bilingue, anglais et français** : aucun texte visible n'est écrit
+  en dur dans un composant. Il passe par `t('…')` et existe dans les deux fichiers
+  `frontend/src/i18n/locales/en/` et `fr/` ; `npm run check:i18n` vérifie que les deux
+  langues ont les mêmes clés. Les montants, taux et dates passent par `utils/format.js`.
+- **Les listes de référence sont bilingues en base** (types, régions, secteurs,
+  sections, cycles, filières, examens, modalités de paiement) : colonnes `label_fr` et
+  `label_en`, exposées par `GET /reference-labels`. La colonne d'origine (`name` ou
+  `label`) reste la clé métier et ne se traduit jamais sur place.
+- **Les textes saisis par un établissement** (description, biographie, services)
+  restent pour l'instant dans la langue où ils ont été écrits. Les noms propres (villes,
+  établissements, classes comme « 6e » ou « Form 1 ») ne se traduisent pas.
 - **Les commentaires sont en français**, à la première personne du singulier, comme si
   le développeur les écrivait pour lui-même.
 
@@ -239,6 +250,7 @@ curl -s http://127.0.0.1:8000/institutions/999   # attendu : 404
 
 # Frontend
 cd frontend && npm run lint
+cd frontend && npm run check:i18n     # mêmes clés en anglais et en français
 cd frontend && npm run build
 ```
 
@@ -271,5 +283,5 @@ cd frontend && npm run build
   explicitement (les défauts ne sont définis que côté Python).
 - La base contient des données fictives de démonstration (11 établissements,
   399 lignes au total) : à préserver pour les démos et les tests de recherche.
-- L'interface et les libellés du site seront en anglais ; les données de chaque
-  établissement restent dans la langue de l'établissement.
+- L'interface est en anglais et en français ; la langue suit le navigateur à la
+  première visite, puis le choix du visiteur.

@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next'
 import Button from './ui/Button'
 import Container from './ui/Container'
 import LanguageSwitch from './ui/LanguageSwitch'
+import { useReferenceLabel } from '../hooks/useReferenceLabel'
 
 const SECTION_LINKS = [
   { labelKey: 'header.destinations', href: '#destinations' },
@@ -45,6 +46,8 @@ function CompareCount({ count }) {
 }
 
 function TypeMenuItem({ type, isActive, onSelect }) {
+  const translateReference = useReferenceLabel()
+
   return (
     <button
       type="button"
@@ -54,7 +57,7 @@ function TypeMenuItem({ type, isActive, onSelect }) {
         isActive ? 'bg-white/10 font-semibold text-white' : 'text-on-navy-soft'
       }`}
     >
-      {type.name}
+      {translateReference('types', type.name)}
     </button>
   )
 }

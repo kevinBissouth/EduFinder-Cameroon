@@ -1,4 +1,5 @@
 import { Trash2, Upload, Video } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 import FileButton from '../../workspace/FileButton'
 import { toMediaUrl } from '../../../utils/media'
@@ -21,6 +22,7 @@ function RemoveFileButton({ label, onRemove }) {
 
 // Une seule photo : en choisir une autre remplace la précédente.
 export function PhotoUpload({ title, photoUrl, previewClassName, upload, onChange }) {
+  const { t } = useTranslation('manager')
   const selectPhoto = async (file) => {
     const storedUrl = await upload.uploadFile(file)
     if (storedUrl) onChange(storedUrl)
@@ -33,11 +35,11 @@ export function PhotoUpload({ title, photoUrl, previewClassName, upload, onChang
         <div className="mt-2 flex items-center gap-3">
           <img
             src={toMediaUrl(photoUrl)}
-            alt={`${title} preview`}
+            alt={t('form.files.preview', { title })}
             className={`bg-muted object-cover ${previewClassName}`}
           />
           <RemoveFileButton
-            label={`Remove the ${title.toLowerCase()}`}
+            label={t('form.files.removeNamed', { title })}
             onRemove={() => onChange('')}
           />
         </div>
@@ -49,7 +51,7 @@ export function PhotoUpload({ title, photoUrl, previewClassName, upload, onChang
           onSelectFile={selectPhoto}
         >
           <Upload aria-hidden="true" className="size-4" />
-          {photoUrl ? 'Replace the photo' : 'Choose a photo (JPG, PNG or WebP)'}
+          {photoUrl ? t('form.files.replacePhoto') : t('form.files.choosePhoto')}
         </FileButton>
       </div>
     </div>
@@ -57,6 +59,7 @@ export function PhotoUpload({ title, photoUrl, previewClassName, upload, onChang
 }
 
 export function VideoUploads({ videoUrls, upload, onChange }) {
+  const { t } = useTranslation('manager')
   const addVideo = async (file) => {
     const storedUrl = await upload.uploadFile(file)
     if (storedUrl) onChange([...videoUrls, storedUrl])
@@ -64,7 +67,7 @@ export function VideoUploads({ videoUrls, upload, onChange }) {
 
   return (
     <div>
-      <p className="text-sm font-semibold text-navy">Videos</p>
+      <p className="text-sm font-semibold text-navy">{t('form.files.videos')}</p>
       <ul className="mt-1 divide-y divide-line">
         {videoUrls.map((videoUrl) => (
           <li key={videoUrl} className="flex items-center justify-between gap-3 py-1">
@@ -73,7 +76,7 @@ export function VideoUploads({ videoUrls, upload, onChange }) {
               <span className="truncate">{videoUrl.split('/').pop()}</span>
             </span>
             <RemoveFileButton
-              label="Remove this video"
+              label={t('form.files.removeVideo')}
               onRemove={() => onChange(videoUrls.filter((url) => url !== videoUrl))}
             />
           </li>
@@ -82,7 +85,7 @@ export function VideoUploads({ videoUrls, upload, onChange }) {
       <div className="mt-2">
         <FileButton accept={VIDEO_FILE_TYPES} disabled={upload.isUploading} onSelectFile={addVideo}>
           <Video aria-hidden="true" className="size-4" />
-          Add a video (MP4 or WebM)
+          {t('form.files.addVideo')}
         </FileButton>
       </div>
     </div>

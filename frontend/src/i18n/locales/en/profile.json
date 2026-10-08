@@ -1,0 +1,135 @@
+{
+  "loading": "Loading the school profile",
+  "notFound": {
+    "title": "This school could not be found",
+    "description": "It may not be published anymore, or the link may be incorrect.",
+    "action": "Back to all schools"
+  },
+  "sections": {
+    "navigation": "Sections of this profile",
+    "overview": "Overview",
+    "fees": "Fees",
+    "results": "Exam results",
+    "offer": "Programs and services",
+    "gallery": "Gallery",
+    "contact": "Location and contact"
+  },
+  "hero": {
+    "breadcrumb": "Breadcrumb",
+    "schools": "Schools",
+    "eyebrow": "School profile",
+    "linkCopied": "Link copied",
+    "copyFailed": "Copy the address from your browser bar",
+    "copyLink": "Copy the link to this school",
+    "visitWebsite": "Visit website",
+    "contact": "Contact the school",
+    "photoAlt": "{{name}}, {{city}}"
+  },
+  "facts": {
+    "label": "Key facts",
+    "type": "Type of school",
+    "section": "Language section",
+    "sector": "Sector",
+    "feesFrom": "Fees from, per year",
+    "bestPassRate": "Best pass rate, {{session}}"
+  },
+  "overview": {
+    "eyebrow": "At a glance",
+    "title": "What to know <emphasis>before</emphasis> you visit.",
+    "showLess": "Show less",
+    "readMore": "Read the full presentation",
+    "noDescription": "This school has not published a presentation yet.",
+    "location": "Location",
+    "programsOffered": "Programs offered",
+    "servicesOnSite": "Services on site",
+    "examSessions": "Exam sessions published",
+    "photos": "Photos"
+  },
+  "contact": {
+    "title": "Contact the school",
+    "none": "This school has not published its contacts yet.",
+    "sendEnquiry": "Send an enquiry",
+    "enquirySubject": "Admission enquiry: {{name}}"
+  },
+  "fees": {
+    "eyebrow": "Fees",
+    "title": "Tuition by class, <emphasis>year</emphasis> by year.",
+    "classCount_one": "{{count}} class",
+    "classCount_other": "{{count}} classes",
+    "sameAmount": "{{amount}} per year, for {{classes}}.",
+    "range": "From {{lowest}} to {{highest}} per year, across {{classes}}.",
+    "schoolYear": "School year",
+    "askSchool": "Ask the school",
+    "caption": "Yearly fees for {{year}}",
+    "class": "Class",
+    "yearlyFee": "Yearly fee",
+    "paymentPlans": "Payment plans"
+  },
+  "results": {
+    "eyebrow": "Exam results",
+    "title": "Pass rates, <emphasis>session</emphasis> after session.",
+    "lead": "The latest published session for each exam, then how each rate has moved over time.",
+    "session": "session {{session}}",
+    "overTime": "Pass rate over time",
+    "chartLabel": "Pass rate by exam and by session",
+    "pointTitle": "{{exam}}, {{session}}: {{rate}}"
+  },
+  "offer": {
+    "eyebrow": "Programs and services",
+    "title": "The details that shape <emphasis>daily</emphasis> school life.",
+    "programs": "Programs",
+    "services": "Services on site"
+  },
+  "gallery": {
+    "eyebrow": "Gallery",
+    "title": "See the school <emphasis>before</emphasis> you go.",
+    "enlarge": "Enlarge photo",
+    "enlargeNamed": "Enlarge photo: {{caption}}",
+    "enlarged": "Enlarged photo",
+    "close": "Close the photo",
+    "document": "Document"
+  },
+  "leadership": {
+    "eyebrow": "Leadership"
+  },
+  "location": {
+    "eyebrow": "Location and contact",
+    "title": "Find the school and <emphasis>get in touch.</emphasis>",
+    "noPosition": "{{place}}. This school has not published a precise position yet."
+  },
+  "cta": {
+    "title": "Keep comparing. Choose with <emphasis>confidence.</emphasis>",
+    "lead": "Look at other schools in the same city or of the same type before you decide.",
+    "action": "Explore other schools"
+  },
+  "questions": {
+    "eyebrow": "Questions and answers",
+    "title": "Questions to <emphasis>ask</emphasis> before you enquire.",
+    "fees": {
+      "question": "How much does a year cost?",
+      "none": "This school has not published its fees yet. Contact it directly to ask.",
+      "answer": "For {{year}}, the fees listed go from {{lowest}} to {{highest}} per year, depending on the class."
+    },
+    "exams": {
+      "question": "Which exams does the school report?",
+      "none": "No exam result is published for this school yet.",
+      "answer": "It publishes pass rates for {{exams}}. The most recent session listed is {{session}}."
+    },
+    "language": {
+      "question": "In which language are classes taught?",
+      "answer": "The school is listed in the {{section}} section."
+    },
+    "sector": {
+      "question": "Is it a public or a private school?",
+      "answer": "It is listed as a {{sector}} school, in the category \"{{type}}\"."
+    },
+    "contact": {
+      "question": "How do I contact the school?",
+      "none": "This school has not published a phone number or an e-mail yet.",
+      "call": "call {{phone}}",
+      "write": "write to {{email}}",
+      "or": " or ",
+      "answer": "You can {{ways}}."
+    }
+  }
+}

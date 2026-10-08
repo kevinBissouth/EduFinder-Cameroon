@@ -15,6 +15,7 @@ import { useIsDesktop } from '../hooks/useIsDesktop'
 import { readApiErrorMessage } from '../utils/apiError'
 import { authedRequest } from '../utils/auth'
 import { findFirstName } from '../utils/format'
+import '../i18n/privateTexts'
 
 const NAV_ITEMS = [
   { id: 'overview', label: 'Dashboard', icon: LayoutDashboard },

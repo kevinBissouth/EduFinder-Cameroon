@@ -6,6 +6,7 @@ import ChartTooltip from './ChartTooltip'
 import { pivotPassRates } from './chartData'
 import { AXIS_TICK, CHART_COLORS, CHART_MARGIN, SERIES_COLORS } from './chartTheme'
 import { formatPercent } from '../../utils/format'
+import { useReferenceLabel } from '../../hooks/useReferenceLabel'
 
 const RATE_AXIS_PADDING = 5
 const MAX_RATE = 100
@@ -13,6 +14,7 @@ const MAX_RATE = 100
 // Taux de réussite par examen au fil des sessions. L'axe se resserre autour
 // des valeurs réelles : entre 0 et 100, des taux voisins se confondraient.
 function PassRateChart({ examResults }) {
+  const translateReference = useReferenceLabel()
   const { examNames, rows } = pivotPassRates(examResults)
   const rates = examResults.map((examResult) => Number(examResult.pass_rate))
   const rateDomain = [
@@ -32,7 +34,7 @@ function PassRateChart({ examResults }) {
             tick={AXIS_TICK}
             tickLine={false}
             axisLine={false}
-            tickFormatter={(rate) => `${rate}%`}
+            tickFormatter={formatPercent}
           />
           <Tooltip content={<ChartTooltip formatValue={formatPercent} />} />
           {examNames.map((examName, examIndex) => (
@@ -41,7 +43,7 @@ function PassRateChart({ examResults }) {
               key={examName}
               type="monotone"
               dataKey={examName}
-              name={examName}
+              name={translateReference('exams', examName)}
               stroke={findColor(examIndex)}
               strokeWidth={2}
               dot={{ r: 3 }}
@@ -53,7 +55,7 @@ function PassRateChart({ examResults }) {
       <ChartLegend
         className="mt-4"
         items={examNames.map((examName, examIndex) => ({
-          label: examName,
+          label: translateReference('exams', examName),
           color: findColor(examIndex),
         }))}
       />

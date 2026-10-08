@@ -1,3 +1,5 @@
+import i18next from 'i18next'
+
 export function describeBenchmarkSample(benchmarks) {
-  return `${benchmarks.same_type_sample_size} published schools of the same type`
+  return i18next.t('manager:dashboard.benchmarkSample', { count: benchmarks.same_type_sample_size })
 }

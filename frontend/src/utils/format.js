@@ -5,8 +5,12 @@ import { getActiveLanguage } from '../i18n'
 // Formatage partagé entre la liste et la fiche : même présentation partout,
 // dans les conventions de la langue affichée (montant FCFA entier, pourcentage
 // sans zéros superflus après la virgule).
+export function formatAmount(amount) {
+  return Number(amount).toLocaleString(getActiveLanguage().numberLocale)
+}
+
 export function formatFcfa(amount) {
-  return `${Number(amount).toLocaleString(getActiveLanguage().numberLocale)} FCFA`
+  return `${formatAmount(amount)} FCFA`
 }
 
 const PERCENT_FORMAT = { style: 'percent', maximumFractionDigits: 1 }

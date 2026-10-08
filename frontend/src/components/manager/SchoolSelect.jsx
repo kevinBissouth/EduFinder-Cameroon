@@ -1,13 +1,15 @@
 import { ChevronDown } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 // Choix de l'établissement piloté, pour un responsable qui en gère plusieurs.
 // Toutes les vues liées à un établissement suivent ce choix.
 function SchoolSelect({ establishments, selectedUuid, onSelectSchool, className = '' }) {
+  const { t } = useTranslation('manager')
   if (establishments.length < 2) return null
 
   return (
     <label className={`relative block ${className}`}>
-      <span className="sr-only">School</span>
+      <span className="sr-only">{t('page.school')}</span>
       <select
         value={selectedUuid ?? ''}
         onChange={(event) => onSelectSchool(event.target.value)}

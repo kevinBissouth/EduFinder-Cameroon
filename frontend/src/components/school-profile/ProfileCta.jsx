@@ -1,4 +1,5 @@
 import { ArrowRight } from 'lucide-react'
+import { Trans, useTranslation } from 'react-i18next'
 
 import Button from '../ui/Button'
 import Container from '../ui/Container'
@@ -6,6 +7,8 @@ import { Emphasis } from '../ui/SectionHeading'
 
 // Panneau de fin de fiche : il ramène vers la liste pour continuer à comparer.
 function ProfileCta() {
+  const { t } = useTranslation('profile')
+
   return (
     <section className="bg-paper py-16 sm:py-20">
       <Container>
@@ -17,14 +20,14 @@ function ProfileCta() {
           <div className="relative flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
             <div className="max-w-xl">
               <h2 className="text-balance font-display text-3xl leading-display tracking-tight text-white sm:text-5xl">
-                Keep comparing. Choose with <Emphasis>confidence.</Emphasis>
+                <Trans t={t} i18nKey="cta.title" components={{ emphasis: <Emphasis /> }} />
               </h2>
               <p className="mt-5 text-pretty text-base text-on-navy-soft sm:text-lg">
-                Look at other schools in the same city or of the same type before you decide.
+                {t('cta.lead')}
               </p>
             </div>
             <Button as="a" href="#results" size="lg" className="group self-start rounded-full lg:self-auto">
-              Explore other schools
+              {t('cta.action')}
               <ArrowRight aria-hidden="true" className="size-4 transition-transform group-hover:translate-x-0.5" />
             </Button>
           </div>

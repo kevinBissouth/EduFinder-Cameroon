@@ -1,15 +1,19 @@
 import i18next from 'i18next'
 import { initReactI18next } from 'react-i18next'
 
+import enAuth from './locales/en/auth.json'
 import enCommon from './locales/en/common.json'
 import enHome from './locales/en/home.json'
+import enProfile from './locales/en/profile.json'
+import frAuth from './locales/fr/auth.json'
 import frCommon from './locales/fr/common.json'
 import frHome from './locales/fr/home.json'
+import frProfile from './locales/fr/profile.json'
 import { DEFAULT_LANGUAGE, findLanguage, rememberLanguage, resolveInitialLanguage } from './languages'
 
 const RESOURCES = {
-  en: { common: enCommon, home: enHome },
-  fr: { common: frCommon, home: frHome },
+  en: { auth: enAuth, common: enCommon, home: enHome, profile: enProfile },
+  fr: { auth: frAuth, common: frCommon, home: frHome, profile: frProfile },
 }
 
 function applyDocumentLanguage(languageCode) {

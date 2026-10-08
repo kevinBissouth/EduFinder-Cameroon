@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   Building2,
   ChartNoAxesColumn,
@@ -28,36 +29,44 @@ import { useManagerEstablishment } from '../hooks/useManagerEstablishment'
 import { readApiErrorMessage } from '../utils/apiError'
 import { findFirstName } from '../utils/format'
 import { authedRequest } from '../utils/auth'
+import '../i18n/privateTexts'
 
 const NAV_ITEMS = [
-  { id: 'overview', label: 'Dashboard', shortLabel: 'Home', icon: LayoutDashboard },
-  { id: 'schools', label: 'Your schools', shortLabel: 'Schools', icon: Building2 },
-  { id: 'submissions', label: 'Submissions', icon: ClipboardList },
-  { id: 'fees', label: 'Fees and payments', shortLabel: 'Fees', icon: WalletCards },
-  { id: 'exam', label: 'Exam results', shortLabel: 'Exams', icon: ChartNoAxesColumn },
-  { id: 'services', label: 'Services', icon: Wrench },
-  { id: 'settings', label: 'Account', icon: Settings },
+  { id: 'overview', labelKey: 'nav.dashboard', shortLabelKey: 'nav.home', icon: LayoutDashboard },
+  { id: 'schools', labelKey: 'nav.yourSchools', shortLabelKey: 'nav.schools', icon: Building2 },
+  { id: 'submissions', labelKey: 'nav.submissions', icon: ClipboardList },
+  { id: 'fees', labelKey: 'nav.feesAndPayments', shortLabelKey: 'nav.fees', icon: WalletCards },
+  { id: 'exam', labelKey: 'nav.examResults', shortLabelKey: 'nav.exams', icon: ChartNoAxesColumn },
+  { id: 'services', labelKey: 'nav.services', icon: Wrench },
+  { id: 'settings', labelKey: 'nav.account', icon: Settings },
 ]
 
 // Vues atteintes par une action et non par la barre latérale.
-const ACTION_VIEW_TITLES = {
-  'school-detail': 'School details',
-  'form-creation': 'Propose a school',
-  'form-modification': 'Propose changes',
-}
+const ACTION_VIEWS = ['school-detail', 'form-creation', 'form-modification']
+const DEFAULT_ROLE = 'manager'
 
-const ROLE_LABELS = { super_admin: 'Super administrator', manager: 'School manager' }
-const DEFAULT_ROLE_LABEL = 'School manager'
 // Vues qui portent sur l'établissement sélectionné : elles seules affichent
 // le sélecteur d'établissement.
 const SCHOOL_SCOPED_VIEWS = ['overview', 'school-detail', 'fees', 'exam', 'services']
 
-function findViewTitle(viewId) {
-  const navItem = NAV_ITEMS.find((item) => item.id === viewId)
-  return navItem ? navItem.label : ACTION_VIEW_TITLES[viewId]
+// Les libellés du menu sont traduits au moment de l'affichage : la liste
+// elle-même ne porte que des clés, pour suivre un changement de langue.
+function translateNavItems(t) {
+  return NAV_ITEMS.map((navItem) => ({
+    ...navItem,
+    label: t(navItem.labelKey),
+    shortLabel: navItem.shortLabelKey ? t(navItem.shortLabelKey) : undefined,
+  }))
+}
+
+function findViewTitle(viewId, navItems, t) {
+  const navItem = navItems.find((item) => item.id === viewId)
+  if (navItem) return navItem.label
+  return ACTION_VIEWS.includes(viewId) ? t(`views.${viewId}`) : ''
 }
 
 function ManagerHomePage({ profile, onSignOut }) {
+  const { t } = useTranslation('manager')
   const managerData = useManagerData()
   const [activeView, setActiveView] = useState('overview')
   const [formState, setFormState] = useState(null)
@@ -164,8 +173,8 @@ function ManagerHomePage({ profile, onSignOut }) {
         tone: 'success',
         message:
           submittedMode === 'creation'
-            ? 'Proposal sent. A super administrator will review it.'
-            : 'Changes sent for review.',
+            ? t('page.proposalSent')
+            : t('page.changesSent'),
       })
     } catch (error) {
       setServerError(readApiErrorMessage(error))
@@ -174,7 +183,8 @@ function ManagerHomePage({ profile, onSignOut }) {
     }
   }
 
-  const roleLabel = ROLE_LABELS[profile.role] ?? DEFAULT_ROLE_LABEL
+  const roleLabel = t(`roles.${profile.role}`, { defaultValue: t(`roles.${DEFAULT_ROLE}`) })
+  const navItems = translateNavItems(t)
   const isOverview = activeView === 'overview'
   const isSchoolScopedView = SCHOOL_SCOPED_VIEWS.includes(activeView)
   const schoolSelectProps = {
@@ -214,9 +224,9 @@ function ManagerHomePage({ profile, onSignOut }) {
       return (
         <StateMessage
           icon={Building2}
-          title="No school yet"
-          description="Propose your first school. A super administrator reviews it before it becomes public."
-          actionLabel="Propose a school"
+          title={t('page.noSchoolTitle')}
+          description={t('page.noSchoolDescription')}
+          actionLabel={t('actions.proposeSchool')}
           onAction={openCreationForm}
         />
       )
@@ -281,11 +291,11 @@ function ManagerHomePage({ profile, onSignOut }) {
       <AccountView
         profile={profile}
         roleLabel={roleLabel}
-        changeHint="To change your name, email or password, ask a super administrator."
+        changeHint={t('page.changeHint')}
         extraDetails={[
           {
             icon: Building2,
-            label: 'Schools you manage',
+            label: t('page.schoolsYouManage'),
             value: managerData.establishments.length,
           },
         ]}
@@ -316,7 +326,7 @@ function ManagerHomePage({ profile, onSignOut }) {
     if (managerData.status === 'loading') {
       return (
         <p role="status" className="py-16 text-center text-sm text-ink-soft">
-          Loading your workspace…
+          {t('page.loadingWorkspace')}
         </p>
       )
     }
@@ -325,9 +335,9 @@ function ManagerHomePage({ profile, onSignOut }) {
         <StateMessage
           icon={Building2}
           tone="danger"
-          title="Your workspace could not be loaded"
-          description="The server did not answer. Check your connection, then try again."
-          actionLabel="Try again"
+          title={t('page.workspaceErrorTitle')}
+          description={t('page.serverError')}
+          actionLabel={t('workspace:retry')}
           onAction={managerData.refresh}
         />
       )
@@ -337,11 +347,15 @@ function ManagerHomePage({ profile, onSignOut }) {
 
   return (
     <WorkspaceShell
-      navItems={NAV_ITEMS}
+      navItems={navItems}
       activeView={activeView}
       onSelectView={setActiveView}
-      title={isOverview ? `Hello, ${findFirstName(profile.name)}` : findViewTitle(activeView)}
-      subtitle={isOverview ? 'What is happening on your school page.' : ''}
+      title={
+        isOverview
+          ? t('page.hello', { name: findFirstName(profile.name) })
+          : findViewTitle(activeView, navItems, t)
+      }
+      subtitle={isOverview ? t('page.subtitle') : ''}
       toolbar={
         isSchoolScopedView && (
           <SchoolSelect {...schoolSelectProps} className="hidden w-64 md:block" />
@@ -366,7 +380,7 @@ function ManagerHomePage({ profile, onSignOut }) {
           className="fixed inset-0 z-50 flex items-center justify-center bg-navy/40 p-4"
         >
           <p className="rounded-control bg-surface px-5 py-3 text-sm font-semibold text-navy shadow-raised">
-            Loading school details…
+            {t('page.loadingSchoolDetails')}
           </p>
         </div>
       )}

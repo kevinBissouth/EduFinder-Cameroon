@@ -1,4 +1,5 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 import { usePagedItems } from '../../hooks/usePagedItems'
 
@@ -6,8 +7,10 @@ const PAGE_BUTTON_CLASSES =
   'inline-flex min-h-11 cursor-pointer items-center gap-1 rounded-button border border-line bg-surface px-4 text-sm font-semibold text-navy transition-colors hover:border-primary hover:text-primary-deep disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:border-line disabled:hover:text-navy'
 
 function Pagination({ pageIndex, pageCount, onGoToPage }) {
+  const { t } = useTranslation('workspace')
+
   return (
-    <nav aria-label="Pages" className="mt-6 flex items-center justify-between gap-3">
+    <nav aria-label={t('pages')} className="mt-6 flex items-center justify-between gap-3">
       <button
         type="button"
         disabled={pageIndex === 0}
@@ -15,10 +18,10 @@ function Pagination({ pageIndex, pageCount, onGoToPage }) {
         className={PAGE_BUTTON_CLASSES}
       >
         <ChevronLeft aria-hidden="true" className="size-4" />
-        Previous
+        {t('previous')}
       </button>
       <p aria-live="polite" className="text-sm font-semibold text-ink">
-        Page {pageIndex + 1} of {pageCount}
+        {t('pageOf', { current: pageIndex + 1, total: pageCount })}
       </p>
       <button
         type="button"
@@ -26,7 +29,7 @@ function Pagination({ pageIndex, pageCount, onGoToPage }) {
         onClick={() => onGoToPage(pageIndex + 1)}
         className={PAGE_BUTTON_CLASSES}
       >
-        Next
+        {t('next')}
         <ChevronRight aria-hidden="true" className="size-4" />
       </button>
     </nav>

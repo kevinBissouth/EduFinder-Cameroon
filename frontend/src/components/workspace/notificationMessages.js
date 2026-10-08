@@ -1,38 +1,40 @@
 import { Ban, CircleCheck, CircleX, Inbox, RotateCcw } from 'lucide-react'
+import i18next from 'i18next'
 
-// Le serveur n'envoie que le type d'événement : la phrase est composée ici.
+// Le serveur n'envoie que le type d'événement : la phrase est composée ici,
+// dans la langue affichée.
 const PRESENTATION_BY_KIND = {
   submission_received: {
     icon: Inbox,
     toneClass: 'bg-primary-soft text-primary-deep',
-    describe: (schoolName) => `New submission to review for ${schoolName}.`,
+    messageKey: 'workspace:notifications.kinds.submission_received',
   },
   submission_approved: {
     icon: CircleCheck,
     toneClass: 'bg-primary-soft text-primary-deep',
-    describe: (schoolName) => `Your submission for ${schoolName} was approved.`,
+    messageKey: 'workspace:notifications.kinds.submission_approved',
   },
   submission_rejected: {
     icon: CircleX,
     toneClass: 'bg-danger-soft text-danger-deep',
-    describe: (schoolName) => `Your submission for ${schoolName} was rejected.`,
+    messageKey: 'workspace:notifications.kinds.submission_rejected',
   },
   establishment_suspended: {
     icon: Ban,
     toneClass: 'bg-warning-soft text-warning',
-    describe: (schoolName) => `${schoolName} was suspended and left the public site.`,
+    messageKey: 'workspace:notifications.kinds.establishment_suspended',
   },
   establishment_reactivated: {
     icon: RotateCcw,
     toneClass: 'bg-primary-soft text-primary-deep',
-    describe: (schoolName) => `${schoolName} is public again.`,
+    messageKey: 'workspace:notifications.kinds.establishment_reactivated',
   },
 }
 
 const UNKNOWN_KIND_PRESENTATION = {
   icon: Inbox,
   toneClass: 'bg-muted text-ink',
-  describe: (schoolName) => `Update about ${schoolName}.`,
+  messageKey: 'workspace:notifications.kinds.unknown',
 }
 
 export function presentNotification(notification) {
@@ -40,6 +42,6 @@ export function presentNotification(notification) {
   return {
     Icon: presentation.icon,
     toneClass: presentation.toneClass,
-    message: presentation.describe(notification.establishment_name),
+    message: i18next.t(presentation.messageKey, { school: notification.establishment_name }),
   }
 }
