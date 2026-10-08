@@ -1,7 +1,11 @@
+import { useTranslation } from 'react-i18next'
+
 import Container from './ui/Container'
 import SectionHeading from './ui/SectionHeading'
+import { formatPercent } from '../utils/format'
 
 const DONUT_RADIUS = 80
+const PERCENT_SCALE = 100
 const DONUT_CIRCUMFERENCE = 2 * Math.PI * DONUT_RADIUS
 // Petit vide laissé entre deux parts, pour que chacune se détache.
 const SEGMENT_GAP = 3
@@ -65,8 +69,10 @@ function Figure({ value, label }) {
 // Le graphique est doublé d'une légende chiffrée : l'information ne repose
 // jamais sur la seule couleur.
 function TypeDonut({ shares, schoolCount }) {
+  const { t } = useTranslation('home')
+
   return (
-    <svg viewBox="0 0 200 200" role="img" aria-label="Schools by type" className="size-48 shrink-0 -rotate-90 sm:size-56">
+    <svg viewBox="0 0 200 200" role="img" aria-label={t('picture.byType')} className="size-48 shrink-0 -rotate-90 sm:size-56">
       <circle cx="100" cy="100" r={DONUT_RADIUS} fill="none" strokeWidth="18" className="stroke-white/10" />
       {shares.map((share) => (
         <circle
@@ -103,7 +109,7 @@ function TypeLegend({ shares }) {
           <span aria-hidden="true" className={`size-2.5 shrink-0 rounded-full ${share.style.dot}`} />
           <span className="text-white">{share.typeName}</span>
           <span className="ml-auto tabular-nums text-on-navy-soft">
-            {share.schoolCount} ({Math.round(share.fraction * 100)}%)
+            {share.schoolCount} ({formatPercent(Math.round(share.fraction * PERCENT_SCALE))})
           </span>
         </li>
       ))}
@@ -112,14 +118,15 @@ function TypeLegend({ shares }) {
 }
 
 function GlobalPicture({ institutions, figures }) {
+  const { t } = useTranslation('home')
   if (institutions.length === 0) return null
 
   const typeShares = buildTypeShares(institutions)
   const platformFigures = [
-    { value: institutions.length, label: 'Schools listed' },
-    { value: figures.cityCount, label: 'Cities covered' },
-    { value: figures.feePlanCount, label: 'Fee lines published' },
-    { value: figures.examResultCount, label: 'Exam results published' },
+    { value: institutions.length, label: t('picture.schoolsListed') },
+    { value: figures.cityCount, label: t('picture.citiesCovered') },
+    { value: figures.feePlanCount, label: t('picture.feeLines') },
+    { value: figures.examResultCount, label: t('picture.examResults') },
   ]
 
   return (
@@ -138,9 +145,9 @@ function GlobalPicture({ institutions, figures }) {
         <div>
           <SectionHeading
             tone="onNavy"
-            eyebrow="The global picture"
-            title="Schooling in Cameroon, in numbers."
-            lead="Every figure counts published listings only, across all ten regions of the country."
+            eyebrow={t('picture.eyebrow')}
+            title={t('picture.title')}
+            lead={t('picture.lead')}
           />
           <dl className="mt-10 grid grid-cols-2 gap-x-8 gap-y-8">
             {platformFigures.map((figure) => (
@@ -150,7 +157,7 @@ function GlobalPicture({ institutions, figures }) {
         </div>
 
         <div className="rounded-panel border border-white/10 bg-white/5 p-5 backdrop-blur-sm sm:p-8">
-          <h3 className="text-lg font-bold text-white">Schools by type</h3>
+          <h3 className="text-lg font-bold text-white">{t('picture.byType')}</h3>
           <div className="mt-6 flex flex-col items-center gap-8 sm:flex-row">
             <TypeDonut shares={typeShares} schoolCount={institutions.length} />
             <TypeLegend shares={typeShares} />

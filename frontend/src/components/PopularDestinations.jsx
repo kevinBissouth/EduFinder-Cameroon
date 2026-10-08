@@ -1,9 +1,11 @@
 import { ArrowUpRight } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 import Container from './ui/Container'
 import SectionHeading from './ui/SectionHeading'
 
 function DestinationTile({ city, largestSchoolCount, isActive, onToggle }) {
+  const { t } = useTranslation()
   const sharePercent = (city.count / largestSchoolCount) * 100
 
   return (
@@ -19,7 +21,7 @@ function DestinationTile({ city, largestSchoolCount, isActive, onToggle }) {
       <span aria-hidden="true" className="absolute -right-16 -top-16 size-44 rounded-full border border-white/10" />
       <span className="relative flex items-center justify-between">
         <span className="rounded-full bg-white/10 px-2.5 py-1 text-xs font-semibold tabular-nums text-white">
-          {city.count} {city.count === 1 ? 'school' : 'schools'}
+          {t('common:schoolCount', { count: city.count })}
         </span>
         <ArrowUpRight
           aria-hidden="true"
@@ -40,6 +42,7 @@ function DestinationTile({ city, largestSchoolCount, isActive, onToggle }) {
 // Les villes qui comptent le plus d'établissements publiés : un clic applique
 // le filtre ville, un second clic le retire.
 function PopularDestinations({ cities, activeCityId, onToggleCity }) {
+  const { t } = useTranslation('home')
   if (cities.length === 0) return null
 
   const largestSchoolCount = Math.max(...cities.map((city) => city.count))
@@ -48,9 +51,9 @@ function PopularDestinations({ cities, activeCityId, onToggleCity }) {
     <section id="destinations" className="scroll-mt-20 border-t border-line bg-surface py-16 sm:py-24">
       <Container>
         <SectionHeading
-          eyebrow="Popular destinations"
-          title="Explore the cities families look at first."
-          lead="The places with the most schools listed today."
+          eyebrow={t('destinations.eyebrow')}
+          title={t('destinations.title')}
+          lead={t('destinations.lead')}
         />
         <ul className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-5">
           {cities.map((city) => (
