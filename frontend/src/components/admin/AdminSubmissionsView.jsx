@@ -1,3 +1,6 @@
+import { useTranslation } from 'react-i18next'
+import i18next from 'i18next'
+
 import PagedCards from '../workspace/PagedCards'
 import SubmissionCard from '../workspace/SubmissionCard'
 import ViewHero from '../workspace/ViewHero'
@@ -5,10 +8,10 @@ import { formatShortDate } from '../../utils/format'
 
 const ALL_STATUSES = 'all'
 const STATUS_FILTERS = [
-  { id: 'pending', label: 'Awaiting review' },
-  { id: 'approved', label: 'Approved' },
-  { id: 'rejected', label: 'Rejected' },
-  { id: ALL_STATUSES, label: 'All' },
+  { id: 'pending', labelKey: 'submissions.filterPending' },
+  { id: 'approved', labelKey: 'submissions.filterApproved' },
+  { id: 'rejected', labelKey: 'submissions.filterRejected' },
+  { id: ALL_STATUSES, labelKey: 'submissions.filterAll' },
 ]
 
 function countByStatus(submissions, submissionStatus) {
@@ -16,9 +19,17 @@ function countByStatus(submissions, submissionStatus) {
     .length
 }
 
+// Chaque pastille accorde son libellé avec son propre nombre.
+function buildStatusFigure(submissions, submissionStatus, labelKey) {
+  const count = countByStatus(submissions, submissionStatus)
+  return { value: count, label: i18next.t(labelKey, { count }) }
+}
+
 function StatusFilters({ activeFilter, onFilterChange }) {
+  const { t } = useTranslation('admin')
+
   return (
-    <div role="group" aria-label="Submission status" className="mb-6 flex flex-wrap gap-2">
+    <div role="group" aria-label={t('submissions.statusGroup')} className="mb-6 flex flex-wrap gap-2">
       {STATUS_FILTERS.map((statusFilter) => {
         const isActive = statusFilter.id === activeFilter
         return (
@@ -33,7 +44,7 @@ function StatusFilters({ activeFilter, onFilterChange }) {
                 : 'border-line bg-surface text-navy hover:border-primary hover:text-primary-deep'
             }`}
           >
-            {statusFilter.label}
+            {t(statusFilter.labelKey)}
           </button>
         )
       })}
@@ -51,6 +62,7 @@ function AdminSubmissionsView({
   onFilterChange,
   onOpenSubmission,
 }) {
+  const { t } = useTranslation('admin')
   const coverUrlBySchool = new Map(
     establishments.map((school) => [school.establishment_uuid, school.cover_url]),
   )
@@ -62,18 +74,18 @@ function AdminSubmissionsView({
   return (
     <>
       <ViewHero
-        title="Submissions"
-        description="What school managers propose. Nothing reaches the public site before you approve it."
+        title={t('submissions.title')}
+        description={t('submissions.description')}
         figures={[
-          { value: countByStatus(submissions, 'pending'), label: 'awaiting review' },
-          { value: countByStatus(submissions, 'approved'), label: 'approved' },
-          { value: countByStatus(submissions, 'rejected'), label: 'rejected' },
+          buildStatusFigure(submissions, 'pending', 'admin:submissions.awaiting'),
+          buildStatusFigure(submissions, 'approved', 'admin:submissions.approved'),
+          buildStatusFigure(submissions, 'rejected', 'admin:submissions.rejected'),
         ]}
       />
       <StatusFilters activeFilter={activeFilter} onFilterChange={onFilterChange} />
       {shownSubmissions.length === 0 ? (
         <p className="rounded-panel border border-dashed border-line bg-surface p-8 text-center text-sm text-ink-soft">
-          No submission with this status.
+          {t('submissions.empty')}
         </p>
       ) : (
         // La clé remet la pagination à la première page quand le filtre change.
@@ -85,8 +97,11 @@ function AdminSubmissionsView({
               key={submission.submission_uuid}
               submission={submission}
               coverUrl={coverUrlBySchool.get(submission.establishment_uuid)}
-              actionLabel="Review"
-              actionAriaLabel={`Review the submission for ${submission.establishment_name} of ${formatShortDate(submission.submitted_at)}`}
+              actionLabel={t('submissions.review')}
+              actionAriaLabel={t('submissions.reviewNamed', {
+                school: submission.establishment_name,
+                date: formatShortDate(submission.submitted_at),
+              })}
               onAction={(openedSubmission) => onOpenSubmission(openedSubmission.submission_uuid)}
             />
           )}

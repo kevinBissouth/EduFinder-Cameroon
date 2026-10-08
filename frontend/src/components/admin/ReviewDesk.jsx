@@ -1,11 +1,14 @@
 import { useEffect } from 'react'
 import { ChevronRight, CircleCheck } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 import SubmissionReview, { SubmissionSummaryLine } from './SubmissionReview'
 import ScrollArea from '../workspace/ScrollArea'
 import { formatRelativeTime } from '../../utils/format'
 
 function QueueItem({ submission, isSelected, onOpen }) {
+  const { t } = useTranslation('admin')
+
   return (
     <li>
       <button
@@ -21,7 +24,12 @@ function QueueItem({ submission, isSelected, onOpen }) {
             {submission.establishment_name}
           </span>
           <span className="block text-xs text-ink-soft">
-            <span className="capitalize">{submission.submission_type}</span> by{' '}
+            <span className="capitalize">
+              {t(`workspace:submissionType.${submission.submission_type}`, {
+                defaultValue: submission.submission_type,
+              })}
+            </span>{' '}
+            {t('review.by')}{' '}
             {submission.proposer_name}, {formatRelativeTime(submission.submitted_at)}
           </span>
         </span>
@@ -32,13 +40,15 @@ function QueueItem({ submission, isSelected, onOpen }) {
 }
 
 function EmptyQueue() {
+  const { t } = useTranslation('admin')
+
   return (
     <section className="flex items-center gap-4 rounded-panel bg-linear-to-br from-primary-deep to-violet-deep p-6 text-white sm:p-8">
       <CircleCheck aria-hidden="true" className="size-10 shrink-0 text-accent" />
       <div>
-        <h2 className="font-display text-3xl leading-display">Nothing to decide</h2>
+        <h2 className="font-display text-3xl leading-display">{t('review.nothingTitle')}</h2>
         <p className="mt-1 text-sm text-on-navy-soft text-pretty">
-          Every submission has a decision. New ones appear here and in your notifications.
+          {t('review.nothingText')}
         </p>
       </div>
     </section>
@@ -56,6 +66,7 @@ function ReviewDesk({
   reviewProps,
   onOpenSubmission,
 }) {
+  const { t } = useTranslation('admin')
   // L'API renvoie les plus récentes d'abord : celle qui attend depuis le plus
   // longtemps passe en tête.
   const queue = [...pendingSubmissions].reverse()
@@ -76,11 +87,11 @@ function ReviewDesk({
       <div className="flex h-[26rem] min-h-0 flex-col bg-linear-to-br from-primary-deep to-violet-deep p-5 text-white [--focus-ring:var(--color-accent)] sm:p-6 lg:col-span-2 lg:h-auto">
         <p className="font-display text-5xl leading-display tabular-nums">{queue.length}</p>
         <h2 className="mt-1 text-lg font-bold">
-          {queue.length === 1 ? 'submission awaiting your review' : 'submissions awaiting your review'}
+          {t('review.awaiting', { count: queue.length })}
         </h2>
-        <p className="mt-1 text-sm text-on-navy-soft">The one that has waited longest comes first.</p>
+        <p className="mt-1 text-sm text-on-navy-soft">{t('review.longestFirst')}</p>
         <div className="mt-5 flex min-h-0 flex-1 flex-col rounded-control bg-surface p-1">
-          <ScrollArea label="Submissions awaiting review">
+          <ScrollArea label={t('review.queueLabel')}>
             <ul className="space-y-1">
               {queue.map((submission) => (
                 <QueueItem
@@ -112,7 +123,7 @@ function ReviewDesk({
             </>
           ) : (
             <p role="status" className="py-16 text-center text-sm text-ink-soft">
-              Loading the submission…
+              {t('review.loading')}
             </p>
           )}
         </div>

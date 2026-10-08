@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Building2, ClipboardList, LayoutDashboard, Settings } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 import AdminDashboard from '../components/admin/AdminDashboard'
 import AdminEstablishmentsView from '../components/admin/AdminEstablishmentsView'
@@ -18,17 +19,13 @@ import { findFirstName } from '../utils/format'
 import '../i18n/privateTexts'
 
 const NAV_ITEMS = [
-  { id: 'overview', label: 'Dashboard', icon: LayoutDashboard },
-  { id: 'submissions', label: 'Submissions', icon: ClipboardList },
-  { id: 'establishments', label: 'Schools', icon: Building2 },
-  { id: 'account', label: 'Account', icon: Settings },
+  { id: 'overview', labelKey: 'nav.dashboard', icon: LayoutDashboard },
+  { id: 'submissions', labelKey: 'nav.submissions', icon: ClipboardList },
+  { id: 'establishments', labelKey: 'nav.schools', icon: Building2 },
+  { id: 'account', labelKey: 'nav.account', icon: Settings },
 ]
-const ROLE_LABEL = 'Super administrator'
 const DEFAULT_SUBMISSION_FILTER = 'pending'
-const DECISION_MESSAGES = {
-  approve: 'Submission approved. The manager has been notified.',
-  reject: 'Submission rejected. The manager has been notified of the reason.',
-}
+const DECISION_MESSAGE_KEYS = { approve: 'page.approved', reject: 'page.rejected' }
 const EMPTY_ADMIN_DATA = { pending: [], approved: [], rejected: [], establishments: [] }
 
 // Les trois états de soumissions et tous les établissements partent en
@@ -44,6 +41,7 @@ async function loadAdminData() {
 }
 
 function AdminHomePage({ profile, onSignOut }) {
+  const { t } = useTranslation('admin')
   const [activeView, setActiveView] = useState('overview')
   const [submissionFilter, setSubmissionFilter] = useState(DEFAULT_SUBMISSION_FILTER)
   const [adminData, setAdminData] = useState(EMPTY_ADMIN_DATA)
@@ -100,7 +98,7 @@ function AdminHomePage({ profile, onSignOut }) {
       )
       await reload()
       closeSubmission()
-      showToast({ tone: 'success', message: DECISION_MESSAGES[decision] })
+      showToast({ tone: 'success', message: t(DECISION_MESSAGE_KEYS[decision]) })
     } catch (error) {
       setReviewError(readApiErrorMessage(error))
     } finally {
@@ -150,12 +148,12 @@ function AdminHomePage({ profile, onSignOut }) {
     account: () => (
       <AccountView
         profile={profile}
-        roleLabel={ROLE_LABEL}
-        changeHint="Accounts are managed on the server, outside this application."
+        roleLabel={t('role')}
+        changeHint={t('page.changeHint')}
         extraDetails={[
           {
             icon: Building2,
-            label: 'Schools on the platform',
+            label: t('page.schoolsOnPlatform'),
             value: adminData.establishments.length,
           },
         ]}
@@ -168,7 +166,7 @@ function AdminHomePage({ profile, onSignOut }) {
     if (loadStatus === 'loading') {
       return (
         <p role="status" className="py-16 text-center text-sm text-ink-soft">
-          Loading your workspace…
+          {t('manager:page.loadingWorkspace')}
         </p>
       )
     }
@@ -177,9 +175,9 @@ function AdminHomePage({ profile, onSignOut }) {
         <StateMessage
           icon={Building2}
           tone="danger"
-          title="The workspace could not be loaded"
-          description="The server did not answer. Check your connection, then try again."
-          actionLabel="Try again"
+          title={t('page.errorTitle')}
+          description={t('manager:page.serverError')}
+          actionLabel={t('workspace:retry')}
           onAction={reload}
         />
       )
@@ -187,19 +185,22 @@ function AdminHomePage({ profile, onSignOut }) {
     return viewRenderers[activeView]()
   }
 
+  // Le menu ne porte que des clés : ses libellés suivent la langue affichée.
+  const navItems = NAV_ITEMS.map((navItem) => ({ ...navItem, label: t(navItem.labelKey) }))
+
   return (
     <WorkspaceShell
-      navItems={NAV_ITEMS}
+      navItems={navItems}
       activeView={activeView}
       onSelectView={setActiveView}
       title={
         activeView === 'overview'
-          ? `Hello, ${findFirstName(profile.name)}`
-          : NAV_ITEMS.find((navItem) => navItem.id === activeView).label
+          ? t('manager:page.hello', { name: findFirstName(profile.name) })
+          : navItems.find((navItem) => navItem.id === activeView).label
       }
-      subtitle={activeView === 'overview' ? 'What is waiting for your decision.' : ''}
+      subtitle={activeView === 'overview' ? t('page.subtitle') : ''}
       profile={profile}
-      roleLabel={ROLE_LABEL}
+      roleLabel={t('role')}
       onSignOut={onSignOut}
       onOpenNotification={openNotification}
       onOpenAccount={() => setActiveView('account')}

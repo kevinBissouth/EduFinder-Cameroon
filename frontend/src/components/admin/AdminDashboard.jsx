@@ -1,3 +1,6 @@
+import { useTranslation } from 'react-i18next'
+import i18next from 'i18next'
+
 import {
   Building2,
   ChartColumn,
@@ -21,21 +24,22 @@ import StatTiles from '../workspace/StatTiles'
 import { findStatusTheme } from '../workspace/statusTheme'
 import ReviewDesk from './ReviewDesk'
 import { useActivity } from '../../hooks/useActivity'
+import { useReferenceLabel } from '../../hooks/useReferenceLabel'
 
 // Hauteurs fixes des rangées : tous les blocs d'une rangée s'alignent, et une
 // liste qui grandit défile dans son bloc.
 const ROW_CLASSES = 'grid grid-cols-1 gap-6 xl:grid-cols-3 *:h-[26rem]'
 const TALL_ROW_CLASSES = 'grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3 *:h-[30rem]'
 const CATALOGUE_STATUSES = [
-  { status: 'published', label: 'Published' },
-  { status: 'pending', label: 'Awaiting review' },
-  { status: 'suspended', label: 'Suspended' },
-  { status: 'rejected', label: 'Rejected' },
+  { status: 'published', labelKey: 'admin:dashboard.published' },
+  { status: 'pending', labelKey: 'admin:dashboard.pending' },
+  { status: 'suspended', labelKey: 'admin:dashboard.suspended' },
+  { status: 'rejected', labelKey: 'admin:dashboard.rejected' },
 ]
 
 function buildCatalogueSegments(establishments) {
   return CATALOGUE_STATUSES.map((catalogueStatus) => ({
-    label: catalogueStatus.label,
+    label: i18next.t(catalogueStatus.labelKey),
     color: findStatusTheme(catalogueStatus.status).chartColor,
     value: establishments.filter(
       (establishment) => establishment.establishment_status === catalogueStatus.status,
@@ -43,9 +47,12 @@ function buildCatalogueSegments(establishments) {
   }))
 }
 
-function SchoolsRanking({ icon, tone, title, establishments, fieldName, barClass }) {
+// referenceKind : la liste de référence du champ, quand ses valeurs se traduisent.
+function SchoolsRanking({ icon, tone, title, establishments, fieldName, referenceKind, barClass }) {
+  const { t } = useTranslation('admin')
+  const translateReference = useReferenceLabel()
   const rankedRows = countByField(establishments, fieldName).map((entry) => ({
-    label: entry.label,
+    label: referenceKind ? translateReference(referenceKind, entry.label) : entry.label,
     value: entry.count,
   }))
 
@@ -56,7 +63,7 @@ function SchoolsRanking({ icon, tone, title, establishments, fieldName, barClass
       title={title}
       count={rankedRows.length}
       status={rankedRows.length === 0 ? 'empty' : 'ready'}
-      emptyMessage="No school has been proposed yet."
+      emptyMessage={t('dashboard.noSchool')}
     >
       <ScrollArea label={title}>
         <RankedBars rows={rankedRows} barClass={barClass} />
@@ -71,28 +78,28 @@ function buildTiles(submissionsByStatus, establishments, onNavigate) {
     {
       icon: Clock,
       tone: 'harmonyBlue',
-      label: 'Submissions awaiting review',
+      label: i18next.t('admin:dashboard.submissionsAwaiting'),
       value: submissionsByStatus.pending.length,
       onOpen: openSubmissions,
     },
     {
       icon: CircleCheck,
       tone: 'harmonyBlend',
-      label: 'Submissions approved',
+      label: i18next.t('admin:dashboard.submissionsApproved'),
       value: submissionsByStatus.approved.length,
       onOpen: openSubmissions,
     },
     {
       icon: CircleX,
       tone: 'harmonyViolet',
-      label: 'Submissions rejected',
+      label: i18next.t('admin:dashboard.submissionsRejected'),
       value: submissionsByStatus.rejected.length,
       onOpen: openSubmissions,
     },
     {
       icon: Building2,
       tone: 'harmonyBright',
-      label: 'Schools on the platform',
+      label: i18next.t('admin:page.schoolsOnPlatform'),
       value: establishments.length,
       onOpen: () => onNavigate('establishments'),
     },
@@ -102,6 +109,7 @@ function buildTiles(submissionsByStatus, establishments, onNavigate) {
 // Tableau de bord du super administrateur : d'abord ce qui attend une
 // décision, puis l'état de la plateforme en graphiques.
 function AdminDashboard({ submissionsByStatus, establishments, reviewDeskProps, onNavigate }) {
+  const { t } = useTranslation('admin')
   const activityState = useActivity('/admin/activity')
   const { pending, approved, rejected } = submissionsByStatus
   const allSubmissions = [...pending, ...approved, ...rejected]
@@ -118,23 +126,23 @@ function AdminDashboard({ submissionsByStatus, establishments, reviewDeskProps, 
         <ChartCard
           icon={ChartColumn}
           tone="blue"
-          title="Submissions per week"
-          description="Sent by managers over the last 12 weeks, by outcome."
+          title={t('dashboard.weeklyTitle')}
+          description={t('dashboard.weeklyDescription')}
           className="xl:col-span-2"
           status={allSubmissions.length === 0 ? 'empty' : 'ready'}
-          emptyMessage="No submission has been received yet."
+          emptyMessage={t('dashboard.noSubmission')}
         >
           <WeeklySubmissionsChart submissions={allSubmissions} />
         </ChartCard>
         <ChartCard
           icon={PieChart}
           tone="green"
-          title="Catalogue"
-          description={`${unmanagedCount} schools have no manager account`}
+          title={t('dashboard.catalogue')}
+          description={t('dashboard.unmanaged', { count: unmanagedCount })}
           status={establishments.length === 0 ? 'empty' : 'ready'}
-          emptyMessage="No school has been proposed yet."
+          emptyMessage={t('dashboard.noSchool')}
         >
-          <DonutChart segments={buildCatalogueSegments(establishments)} totalLabel="schools" />
+          <DonutChart segments={buildCatalogueSegments(establishments)} totalLabel={t('dashboard.schoolsLabel', { count: establishments.length })} />
         </ChartCard>
       </div>
 
@@ -142,7 +150,7 @@ function AdminDashboard({ submissionsByStatus, establishments, reviewDeskProps, 
         <SchoolsRanking
           icon={MapPin}
           tone="blue"
-          title="Schools by city"
+          title={t('dashboard.byCity')}
           establishments={establishments}
           fieldName="city"
           barClass="bg-primary"
@@ -150,16 +158,17 @@ function AdminDashboard({ submissionsByStatus, establishments, reviewDeskProps, 
         <SchoolsRanking
           icon={GraduationCap}
           tone="violet"
-          title="Schools by type"
+          title={t('dashboard.byType')}
           establishments={establishments}
           fieldName="type"
+          referenceKind="types"
           barClass="bg-violet-deep"
         />
         <ActivityChart
           icon={TrendingUp}
           tone="amber"
-          title="Visits to the platform"
-          description="All public school pages together."
+          title={t('dashboard.visitsTitle')}
+          description={t('dashboard.visitsDescription')}
           activityState={activityState}
           className="md:col-span-2 xl:col-span-1"
         />
