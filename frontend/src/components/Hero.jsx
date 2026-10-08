@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { ArrowRight, GraduationCap, MapPin, Search, ShieldCheck, SlidersHorizontal } from 'lucide-react'
+import { Trans, useTranslation } from 'react-i18next'
 
 import AdvancedFilters from './AdvancedFilters'
 import Button from './ui/Button'
@@ -18,11 +19,6 @@ function countActiveAdvancedFilters(advancedFilters) {
   return singleCriteria.length + serviceNames.length + examRequirements.length
 }
 
-function buildLead(schoolCount) {
-  const scope = schoolCount > 0 ? `${schoolCount} schools and universities` : 'schools and universities'
-  return `Compare fees, payment plans, exam results and services across ${scope} in Cameroon.`
-}
-
 // Barre de recherche en pilule : un seul bloc arrondi qui réunit le texte
 // libre, la ville, le type et le bouton. Sur mobile, les champs s'empilent.
 // Le focus d'un champ se lit sur la pilule entière (anneau bleu), les champs
@@ -30,6 +26,8 @@ function buildLead(schoolCount) {
 // Le retrait à gauche de la pilule est compensé par son remplissage, pour que
 // l'icône de recherche tombe exactement à l'aplomb du titre.
 function SearchBar({ searchState, cities, types }) {
+  const { t } = useTranslation('home')
+
   return (
     <form
       onSubmit={searchState.onSubmit}
@@ -37,20 +35,20 @@ function SearchBar({ searchState, cities, types }) {
     >
       <label className="flex items-center gap-2.5 px-4 lg:px-0">
         <Search aria-hidden="true" className="size-4 shrink-0 text-navy" />
-        <span className="sr-only">School, program or city</span>
+        <span className="sr-only">{t('hero.searchPlaceholder')}</span>
         <input
           type="search"
           value={searchState.search}
           onChange={searchState.onSearchChange}
-          placeholder="School, program or city"
+          placeholder={t('hero.searchPlaceholder')}
           className="h-12 w-full bg-transparent text-sm font-medium text-navy outline-none placeholder:font-normal placeholder:text-ink-soft"
         />
       </label>
       <label className={PILL_FIELD_CLASSES}>
         <MapPin aria-hidden="true" className="size-4 shrink-0 text-ink-soft" />
-        <span className="sr-only">City</span>
+        <span className="sr-only">{t('hero.city')}</span>
         <select value={searchState.cityId} onChange={searchState.onCityChange} className={PILL_SELECT_CLASSES}>
-          <option value="">All cities</option>
+          <option value="">{t('hero.allCities')}</option>
           {cities.map((city) => (
             <option key={city.id} value={city.id}>
               {city.name}
@@ -60,9 +58,9 @@ function SearchBar({ searchState, cities, types }) {
       </label>
       <label className={PILL_FIELD_CLASSES}>
         <GraduationCap aria-hidden="true" className="size-4 shrink-0 text-ink-soft" />
-        <span className="sr-only">Type of school</span>
+        <span className="sr-only">{t('hero.type')}</span>
         <select value={searchState.typeId} onChange={searchState.onTypeChange} className={PILL_SELECT_CLASSES}>
-          <option value="">All types</option>
+          <option value="">{t('hero.allTypes')}</option>
           {types.map((type) => (
             <option key={type.id} value={type.id}>
               {type.name}
@@ -71,7 +69,7 @@ function SearchBar({ searchState, cities, types }) {
         </select>
       </label>
       <Button type="submit" size="lg" className="group w-full lg:w-auto lg:rounded-full">
-        Search schools
+        {t('hero.submit')}
         <ArrowRight aria-hidden="true" className="size-4 transition-transform group-hover:translate-x-0.5" />
       </Button>
     </form>
@@ -80,10 +78,11 @@ function SearchBar({ searchState, cities, types }) {
 
 // Chiffres clés sous la recherche : séparés par des filets, en chiffres serif.
 function KeyCounters({ figures }) {
+  const { t } = useTranslation('home')
   const counters = [
-    { value: `${figures.schoolCount}+`, label: 'Schools' },
-    { value: figures.cityCount, label: 'Cities' },
-    { value: figures.regionCount, label: 'Regions' },
+    { value: `${figures.schoolCount}+`, label: t('hero.counters.schools') },
+    { value: figures.cityCount, label: t('hero.counters.cities') },
+    { value: figures.regionCount, label: t('hero.counters.regions') },
   ]
 
   return (
@@ -103,6 +102,7 @@ function KeyCounters({ figures }) {
 // La photo est rognée en arche, avec deux arcs fins derrière elle : c'est ce
 // qui remplace une photo détourée, que le projet ne possède pas.
 function HeroPhoto() {
+  const { t } = useTranslation('home')
   const [hasPhotoFailed, setHasPhotoFailed] = useState(false)
 
   return (
@@ -122,7 +122,7 @@ function HeroPhoto() {
       ) : (
         <img
           src="/hero-family6.jpeg"
-          alt="Parent and schoolgirl seen from behind, holding hands and walking to school"
+          alt={t('hero.photoAlt')}
           onError={() => setHasPhotoFailed(true)}
           className="relative aspect-4/5 w-full rounded-t-full rounded-b-panel object-cover shadow-raised"
         />
@@ -132,6 +132,7 @@ function HeroPhoto() {
 }
 
 function Hero({ searchState, cities, types, advancedFilters, figures }) {
+  const { t } = useTranslation('home')
   const [areAdvancedFiltersOpen, setAreAdvancedFiltersOpen] = useState(false)
   const activeAdvancedFilterCount = countActiveAdvancedFilters(advancedFilters)
 
@@ -139,13 +140,15 @@ function Hero({ searchState, cities, types, advancedFilters, figures }) {
     <section id="search" className="scroll-mt-20 bg-surface">
       <Container className="grid items-center gap-12 py-12 sm:py-16 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,0.75fr)] lg:gap-20 lg:py-24">
         <div className="animate-settle">
-          <Eyebrow>Cameroon school discovery</Eyebrow>
+          <Eyebrow>{t('hero.eyebrow')}</Eyebrow>
           <h1 className="mt-5 text-balance font-display text-4xl leading-display tracking-tight text-navy sm:text-5xl xl:text-6xl">
-            Find the school where your child will <Emphasis>thrive.</Emphasis>
+            <Trans t={t} i18nKey="hero.title" components={{ emphasis: <Emphasis /> }} />
           </h1>
           <span aria-hidden="true" className="mt-6 block h-0.5 w-10 rounded-full bg-primary" />
           <p className="mt-6 max-w-[52ch] text-pretty text-base text-ink sm:text-lg">
-            {buildLead(figures.schoolCount)}
+            {figures.schoolCount > 0
+              ? t('hero.leadWithCount', { schoolCount: figures.schoolCount })
+              : t('hero.lead')}
           </p>
 
           <div className="mt-8">
@@ -161,17 +164,17 @@ function Hero({ searchState, cities, types, advancedFilters, figures }) {
               className="inline-flex h-11 cursor-pointer items-center gap-2 rounded-control text-sm font-semibold text-primary-deep transition-colors hover:text-primary"
             >
               <SlidersHorizontal aria-hidden="true" className="size-4" />
-              {areAdvancedFiltersOpen ? 'Hide filters' : 'Refine with more filters'}
+              {areAdvancedFiltersOpen ? t('hero.hideFilters') : t('hero.showFilters')}
               {activeAdvancedFilterCount > 0 && (
                 <span className="rounded-full bg-primary px-2 py-0.5 text-xs font-semibold text-white">
                   {activeAdvancedFilterCount}
-                  <span className="sr-only"> active</span>
+                  <span className="sr-only"> {t('hero.activeFilters')}</span>
                 </span>
               )}
             </button>
             <p className="flex items-center gap-2 text-sm text-ink-soft">
               <ShieldCheck aria-hidden="true" className="size-4 shrink-0 text-primary-deep" />
-              Independent. Schools cannot pay to rank higher.
+              {t('hero.independence')}
             </p>
           </div>
 

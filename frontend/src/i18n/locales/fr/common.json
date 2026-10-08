@@ -1,0 +1,40 @@
+{
+  "language": {
+    "switchLabel": "Langue"
+  },
+  "schoolCount_one": "{{count}} établissement",
+  "schoolCount_many": "{{count}} établissements",
+  "schoolCount_other": "{{count}} établissements",
+  "notPublished": "Non publié",
+  "justNow": "à l'instant",
+  "removeFilter": "Retirer le filtre : {{label}}",
+  "header": {
+    "mainNavigation": "Navigation principale",
+    "findSchools": "Trouver un établissement",
+    "destinations": "Destinations",
+    "globalPicture": "Vue d'ensemble",
+    "howItWorks": "Comment ça marche",
+    "forSchools": "Espace établissements",
+    "searchSchools": "Rechercher un établissement",
+    "openMenu": "Ouvrir le menu",
+    "closeMenu": "Fermer le menu",
+    "selectedForComparison_one": "établissement sélectionné pour la comparaison",
+    "selectedForComparison_many": "établissements sélectionnés pour la comparaison",
+    "selectedForComparison_other": "établissements sélectionnés pour la comparaison"
+  },
+  "footer": {
+    "tagline": "La plateforme qui aide les familles à comparer les écoles et les universités du Cameroun.",
+    "runSchool": "Vous dirigez un établissement ?",
+    "runSchoolLead": "Tenez vos frais, vos résultats et vos photos à jour pour les familles.",
+    "manageSchoolPage": "Gérer la page de votre établissement",
+    "directoryNavigation": "Annuaire",
+    "schools": "Établissements",
+    "findSchools": "Trouver un établissement",
+    "popularDestinations": "Destinations populaires",
+    "globalPicture": "Vue d'ensemble",
+    "howItWorks": "Comment ça marche",
+    "typesNavigation": "Établissements par type",
+    "schoolTypes": "Types d'établissement",
+    "backToTop": "Haut de page"
+  }
+}
