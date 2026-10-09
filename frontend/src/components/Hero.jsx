@@ -248,7 +248,7 @@ function Hero({ searchState, cities, types, advancedFilters, figures }) {
               {/* Les filtres s'appliquent dès qu'on les change : ce bouton le
                   dit, et mène aux résultats sans avoir à remonter. */}
               <div className="mt-4 flex justify-end">
-                <Button as="a" href="#results" className="w-full sm:w-auto">
+                <Button as="a" href="/#results" className="w-full sm:w-auto">
                   {t('hero.viewResults', { count: figures.resultCount })}
                 </Button>
               </div>

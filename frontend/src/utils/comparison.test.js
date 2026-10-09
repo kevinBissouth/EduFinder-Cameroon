@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 
 import {
-  buildComparisonHash,
+  buildComparisonPath,
   canCompare,
   includesAllIds,
   isComparisonFull,
@@ -17,18 +17,18 @@ test('a selection keeps four distinct schools at most', () => {
 })
 
 test('the shareable address round-trips through the route parser', () => {
-  const hash = buildComparisonHash(['a', 'b', 'c'])
+  const path = buildComparisonPath(['a', 'b', 'c'])
 
-  assert.equal(hash, '#/compare/a,b,c')
-  assert.deepEqual(parseRoute(hash), { page: 'compare', ids: ['a', 'b', 'c'] })
+  assert.equal(path, '/compare/a,b,c')
+  assert.deepEqual(parseRoute(path), { page: 'compare', ids: ['a', 'b', 'c'] })
 })
 
 test('a link with six schools shows the first four', () => {
-  assert.deepEqual(parseRoute('#/compare/a,b,c,d,e,f').ids, ['a', 'b', 'c', 'd'])
+  assert.deepEqual(parseRoute('/compare/a,b,c,d,e,f').ids, ['a', 'b', 'c', 'd'])
 })
 
 test('a link without any school still opens the comparison page, empty', () => {
-  assert.deepEqual(parseRoute('#/compare/'), { page: 'compare', ids: [] })
+  assert.deepEqual(parseRoute('/compare/'), { page: 'compare', ids: [] })
 })
 
 test('another path is not a comparison', () => {
@@ -36,9 +36,9 @@ test('another path is not a comparison', () => {
 })
 
 test('known routes keep working', () => {
-  assert.deepEqual(parseRoute('#/school/abc'), { page: 'school-detail', id: 'abc' })
-  assert.deepEqual(parseRoute('#/saved'), { page: 'saved' })
-  assert.deepEqual(parseRoute('#/login'), { page: 'login' })
+  assert.deepEqual(parseRoute('/school/abc'), { page: 'school-detail', id: 'abc' })
+  assert.deepEqual(parseRoute('/saved'), { page: 'saved' })
+  assert.deepEqual(parseRoute('/login'), { page: 'login' })
   assert.deepEqual(parseRoute('#results'), { page: 'home' })
   assert.deepEqual(parseRoute(''), { page: 'home' })
 })

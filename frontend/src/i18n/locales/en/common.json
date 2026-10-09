@@ -31,7 +31,10 @@
     "howItWorks": "How it works",
     "typesNavigation": "Schools by type",
     "schoolTypes": "School types",
-    "backToTop": "Back to top"
+    "backToTop": "Back to top",
+    "legalNotice": "Legal notice",
+    "privacy": "Privacy",
+    "legalNavigation": "Legal information"
   },
   "documentTitle": "EduFinder Cameroon: compare schools before you enrol",
   "pageDocumentTitle": "{{page}} | EduFinder Cameroon",

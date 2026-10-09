@@ -132,7 +132,7 @@ function CriteriaSection({ institutions, onView }) {
               ))}
             </ul>
             <a
-              href="#results"
+              href="/#results"
               className="mt-2 inline-flex h-11 items-center gap-2 rounded-control text-sm font-semibold text-primary-deep transition-colors hover:text-primary"
             >
               {t('criteria.viewAll', { count: institutions.length })}

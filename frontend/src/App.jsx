@@ -2,10 +2,12 @@ import { lazy, Suspense, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import ComparePage from './pages/ComparePage'
 import HomePage from './pages/HomePage'
+import LegalPage from './pages/LegalPage'
 import SavedSchoolsPage from './pages/SavedSchoolsPage'
 import SchoolProfilePage from './pages/SchoolProfilePage'
 import ToastProvider from './components/workspace/ToastProvider'
-import { useHashRoute } from './hooks/useHashRoute'
+import { useRoute } from './hooks/useRoute'
+import { HOME_PATH, LOGIN_PATH, MANAGER_PATH, SCHOOL_ADMIN_PATH, navigateTo, redirectTo } from './routes'
 import { useScrollOnPageChange } from './hooks/useScrollOnPageChange'
 import { clearAuthToken, fetchAuthenticatedProfile } from './utils/auth'
 
@@ -28,11 +30,24 @@ function preloadLoginPageWhenIdle() {
 }
 const AdminHomePage = lazy(() => import('./pages/AdminHomePage'))
 
+const WORKSPACE_PAGES = ['manager', 'school-admin']
+const LEGAL_DOCUMENT_BY_PAGE = { 'legal-notice': 'notice', privacy: 'privacy' }
+
+// Où renvoyer un visiteur qui n'a pas sa place sur la page demandée, sinon
+// null. Tant que la session n'est pas vérifiée (profil indéfini), personne
+// n'est renvoyé : un compte connecté ne doit pas passer par la connexion.
+function findRedirectPath(page, profile) {
+  if (profile === undefined || !WORKSPACE_PAGES.includes(page)) return null
+  if (!profile) return LOGIN_PATH
+  const isMisplacedManager = page === 'school-admin' && profile.role !== 'super_admin'
+  return isMisplacedManager ? MANAGER_PATH : null
+}
+
 function App() {
   // Abonne la racine à la langue : au changement, tout l'arbre se redessine,
   // y compris les montants et les dates formatés hors des composants.
   useTranslation()
-  const { route, pageKey } = useHashRoute()
+  const { route, pageKey } = useRoute()
   // Profil restauré depuis /auth/me (le cookie httpOnly n'est pas lisible en
   // JS) ; authChecked évite un faux redirection vers /login le temps du test.
   const [profile, setProfile] = useState(null)
@@ -43,6 +58,14 @@ function App() {
 
   useEffect(preloadLoginPageWhenIdle, [])
 
+  // Une redirection change l'adresse : elle se fait après l'affichage, jamais
+  // pendant. En attendant, la page affichée est déjà la bonne (connexion, ou
+  // espace responsable).
+  const redirectPath = findRedirectPath(route.page, authChecked ? profile : undefined)
+  useEffect(() => {
+    if (redirectPath) redirectTo(redirectPath)
+  }, [redirectPath])
+
   useEffect(() => {
     fetchAuthenticatedProfile()
       .then(setProfile)
@@ -52,11 +75,7 @@ function App() {
 
   function handleAuthenticated(authProfile) {
     setProfile(authProfile)
-    if (authProfile.role === 'super_admin') {
-      window.location.hash = '#/school-admin'
-    } else {
-      window.location.hash = '#/manager'
-    }
+    navigateTo(authProfile.role === 'super_admin' ? SCHOOL_ADMIN_PATH : MANAGER_PATH)
   }
 
   function handleSignOut() {
@@ -64,7 +83,7 @@ function App() {
       .catch(() => {})
       .finally(() => {
         setProfile(null)
-        window.location.hash = '#/'
+        navigateTo(HOME_PATH)
       })
   }
 
@@ -80,6 +99,10 @@ function App() {
     return <SavedSchoolsPage />
   }
 
+  if (route.page in LEGAL_DOCUMENT_BY_PAGE) {
+    return <LegalPage documentKey={LEGAL_DOCUMENT_BY_PAGE[route.page]} />
+  }
+
   if (route.page === 'login') {
     return (
       <Suspense fallback={null}>
@@ -93,7 +116,6 @@ function App() {
       return null
     }
     if (!profile) {
-      window.location.hash = '#/login'
       return (
         <Suspense fallback={null}>
           <LoginPage onAuthenticated={handleAuthenticated} />
@@ -103,9 +125,6 @@ function App() {
     // L'espace super admin n'est accessible qu'au rôle super_admin ; tout
     // autre compte authentifié est redirigé vers l'espace responsable.
     const isAdminSpace = route.page === 'school-admin' && profile.role === 'super_admin'
-    if (route.page === 'school-admin' && !isAdminSpace) {
-      window.location.hash = '#/manager'
-    }
     const WorkspacePage = isAdminSpace ? AdminHomePage : ManagerHomePage
     return (
       <ToastProvider>

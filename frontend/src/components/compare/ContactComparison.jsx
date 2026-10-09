@@ -5,6 +5,7 @@ import { ComparisonSection, SchoolColumns } from './comparisonParts'
 import { COMPARISON_SECTION_IDS } from './comparisonLayout'
 import Button from '../ui/Button'
 import { buildContactLinks } from '../../utils/comparisonView'
+import { buildSchoolPath } from '../../routes'
 
 const EXTERNAL_LINK_PROPS = { target: '_blank', rel: 'noopener noreferrer' }
 
@@ -53,7 +54,7 @@ function SchoolContact({ school }) {
         />
       </ul>
       <div className="mt-auto pt-5">
-        <Button as="a" href={`#/school/${school.uuid}`} variant="secondary" className="w-full">
+        <Button as="a" href={buildSchoolPath(school.uuid, school.name)} variant="secondary" className="w-full">
           {t('viewProfile')}
           <ArrowRight aria-hidden="true" className="size-4" />
         </Button>

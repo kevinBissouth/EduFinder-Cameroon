@@ -283,7 +283,7 @@ EduFinder-Cameroon/
 │   │   ├── hooks/            # État et appels API
 │   │   ├── utils/            # Authentification, formats, médias
 │   │   ├── i18n/             # Choix de langue et textes (locales/en, locales/fr)
-│   │   └── routes.js         # Routage par hash
+│   │   └── routes.js         # Routage par chemin (/school/:id, /compare/…)
 │   └── package.json
 ├── media/                    # Fichiers téléversés (images, vidéos, PDF)
 ├── docs/                     # Documents du sujet

@@ -79,7 +79,7 @@ export function WorkspaceRail({ navItems, activeView, onSelectView, onSignOut })
   return (
     <aside className="sticky top-0 z-40 hidden h-screen w-32 shrink-0 flex-col bg-navy [--focus-ring:var(--color-accent)] lg:flex">
       <a
-        href="#/"
+        href="/"
         aria-label={t('backToPublicSite')}
         className="flex h-20 items-center justify-center text-primary"
       >

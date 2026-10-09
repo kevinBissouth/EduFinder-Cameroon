@@ -4,12 +4,9 @@ const TRAVERSE_NAVIGATION = 'traverse'
 const LAYOUT_SETTLE_MILLISECONDS = 3000
 const USER_SCROLL_EVENTS = ['wheel', 'touchstart', 'keydown']
 
-// Une ancre de section (« #results ») n'a pas de barre oblique, contrairement
-// aux adresses de page (« #/compare/… »).
 function findAnchoredSection(hash) {
   const sectionId = hash.replace(/^#/, '')
-  if (!sectionId || sectionId.startsWith('/')) return null
-  return document.getElementById(sectionId)
+  return sectionId ? document.getElementById(sectionId) : null
 }
 
 // La page d'accueil se remplit après son premier affichage (chiffres,
@@ -33,7 +30,7 @@ function holdSectionInView(section) {
   )
 }
 
-// Le routage par hash ne recharge rien : sans ce crochet, on arrive sur une
+// Le routage du site ne recharge rien : sans ce crochet, on arrive sur une
 // nouvelle page à la hauteur où l'on a quitté la précédente. Je remonte donc
 // en haut à chaque changement de page, ou je vais à la section visée quand
 // l'adresse en nomme une (le navigateur l'a cherchée avant que la page existe).

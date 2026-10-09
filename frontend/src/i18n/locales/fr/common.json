@@ -32,7 +32,10 @@
     "howItWorks": "Comment ça marche",
     "typesNavigation": "Établissements par type",
     "schoolTypes": "Types d'établissement",
-    "backToTop": "Haut de page"
+    "backToTop": "Haut de page",
+    "legalNotice": "Mentions légales",
+    "privacy": "Confidentialité",
+    "legalNavigation": "Informations légales"
   },
   "documentTitle": "EduFinder Cameroon : comparez les établissements avant d'inscrire",
   "pageDocumentTitle": "{{page}} | EduFinder Cameroon",
