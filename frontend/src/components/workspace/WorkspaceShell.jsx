@@ -1,10 +1,34 @@
+import { Globe } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 import NotificationBell from './NotificationBell'
+import Button from '../ui/Button'
 import LanguageSwitch from '../ui/LanguageSwitch'
 import { WorkspaceRail, WorkspaceTabBar } from './WorkspaceNavigation'
 import { useNotifications } from '../../hooks/useNotifications'
+import { HOME_PATH } from '../../routes'
 import { buildInitials } from '../../utils/format'
+
+// Sous 1280 px la barre porte déjà le sélecteur d'établissement, la langue,
+// la cloche et le compte : le bouton ne garde alors que son icône, pour ne pas
+// écraser le titre. Son nom reste lu par les lecteurs d'écran et au survol.
+function PublicSiteButton() {
+  const { t } = useTranslation('workspace')
+
+  return (
+    <Button
+      as="a"
+      href={HOME_PATH}
+      variant="secondary"
+      aria-label={t('publicSite')}
+      title={t('publicSite')}
+      className="rounded-full max-xl:w-11 max-xl:px-0"
+    >
+      <Globe aria-hidden="true" className="size-4" />
+      <span className="max-xl:hidden">{t('publicSite')}</span>
+    </Button>
+  )
+}
 
 const AVATAR_CLASSES =
   'flex size-11 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-primary to-violet-deep text-sm font-bold text-white shadow-soft ring-2 ring-surface lg:bg-navy lg:bg-none lg:shadow-none lg:ring-0'
@@ -80,8 +104,12 @@ function WorkspaceShell({
               {subtitle && <p className="line-clamp-2 text-xs text-ink sm:text-sm">{subtitle}</p>}
             </div>
             {toolbar}
-            {/* Sous lg la barre est trop étroite : la langue se règle dans la vue du compte. */}
-            <div className="hidden lg:block">
+            {/* Retour au site des visiteurs, sans se déconnecter : la session
+                reste ouverte et « Mon espace » y ramène. Sous lg la barre est
+                trop étroite : ce lien est dans le menu « Plus », et la langue
+                se règle dans la vue du compte. */}
+            <div className="hidden items-center gap-3 lg:flex">
+              <PublicSiteButton />
               <LanguageSwitch tone="onLight" />
             </div>
             <NotificationBell inbox={inbox} onOpenNotification={onOpenNotification} />

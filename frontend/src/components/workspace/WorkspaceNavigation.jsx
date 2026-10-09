@@ -79,16 +79,12 @@ export function WorkspaceRail({ navItems, activeView, onSelectView, onSignOut })
 
   return (
     <aside className="sticky top-0 z-40 hidden h-screen w-32 shrink-0 flex-col bg-navy [--focus-ring:var(--color-accent)] lg:flex">
-      {/* Retour au site des visiteurs, sans se déconnecter : la session reste
-          ouverte et « Mon espace » y ramène. Le libellé sous le logo le dit ;
-          placé ici, il n'allonge pas le rail sur un écran peu haut. */}
       <a
         href={HOME_PATH}
         aria-label={t('backToPublicSite')}
-        className="flex h-20 flex-col items-center justify-center gap-0.5 text-xs font-medium text-on-navy-soft transition-colors hover:text-white"
+        className="flex h-20 items-center justify-center text-primary"
       >
-        <GraduationCap aria-hidden="true" className="size-8 text-primary" />
-        {t('publicSite')}
+        <GraduationCap aria-hidden="true" className="size-8" />
       </a>
       <nav aria-label={t('navigation')} className="flex-1">
         <ul>
