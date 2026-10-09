@@ -1,10 +1,13 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { ChevronDown, GraduationCap, Heart, Menu, Scale, Search, X } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 import Button from './ui/Button'
 import Container from './ui/Container'
 import LanguageSwitch from './ui/LanguageSwitch'
+import { useDismissibleMenu } from '../hooks/useDismissibleMenu'
+import { useSession } from '../hooks/useSession'
+import { findWorkspacePath } from '../utils/sessionRoutes'
 import { useReferenceLabel } from '../hooks/useReferenceLabel'
 import { useSchoolSelection } from '../hooks/useSchoolSelection'
 import { buildComparisonPath } from '../utils/comparison'
@@ -133,27 +136,7 @@ function TypeMenuItem({ type, isActive, onSelect }) {
 
 function TypeMenu({ types, activeTypeId, onSelectType }) {
   const { t } = useTranslation()
-  const [isOpen, setIsOpen] = useState(false)
-  const menuRef = useRef(null)
-
-  // Le menu se referme dès qu'on clique ailleurs ou qu'on appuie sur Échap,
-  // comme n'importe quel menu déroulant du système.
-  useEffect(() => {
-    if (!isOpen) return undefined
-
-    const closeOnOutsideClick = (event) => {
-      if (!menuRef.current?.contains(event.target)) setIsOpen(false)
-    }
-    const closeOnEscape = (event) => {
-      if (event.key === 'Escape') setIsOpen(false)
-    }
-    document.addEventListener('mousedown', closeOnOutsideClick)
-    document.addEventListener('keydown', closeOnEscape)
-    return () => {
-      document.removeEventListener('mousedown', closeOnOutsideClick)
-      document.removeEventListener('keydown', closeOnEscape)
-    }
-  }, [isOpen])
+  const { isOpen, setIsOpen, menuRef } = useDismissibleMenu()
 
   if (types.length === 0) {
     return (
@@ -199,6 +182,20 @@ function TypeMenu({ types, activeTypeId, onSelectType }) {
   )
 }
 
+// L'entrée des établissements. Pour un compte déjà connecté, elle mène droit à
+// son espace et le dit : on ne lui repropose pas de se connecter.
+function SchoolSpaceButton({ className = '' }) {
+  const { t } = useTranslation()
+  const signedInProfile = useSession()
+  const spacePath = signedInProfile ? findWorkspacePath(signedInProfile) : LOGIN_PATH
+
+  return (
+    <Button as="a" href={spacePath} variant="accent" className={`rounded-full ${className}`}>
+      {signedInProfile ? t('header.mySpace') : t('header.forSchools')}
+    </Button>
+  )
+}
+
 function MobileMenu({ types, activeTypeId, onSelectType }) {
   const { t } = useTranslation()
 
@@ -232,11 +229,9 @@ function MobileMenu({ types, activeTypeId, onSelectType }) {
         ))}
         <MobileListLinks />
         <div className="mt-3 sm:hidden">
-          <LanguageSwitch />
+          <LanguageSwitch menuAlign="start" />
         </div>
-        <Button as="a" href={LOGIN_PATH} variant="accent" className="mt-3 w-full rounded-full">
-          {t('header.forSchools')}
-        </Button>
+        <SchoolSpaceButton className="mt-3 w-full" />
       </Container>
     </nav>
   )
@@ -314,9 +309,7 @@ function Header({ activeTypeId, onNavigateToType, types = [], featuredTypeIds = 
             <Search aria-hidden="true" className="size-4" />
           </a>
           <div className="hidden lg:block">
-            <Button as="a" href={LOGIN_PATH} variant="accent" className="whitespace-nowrap rounded-full">
-              {t('header.forSchools')}
-            </Button>
+            <SchoolSpaceButton className="whitespace-nowrap" />
           </div>
           <button
             type="button"

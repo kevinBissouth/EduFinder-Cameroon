@@ -110,5 +110,6 @@
     "periodTotals": "Totaux des {{count}} dernières semaines."
   },
   "pages": "Pages",
-  "pageOf": "Page {{current}} sur {{total}}"
+  "pageOf": "Page {{current}} sur {{total}}",
+  "publicSite": "Site public"
 }
