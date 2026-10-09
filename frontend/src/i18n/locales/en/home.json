@@ -1,7 +1,7 @@
 {
   "loadWarning": "Some filters or figures could not be loaded. Refresh the page to try again.",
   "hero": {
-    "eyebrow": "Cameroon school discovery",
+    "eyebrow": "Find a school in Cameroon",
     "title": "Find the school where your child will <emphasis>thrive.</emphasis>",
     "lead": "Compare fees, payment plans, exam results and services across schools and universities in Cameroon.",
     "leadWithCount": "Compare fees, payment plans, exam results and services across {{schoolCount}} schools and universities in Cameroon.",
@@ -20,7 +20,9 @@
       "cities": "Cities",
       "regions": "Regions"
     },
-    "photoAlt": "Parent and schoolgirl seen from behind, holding hands and walking to school"
+    "photoAlt": "Parent and schoolgirl seen from behind, holding hands and walking to school",
+    "viewResults_one": "View the {{count}} result",
+    "viewResults_other": "View the {{count}} results"
   },
   "filters": {
     "languageSection": "Language section",
@@ -65,14 +67,13 @@
   },
   "strip": {
     "label": "Schools listed on EduFinder",
-    "title": "Schools families are comparing on EduFinder"
+    "title": "Some of the schools listed on EduFinder"
   },
   "results": {
     "eyebrow": "Explore",
     "heading": "Schools",
     "found_one": "{{count}} school found",
     "found_other": "{{count}} schools found",
-    "recommendedFirst": "Recommended schools are listed first.",
     "filterByType": "Filter by type of school",
     "clearFilters": "Clear all filters",
     "loading": "Loading schools",
@@ -87,10 +88,11 @@
     "budgetFrom": "From {{minimum}} FCFA",
     "budgetUpTo": "Up to {{maximum}} FCFA",
     "examAtLeast": "{{exam}} at least {{rate}}%",
-    "unknownExam": "Exam {{id}}"
+    "unknownExam": "Exam {{id}}",
+    "completeFirst": "Complete profiles come first, then alphabetical order."
   },
   "card": {
-    "recommended": "Recommended",
+    "completeProfile": "Complete profile",
     "bestPassRate": "Best pass rate",
     "feesFrom": "Fees from, per year",
     "addToComparison": "Add to comparison",
@@ -98,7 +100,8 @@
     "save": "Save this school",
     "unsave": "Remove from saved schools",
     "viewNamed": "View {{name}}",
-    "view": "View school"
+    "view": "View school",
+    "completeProfileHint": "Description, fees and photo published, plus exam results where the school sits official exams."
   },
   "criteria": {
     "eyebrow": "Refine your search",
@@ -129,13 +132,13 @@
   },
   "destinations": {
     "eyebrow": "Popular destinations",
-    "title": "Explore the cities families look at first.",
+    "title": "Explore the cities with the most schools.",
     "lead": "The places with the most schools listed today."
   },
   "picture": {
     "eyebrow": "The global picture",
     "title": "Schooling in Cameroon, in numbers.",
-    "lead": "Every figure counts published listings only, across all ten regions of the country.",
+    "lead": "Every figure counts published listings only.",
     "schoolsListed": "Schools listed",
     "citiesCovered": "Cities covered",
     "feeLines": "Fee lines published",

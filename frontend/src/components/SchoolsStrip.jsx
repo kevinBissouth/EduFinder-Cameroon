@@ -5,7 +5,7 @@ import Container from './ui/Container'
 const STRIP_SIZE = 4
 
 // Bandeau de noms réels : les premiers établissements publiés de l'annuaire
-// (les recommandés d'abord, c'est l'ordre fourni par l'API).
+// (les fiches complètes d'abord, c'est l'ordre fourni par l'API).
 function SchoolsStrip({ institutions }) {
   const { t } = useTranslation('home')
   if (institutions.length === 0) return null

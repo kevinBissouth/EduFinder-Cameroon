@@ -1,5 +1,13 @@
 import { useState } from 'react'
-import { ArrowRight, GraduationCap, MapPin, Search, ShieldCheck, SlidersHorizontal } from 'lucide-react'
+import {
+  ArrowRight,
+  ChevronDown,
+  GraduationCap,
+  MapPin,
+  Search,
+  ShieldCheck,
+  SlidersHorizontal,
+} from 'lucide-react'
 import { Trans, useTranslation } from 'react-i18next'
 
 import AdvancedFilters from './AdvancedFilters'
@@ -11,7 +19,7 @@ import { useReferenceLabel } from '../hooks/useReferenceLabel'
 const PILL_SELECT_CLASSES =
   'h-12 w-full cursor-pointer appearance-none bg-transparent text-sm font-medium text-navy outline-none'
 const PILL_FIELD_CLASSES =
-  'flex items-center gap-2.5 rounded-control px-4 transition-colors hover:bg-paper lg:rounded-none lg:border-l lg:border-line lg:hover:bg-transparent'
+  'flex items-center gap-2.5 rounded-control px-4 transition-colors hover:bg-paper xl:rounded-none xl:border-l xl:border-line xl:px-3 xl:hover:bg-transparent'
 
 function countActiveAdvancedFilters(advancedFilters) {
   const { sectionId, sectorId, regionId, minFee, maxFee, serviceNames, examRequirements } =
@@ -21,7 +29,8 @@ function countActiveAdvancedFilters(advancedFilters) {
 }
 
 // Barre de recherche en pilule : un seul bloc arrondi qui réunit le texte
-// libre, la ville, le type et le bouton. Sur mobile, les champs s'empilent.
+// libre, la ville, le type et le bouton. Sous 1280 px les champs s'empilent :
+// à côté de la photo, la ligne est trop étroite pour « Toutes les villes ».
 // Le focus d'un champ se lit sur la pilule entière (anneau bleu), les champs
 // eux-mêmes n'ont donc pas d'anneau propre.
 // Le retrait à gauche de la pilule est compensé par son remplissage, pour que
@@ -33,9 +42,9 @@ function SearchBar({ searchState, cities, types }) {
   return (
     <form
       onSubmit={searchState.onSubmit}
-      className="grid gap-1 rounded-panel border border-line bg-surface p-2 shadow-raised transition-shadow focus-within:border-primary focus-within:ring-4 focus-within:ring-primary-soft lg:-ml-6 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)_minmax(0,1fr)_auto] lg:items-center lg:rounded-full lg:py-1.5 lg:pl-6 lg:pr-1.5"
+      className="grid gap-1 rounded-panel border border-line bg-surface p-2 shadow-raised transition-shadow focus-within:border-primary focus-within:ring-4 focus-within:ring-primary-soft xl:-ml-6 xl:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)_minmax(0,1fr)_auto] xl:items-center xl:rounded-full xl:py-1.5 xl:pl-6 xl:pr-1.5"
     >
-      <label className="flex items-center gap-2.5 px-4 lg:px-0">
+      <label className="flex items-center gap-2.5 px-4 xl:px-0">
         <Search aria-hidden="true" className="size-4 shrink-0 text-navy" />
         <span className="sr-only">{t('hero.searchPlaceholder')}</span>
         <input
@@ -57,6 +66,7 @@ function SearchBar({ searchState, cities, types }) {
             </option>
           ))}
         </select>
+        <ChevronDown aria-hidden="true" className="size-4 shrink-0 text-ink-soft xl:hidden" />
       </label>
       <label className={PILL_FIELD_CLASSES}>
         <GraduationCap aria-hidden="true" className="size-4 shrink-0 text-ink-soft" />
@@ -69,8 +79,9 @@ function SearchBar({ searchState, cities, types }) {
             </option>
           ))}
         </select>
+        <ChevronDown aria-hidden="true" className="size-4 shrink-0 text-ink-soft xl:hidden" />
       </label>
-      <Button type="submit" size="lg" className="group w-full lg:w-auto lg:rounded-full">
+      <Button type="submit" size="lg" className="group w-full xl:w-auto xl:rounded-full">
         {t('hero.submit')}
         <ArrowRight aria-hidden="true" className="size-4 transition-transform group-hover:translate-x-0.5" />
       </Button>
@@ -84,7 +95,7 @@ function SearchBar({ searchState, cities, types }) {
 function KeyCounters({ figures }) {
   const { t } = useTranslation('home')
   const counters = [
-    { value: `${figures.schoolCount}+`, label: t('hero.counters.schools') },
+    { value: figures.schoolCount, label: t('hero.counters.schools') },
     { value: figures.cityCount, label: t('hero.counters.cities') },
     { value: figures.regionCount, label: t('hero.counters.regions') },
   ]
@@ -188,6 +199,13 @@ function Hero({ searchState, cities, types, advancedFilters, figures }) {
               className="mt-3 rounded-panel border border-line bg-paper p-4 sm:p-5"
             >
               <AdvancedFilters advancedFilters={advancedFilters} />
+              {/* Les filtres s'appliquent dès qu'on les change : ce bouton le
+                  dit, et mène aux résultats sans avoir à remonter. */}
+              <div className="mt-4 flex justify-end">
+                <Button as="a" href="#results" className="w-full sm:w-auto">
+                  {t('hero.viewResults', { count: figures.resultCount })}
+                </Button>
+              </div>
             </div>
           )}
 

@@ -20,7 +20,10 @@
       "cities": "Villes",
       "regions": "Régions"
     },
-    "photoAlt": "Un parent et une écolière vus de dos, main dans la main sur le chemin de l'école"
+    "photoAlt": "Un parent et une écolière vus de dos, main dans la main sur le chemin de l'école",
+    "viewResults_one": "Voir le résultat",
+    "viewResults_many": "Voir les {{count}} résultats",
+    "viewResults_other": "Voir les {{count}} résultats"
   },
   "filters": {
     "languageSection": "Section linguistique",
@@ -66,7 +69,7 @@
   },
   "strip": {
     "label": "Établissements présents sur EduFinder",
-    "title": "Des établissements que les familles comparent sur EduFinder"
+    "title": "Quelques établissements présents sur EduFinder"
   },
   "results": {
     "eyebrow": "Explorer",
@@ -74,7 +77,6 @@
     "found_one": "{{count}} établissement trouvé",
     "found_many": "{{count}} établissements trouvés",
     "found_other": "{{count}} établissements trouvés",
-    "recommendedFirst": "Les établissements recommandés sont affichés en premier.",
     "filterByType": "Filtrer par type d'établissement",
     "clearFilters": "Effacer tous les filtres",
     "loading": "Chargement des établissements",
@@ -90,18 +92,20 @@
     "budgetFrom": "À partir de {{minimum}} FCFA",
     "budgetUpTo": "Jusqu'à {{maximum}} FCFA",
     "examAtLeast": "{{exam}} : au moins {{rate}} %",
-    "unknownExam": "Examen {{id}}"
+    "unknownExam": "Examen {{id}}",
+    "completeFirst": "Les fiches complètes passent en premier, puis l'ordre alphabétique."
   },
   "card": {
-    "recommended": "Recommandé",
+    "completeProfile": "Fiche complète",
     "bestPassRate": "Meilleur taux de réussite",
-    "feesFrom": "Frais à partir de, par an",
+    "feesFrom": "Frais annuels à partir de",
     "addToComparison": "Ajouter à la comparaison",
     "removeFromComparison": "Retirer de la comparaison",
     "save": "Enregistrer cet établissement",
     "unsave": "Retirer des établissements enregistrés",
     "viewNamed": "Voir {{name}}",
-    "view": "Voir la fiche"
+    "view": "Voir la fiche",
+    "completeProfileHint": "Description, frais et photo publiés, ainsi que les résultats d'examens quand l'établissement en présente."
   },
   "criteria": {
     "eyebrow": "Affinez votre recherche",
@@ -133,13 +137,13 @@
   },
   "destinations": {
     "eyebrow": "Destinations populaires",
-    "title": "Explorez les villes que les familles regardent en premier.",
+    "title": "Explorez les villes qui comptent le plus d'établissements.",
     "lead": "Les villes qui comptent aujourd'hui le plus d'établissements."
   },
   "picture": {
     "eyebrow": "Vue d'ensemble",
     "title": "L'école au Cameroun, en chiffres.",
-    "lead": "Chaque chiffre ne compte que les fiches publiées, dans les dix régions du pays.",
+    "lead": "Chaque chiffre ne compte que les fiches publiées.",
     "schoolsListed": "Établissements présents",
     "citiesCovered": "Villes couvertes",
     "feeLines": "Lignes de frais publiées",

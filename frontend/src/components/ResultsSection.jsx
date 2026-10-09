@@ -162,9 +162,9 @@ function ResultsSection({
         >
           {heading}
         </h2>
-        <p className="mt-4 text-base text-ink sm:text-lg">
-          {t('results.recommendedFirst')}
-        </p>
+        {status === 'success' && institutions.length > 0 && (
+          <p className="mt-4 text-base text-ink sm:text-lg">{t('results.completeFirst')}</p>
+        )}
         <TypeTabs
           types={typeTabs.types}
           activeTypeId={typeTabs.activeTypeId}
