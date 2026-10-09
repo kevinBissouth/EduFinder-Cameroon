@@ -20,7 +20,7 @@ function DestinationTile({ city, largestSchoolCount, isActive, onToggle }) {
       <span aria-hidden="true" className="absolute -right-8 -top-8 size-28 rounded-full border border-white/10" />
       <span aria-hidden="true" className="absolute -right-16 -top-16 size-44 rounded-full border border-white/10" />
       <span className="relative flex items-center justify-between">
-        <span className="rounded-full bg-white/10 px-2.5 py-1 text-xs font-semibold tabular-nums text-white">
+        <span className="whitespace-nowrap rounded-full bg-white/10 px-2.5 py-1 text-xs font-semibold tabular-nums text-white">
           {t('common:schoolCount', { count: city.count })}
         </span>
         <ArrowUpRight
@@ -57,7 +57,8 @@ function PopularDestinations({ cities, activeCityId, onToggleCity }) {
         />
         <ul className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-5">
           {cities.map((city) => (
-            <li key={city.id}>
+            // Sur deux colonnes, une dernière tuile impaire prend toute la ligne.
+            <li key={city.id} className="last:odd:col-span-2 sm:last:odd:col-span-1">
               <DestinationTile
                 city={city}
                 largestSchoolCount={largestSchoolCount}

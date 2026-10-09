@@ -6,6 +6,8 @@ import Container from '../ui/Container'
 import SectionHeading, { Emphasis } from '../ui/SectionHeading'
 import { API_URL } from '../../constants'
 
+const SMALL_GALLERY_PHOTO_COUNT = 2
+
 function PhotoTile({ image, isFeatured, onOpen }) {
   const { t } = useTranslation('profile')
   const [hasImageFailed, setHasImageFailed] = useState(false)
@@ -31,6 +33,19 @@ function PhotoTile({ image, isFeatured, onOpen }) {
           className="aspect-4/3 size-full object-cover transition-transform duration-500 group-hover:scale-105"
         />
       </button>
+    </li>
+  )
+}
+
+function VideoTile({ video }) {
+  return (
+    <li>
+      <video
+        controls
+        preload="metadata"
+        src={`${API_URL}${video.url}`}
+        className="aspect-video w-full rounded-panel bg-navy"
+      />
     </li>
   )
 }
@@ -82,6 +97,10 @@ function GallerySection({ media }) {
   const documents = media.filter((mediaItem) => mediaItem.type === 'pdf')
   if (media.length === 0) return null
 
+  // Avec une ou deux photos, la grille de quatre colonnes laissait la moitié
+  // de la page vide : photos et vidéos partagent alors une même rangée.
+  const isSmallGallery = images.length > 0 && images.length <= SMALL_GALLERY_PHOTO_COUNT
+
   return (
     <section id="gallery" className="scroll-mt-36 border-t border-line bg-paper py-16 sm:py-20">
       <Container>
@@ -90,7 +109,17 @@ function GallerySection({ media }) {
           eyebrow={t('gallery.eyebrow')}
           title={<Trans t={t} i18nKey="gallery.title" components={{ emphasis: <Emphasis /> }} />}
         />
-        {images.length > 0 && (
+        {isSmallGallery && (
+          <ul className="mt-10 grid items-start gap-4 md:grid-cols-2">
+            {images.map((image) => (
+              <PhotoTile key={image.id_media} image={image} onOpen={setEnlargedImage} />
+            ))}
+            {videos.map((video) => (
+              <VideoTile key={video.id_media} video={video} />
+            ))}
+          </ul>
+        )}
+        {!isSmallGallery && images.length > 0 && (
           <ul className="mt-10 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
             {images.map((image, index) => (
               <PhotoTile
@@ -102,12 +131,10 @@ function GallerySection({ media }) {
             ))}
           </ul>
         )}
-        {videos.length > 0 && (
+        {!isSmallGallery && videos.length > 0 && (
           <ul className="mt-6 grid gap-4 md:grid-cols-2">
             {videos.map((video) => (
-              <li key={video.id_media}>
-                <video controls preload="metadata" src={`${API_URL}${video.url}`} className="aspect-video w-full rounded-panel bg-navy" />
-              </li>
+              <VideoTile key={video.id_media} video={video} />
             ))}
           </ul>
         )}

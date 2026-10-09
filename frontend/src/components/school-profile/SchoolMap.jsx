@@ -27,7 +27,7 @@ function SchoolMap({ latitude, longitude }) {
       center={position}
       zoom={STREET_ZOOM}
       scrollWheelZoom={false}
-      className="isolate z-0 h-80 w-full rounded-panel"
+      className="isolate z-0 h-80 w-full rounded-panel [&_.leaflet-control-attribution]:mr-4!"
     >
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
