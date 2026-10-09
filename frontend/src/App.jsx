@@ -2,6 +2,7 @@ import { lazy, Suspense, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import ComparePage from './pages/ComparePage'
 import HomePage from './pages/HomePage'
+import LegalPage from './pages/LegalPage'
 import SavedSchoolsPage from './pages/SavedSchoolsPage'
 import SchoolProfilePage from './pages/SchoolProfilePage'
 import ToastProvider from './components/workspace/ToastProvider'
@@ -30,6 +31,7 @@ function preloadLoginPageWhenIdle() {
 const AdminHomePage = lazy(() => import('./pages/AdminHomePage'))
 
 const WORKSPACE_PAGES = ['manager', 'school-admin']
+const LEGAL_DOCUMENT_BY_PAGE = { 'legal-notice': 'notice', privacy: 'privacy' }
 
 // Où renvoyer un visiteur qui n'a pas sa place sur la page demandée, sinon
 // null. Tant que la session n'est pas vérifiée (profil indéfini), personne
@@ -95,6 +97,10 @@ function App() {
 
   if (route.page === 'saved') {
     return <SavedSchoolsPage />
+  }
+
+  if (route.page in LEGAL_DOCUMENT_BY_PAGE) {
+    return <LegalPage documentKey={LEGAL_DOCUMENT_BY_PAGE[route.page]} />
   }
 
   if (route.page === 'login') {

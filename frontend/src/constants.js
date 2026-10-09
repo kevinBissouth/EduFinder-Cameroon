@@ -11,3 +11,10 @@ const SAME_ORIGIN_API_URL = window.location.origin
 
 export const API_URL =
   import.meta.env.VITE_API_URL || (import.meta.env.DEV ? DEVELOPMENT_API_URL : SAME_ORIGIN_API_URL)
+
+// Éditeur du site, affiché dans les mentions légales et la page de
+// confidentialité. C'est l'adresse à laquelle un visiteur peut écrire.
+export const SITE_PUBLISHER = {
+  name: 'Bissouth Jean Jacques Kevin',
+  email: 'kevinbissouth237@gmail.com',
+}

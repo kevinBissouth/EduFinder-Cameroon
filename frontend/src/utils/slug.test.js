@@ -31,6 +31,7 @@ test('only pages of the site are handled without a reload', () => {
   assert.equal(isSitePath('/'), true)
   assert.equal(isSitePath('/compare/a,b'), true)
   assert.equal(isSitePath('/login'), true)
+  assert.equal(isSitePath('/privacy'), true)
   assert.equal(isSitePath('/media/photo.jpg'), false)
   assert.equal(isSitePath('/institutions'), false)
 })

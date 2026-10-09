@@ -108,7 +108,8 @@ def test_unknown_school_page_is_not_found_but_still_shows_the_site(client, built
 
 @pytest.mark.django_db
 @pytest.mark.parametrize(
-    "page_path", ["/login", "/saved", "/manager", "/school-admin", "/compare/", "/compare/a,b"]
+    "page_path",
+    ["/login", "/saved", "/legal", "/privacy", "/manager", "/school-admin", "/compare/", "/compare/a,b"],
 )
 def test_other_site_pages_serve_the_site_unchanged(client, built_site, page_path):
     response = client.get(page_path)

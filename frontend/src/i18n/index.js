@@ -5,17 +5,19 @@ import enAuth from './locales/en/auth.json'
 import enCommon from './locales/en/common.json'
 import enCompare from './locales/en/compare.json'
 import enHome from './locales/en/home.json'
+import enLegal from './locales/en/legal.json'
 import enProfile from './locales/en/profile.json'
 import frAuth from './locales/fr/auth.json'
 import frCommon from './locales/fr/common.json'
 import frCompare from './locales/fr/compare.json'
 import frHome from './locales/fr/home.json'
+import frLegal from './locales/fr/legal.json'
 import frProfile from './locales/fr/profile.json'
 import { DEFAULT_LANGUAGE, findLanguage, rememberLanguage, resolveInitialLanguage } from './languages'
 
 const RESOURCES = {
-  en: { auth: enAuth, common: enCommon, compare: enCompare, home: enHome, profile: enProfile },
-  fr: { auth: frAuth, common: frCommon, compare: frCompare, home: frHome, profile: frProfile },
+  en: { auth: enAuth, common: enCommon, compare: enCompare, home: enHome, legal: enLegal, profile: enProfile },
+  fr: { auth: frAuth, common: frCommon, compare: frCompare, home: frHome, legal: frLegal, profile: frProfile },
 }
 
 function applyDocumentLanguage(languageCode) {

@@ -1,0 +1,85 @@
+{
+  "backToHome": "Retour à l'accueil",
+  "updated": "Dernière mise à jour : {{date}}",
+  "notice": {
+    "title": "Mentions légales",
+    "lead": "Qui publie ce site, qui l'héberge et qui répond de ce qu'on y lit.",
+    "sections": {
+      "publisher": {
+        "title": "Éditeur du site",
+        "body": "EduFinder Cameroon est édité par {{publisher}}.\n\nPour toute question sur le site : {{email}}."
+      },
+      "hosting": {
+        "title": "Hébergement",
+        "body": "Le site est hébergé par PythonAnywhere (www.pythonanywhere.com)."
+      },
+      "content": {
+        "title": "D'où viennent les informations",
+        "body": "Les frais, les résultats aux examens, les services, les photos et les coordonnées sont saisis par chaque établissement, puis relus par l'équipe du site avant d'être publiés.\n\nMalgré cette relecture, une information peut être incomplète ou avoir changé depuis sa publication. Avant une inscription, confirmez toujours les frais et les conditions auprès de l'établissement lui-même."
+      },
+      "independence": {
+        "title": "Indépendance",
+        "body": "Le site ne désigne jamais un établissement comme « le meilleur ». Aucun établissement ne peut payer pour apparaître avant un autre : l'ordre des résultats dépend seulement de vos critères et du fait qu'une fiche est complète."
+      },
+      "report": {
+        "title": "Signaler une erreur",
+        "body": "Vous voyez une information fausse ou dépassée ? Écrivez à {{email}} en indiquant l'établissement concerné : la fiche sera vérifiée avec lui."
+      },
+      "rights": {
+        "title": "Réutilisation des contenus",
+        "body": "Les textes et les photos d'une fiche appartiennent à l'établissement qui les a fournis. Les réutiliser ailleurs demande son accord."
+      }
+    },
+    "highlights": {
+      "independent": "Aucun établissement ne paie pour être mieux placé",
+      "reviewed": "Chaque fiche est relue avant publication",
+      "reportable": "Une erreur ? Elle se signale par courriel"
+    }
+  },
+  "privacy": {
+    "title": "Confidentialité",
+    "lead": "Ce que le site sait de vous quand vous le consultez, et ce qu'il n'enregistre pas.",
+    "sections": {
+      "summary": {
+        "title": "En bref",
+        "body": "Vous consultez le site sans créer de compte. Il n'affiche aucune publicité et n'utilise aucun outil de mesure d'audience d'une autre entreprise."
+      },
+      "device": {
+        "title": "Ce qui reste sur votre appareil",
+        "body": "Vos établissements enregistrés, votre sélection à comparer et la langue choisie sont gardés dans votre navigateur, sur votre appareil. Ils ne sont pas envoyés au site.\n\nVous les effacez en retirant les établissements de vos listes ou en vidant les données du site dans votre navigateur."
+      },
+      "counters": {
+        "title": "Compteurs de visites",
+        "body": "Le site compte combien de fois chaque fiche est consultée et combien de fois un visiteur utilise un de ses moyens de contact. Ces compteurs sont anonymes : ils ne disent pas qui a consulté la fiche.\n\nPour ne pas compter deux fois la même visite, votre adresse IP est gardée en mémoire pendant trente minutes, puis oubliée. Elle n'est pas enregistrée dans la base de données du site."
+      },
+      "contact": {
+        "title": "Quand vous contactez un établissement",
+        "body": "Les boutons de contact ouvrent votre propre application de courriel, de téléphone ou WhatsApp. Votre message part directement vers l'établissement : le site ne le voit pas et ne le garde pas."
+      },
+      "thirdParties": {
+        "title": "Services extérieurs",
+        "body": "La carte d'une fiche est fournie par OpenStreetMap : pour l'afficher, votre navigateur contacte ses serveurs, qui voient alors votre adresse IP.\n\nL'hébergeur du site, PythonAnywhere, tient des journaux techniques des connexions, comme tout hébergeur."
+      },
+      "accounts": {
+        "title": "Comptes des établissements",
+        "body": "Seuls les responsables d'établissement et les administrateurs du site ont un compte. Le site conserve leur nom, leur adresse de courriel et leur mot de passe, chiffré de façon à ne pas pouvoir être relu, ainsi que l'historique de leurs modifications.\n\nUne fois connectés, un cookie de session est déposé dans leur navigateur. Il ne sert qu'à les reconnaître et expire au bout de quelques heures."
+      },
+      "rights": {
+        "title": "Vos droits",
+        "body": "Vous pouvez demander à savoir ce que le site conserve à votre sujet, à le faire corriger ou à le faire supprimer en écrivant à {{email}}."
+      }
+    },
+    "highlights": {
+      "noAccount": "Aucun compte à créer",
+      "noAdvertising": "Aucune publicité",
+      "noTracker": "Aucun traceur d'une autre entreprise"
+    }
+  },
+  "onThisPage": "Sur cette page",
+  "documents": "Documents légaux",
+  "contact": {
+    "title": "Une question sur ces informations ?",
+    "lead": "Écrivez à l'éditeur du site : une personne vous répond.",
+    "action": "Écrire à l'éditeur"
+  }
+}

@@ -4,11 +4,12 @@ import { useTranslation } from 'react-i18next'
 import Button from './ui/Button'
 import Container from './ui/Container'
 import { useReferenceLabel } from '../hooks/useReferenceLabel'
-import { LOGIN_PATH } from '../routes'
+import { LEGAL_NOTICE_PATH, LOGIN_PATH, PRIVACY_PATH } from '../routes'
 import { scrollToPageTop } from '../utils/scroll'
 
 const FOOTER_LINK_CLASSES =
   'flex min-h-11 cursor-pointer items-center rounded-control text-left text-sm text-on-navy-soft transition-colors hover:text-white'
+const LEGAL_LINK_CLASSES = 'flex min-h-11 items-center rounded-control transition-colors hover:text-white'
 const COLUMN_TITLE_CLASSES = 'text-xs font-semibold uppercase tracking-eyebrow text-violet'
 
 const DIRECTORY_LINKS = [
@@ -84,13 +85,23 @@ function Footer({ types = [], onNavigateToType }) {
       </Container>
       <div className="border-t border-white/10">
         <Container className="flex items-center justify-between gap-4 py-4 text-xs text-on-navy-soft">
-          <p>© {currentYear} EduFinder Cameroon</p>
+          <div className="flex flex-wrap items-center gap-x-5">
+            <p>© {currentYear} EduFinder Cameroon</p>
+            <nav aria-label={t('footer.legalNavigation')} className="flex gap-x-5">
+              <a href={LEGAL_NOTICE_PATH} className={LEGAL_LINK_CLASSES}>
+                {t('footer.legalNotice')}
+              </a>
+              <a href={PRIVACY_PATH} className={LEGAL_LINK_CLASSES}>
+                {t('footer.privacy')}
+              </a>
+            </nav>
+          </div>
           {/* Un bouton, pas un lien vers « # » : avec le routage par hash, ce
               lien ramenait à l'accueil au lieu du haut de la page en cours. */}
           <button
             type="button"
             onClick={scrollToPageTop}
-            className="flex min-h-11 cursor-pointer items-center gap-2 rounded-control font-semibold transition-colors hover:text-white"
+            className="flex min-h-11 shrink-0 cursor-pointer items-center gap-2 whitespace-nowrap rounded-control font-semibold transition-colors hover:text-white"
           >
             {t('footer.backToTop')}
             <ArrowUp aria-hidden="true" className="size-4" />
