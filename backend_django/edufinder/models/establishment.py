@@ -1,7 +1,7 @@
 from django.db import models
 from django.utils import timezone
 
-from edufinder.models.enums import EstablishmentStatus, MediaType
+from edufinder.models.enums import ContentLanguage, EstablishmentStatus, MediaType
 from edufinder.models.identifiers import PUBLIC_UUID_LENGTH, generate_public_uuid
 from edufinder.models.reference import (
     City,
@@ -17,6 +17,7 @@ from edufinder.models.user import User
 
 STATUS_MAX_LENGTH = 20
 MEDIA_TYPE_MAX_LENGTH = 20
+CONTENT_LANGUAGE_MAX_LENGTH = 2
 COORDINATE_MAX_DIGITS = 9
 COORDINATE_DECIMAL_PLACES = 6
 MINIMUM_PASS_RATE = 0
@@ -67,6 +68,21 @@ class Establishment(models.Model):
     director_name = models.CharField(max_length=120, null=True, blank=True)
     director_title = models.CharField(max_length=80, null=True, blank=True)
     director_bio = models.TextField(null=True, blank=True)
+    # Textes libres dans les deux langues du site. Les colonnes d'origine
+    # (description, director_title, director_bio) gardent le texte tel que
+    # l'établissement l'a écrit, dans la langue content_language ; les colonnes
+    # « _translation » portent sa version dans l'autre langue, facultative.
+    # content_language reste à NULL pour une fiche saisie avant ce choix : sa
+    # langue est alors inconnue et le texte est affiché tel quel.
+    content_language = models.CharField(
+        max_length=CONTENT_LANGUAGE_MAX_LENGTH,
+        choices=ContentLanguage.choices,
+        null=True,
+        blank=True,
+    )
+    description_translation = models.TextField(null=True, blank=True)
+    director_title_translation = models.CharField(max_length=80, null=True, blank=True)
+    director_bio_translation = models.TextField(null=True, blank=True)
     # Photo du responsable : distincte de la galerie de l'établissement,
     # illustration de la fiche Leadership.
     director_photo_url = models.CharField(max_length=500, null=True, blank=True)

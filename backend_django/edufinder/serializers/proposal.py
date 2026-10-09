@@ -10,6 +10,8 @@ from typing import Any
 
 from rest_framework import serializers
 
+from edufinder.models import ContentLanguage
+
 SMALLEST_FEE_AMOUNT = Decimal("0.01")
 MAX_FEES = 20
 MAX_SERVICES = 15
@@ -127,6 +129,15 @@ class EstablishmentContentSerializer(serializers.Serializer):
         required=False, allow_null=True, max_length=80
     )
     director_bio = serializers.CharField(required=False, allow_null=True)
+    # Langue des textes ci-dessus, et leur version dans l'autre langue.
+    content_language = serializers.ChoiceField(
+        choices=ContentLanguage.choices, required=False, allow_null=True
+    )
+    description_translation = serializers.CharField(required=False, allow_null=True)
+    director_title_translation = serializers.CharField(
+        required=False, allow_null=True, max_length=80
+    )
+    director_bio_translation = serializers.CharField(required=False, allow_null=True)
     director_photo = uploaded_image_url_field()
     fees = SchoolFeeInputSerializer(
         many=True, required=False, allow_null=True, max_length=MAX_FEES
