@@ -80,7 +80,7 @@ function QuestionsSection({ institution }) {
         <div className="mt-8 grid gap-x-16 border-t border-line md:grid-cols-2">
           {buildQuestions(institution, t, translateReference).map((item) => (
             <details key={item.question} className="group border-b border-line">
-              <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-4 rounded-control text-sm font-bold text-navy [&::-webkit-details-marker]:hidden">
+              <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-4 rounded-control text-xs font-bold text-navy sm:text-sm [&::-webkit-details-marker]:hidden">
                 {item.question}
                 <span className="flex size-7 shrink-0 items-center justify-center rounded-full border border-line text-primary-deep transition-transform group-open:rotate-180">
                   <ChevronDown aria-hidden="true" className="size-4" />
