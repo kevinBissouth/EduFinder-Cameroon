@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { Trans, useTranslation } from 'react-i18next'
 
-import ContactCard from './ContactCard'
 import Container from '../ui/Container'
 import SectionHeading, { Emphasis } from '../ui/SectionHeading'
 import { useReferenceLabel } from '../../hooks/useReferenceLabel'
@@ -67,7 +66,7 @@ function OverviewSection({ institution }) {
 
   return (
     <section id="overview" className="scroll-mt-36 bg-surface py-16 sm:py-20">
-      <Container className="grid gap-12 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.8fr)_minmax(0,0.9fr)] lg:gap-12">
+      <Container className="grid gap-12 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] lg:gap-16">
         <div>
           <SectionHeading
             size="md"
@@ -91,10 +90,6 @@ function OverviewSection({ institution }) {
             </div>
           ))}
         </dl>
-
-        <div className="self-start">
-          <ContactCard institution={institution} />
-        </div>
       </Container>
     </section>
   )

@@ -108,21 +108,28 @@ function ProfileActions({ institution }) {
 
   return (
     <div className="mt-8 flex flex-wrap items-center gap-3">
-      {websiteUrl && (
-        <Button as="a" href={websiteUrl} target="_blank" rel="noopener noreferrer">
-          {t('hero.visitWebsite')}
-          <ArrowUpRight aria-hidden="true" className="size-4" />
-        </Button>
-      )}
+      {/* Contacter l'établissement est l'action principale : le lien vers
+          son site fait quitter la fiche, il passe au second plan. */}
       {contactHref && (
         <Button
           as="a"
           href={contactHref}
-          variant="secondary"
           onClick={() => trackInstitutionEvent(institution.uuid, 'inquiry')}
         >
           <Mail aria-hidden="true" className="size-4" />
           {t('hero.contact')}
+        </Button>
+      )}
+      {websiteUrl && (
+        <Button
+          as="a"
+          href={websiteUrl}
+          variant="secondary"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          {t('hero.visitWebsite')}
+          <ArrowUpRight aria-hidden="true" className="size-4" />
         </Button>
       )}
       <ShareButton />
