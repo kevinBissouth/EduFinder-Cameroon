@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import Button from './ui/Button'
 import Container from './ui/Container'
 import { useReferenceLabel } from '../hooks/useReferenceLabel'
+import { scrollToPageTop } from '../utils/scroll'
 
 const FOOTER_LINK_CLASSES =
   'flex min-h-11 cursor-pointer items-center rounded-control text-left text-sm text-on-navy-soft transition-colors hover:text-white'
@@ -38,7 +39,7 @@ function Footer({ types = [], onNavigateToType }) {
             {t('footer.tagline')}
           </p>
           <div className="mt-8 border-t border-white/10 pt-6">
-            <p className="font-display text-2xl text-white">{t('footer.runSchool')}</p>
+            <p className="font-display text-xl text-white sm:text-2xl">{t('footer.runSchool')}</p>
             <p className="mt-2 text-balance text-sm text-on-navy-soft">
               {t('footer.runSchoolLead')}
             </p>
@@ -83,13 +84,16 @@ function Footer({ types = [], onNavigateToType }) {
       <div className="border-t border-white/10">
         <Container className="flex items-center justify-between gap-4 py-4 text-xs text-on-navy-soft">
           <p>© {currentYear} EduFinder Cameroon</p>
-          <a
-            href="#"
-            className="flex min-h-11 items-center gap-2 rounded-control font-semibold transition-colors hover:text-white"
+          {/* Un bouton, pas un lien vers « # » : avec le routage par hash, ce
+              lien ramenait à l'accueil au lieu du haut de la page en cours. */}
+          <button
+            type="button"
+            onClick={scrollToPageTop}
+            className="flex min-h-11 cursor-pointer items-center gap-2 rounded-control font-semibold transition-colors hover:text-white"
           >
             {t('footer.backToTop')}
             <ArrowUp aria-hidden="true" className="size-4" />
-          </a>
+          </button>
         </Container>
       </div>
     </footer>

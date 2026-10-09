@@ -1,280 +1,169 @@
 import { useState } from 'react'
-import { ChevronDown, X } from 'lucide-react'
+import { ClipboardCheck, ConciergeBell, Landmark, Languages, MapPin, Wallet } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
-import Button from './ui/Button'
-import { CONTROL_CLASSES, SelectField, TextField } from './ui/Field'
+import BudgetDialog from './filters/BudgetDialog'
+import ChoiceDialog from './filters/ChoiceDialog'
+import ExamsDialog from './filters/ExamsDialog'
+import FilterButton from './filters/FilterButton'
+import ServicesDialog from './filters/ServicesDialog'
 import { translateOptionNames, useReferenceLabel } from '../hooks/useReferenceLabel'
+import { listExamsForType } from '../utils/examRules'
+import { describeBudget } from './filters/budgetLabels'
+import { findSelectedName } from './filters/choiceLabels'
+import { formatPercent } from '../utils/format'
 
-const EMPTY_EXAM_REQUIREMENT = { examId: '', minRate: '' }
-
-// Critère dont la saisie demande plus qu'une liste : le bouton ouvre un
-// panneau de la même largeur que lui, qui se referme au clic extérieur ou
-// avec la touche Échap.
-function PopoverFilter({ label, activeCount, children }) {
-  const { t } = useTranslation('home')
-  const [isOpen, setIsOpen] = useState(false)
-  const close = () => setIsOpen(false)
-
-  return (
-    <div
-      className="relative flex w-full flex-col gap-1.5"
-      onKeyDown={(event) => {
-        if (event.key === 'Escape') close()
-      }}
-    >
-      <span className="text-sm font-semibold text-navy">{label}</span>
-      <button
-        type="button"
-        aria-expanded={isOpen}
-        onClick={() => setIsOpen(!isOpen)}
-        className={`${CONTROL_CLASSES} flex cursor-pointer items-center justify-between gap-2 text-left`}
-      >
-        <span>
-          {activeCount > 0 ? t('filters.selected', { count: activeCount }) : t('filters.any')}
-        </span>
-        <ChevronDown
-          aria-hidden="true"
-          className={`size-4 text-ink-soft transition-transform ${isOpen ? 'rotate-180' : ''}`}
-        />
-      </button>
-      {isOpen && (
-        <>
-          <div className="fixed inset-0 z-10" onClick={close} />
-          <div className="absolute inset-x-0 top-full z-20 mt-2 max-h-[70vh] overflow-y-auto rounded-panel border border-line bg-surface p-4 shadow-raised">
-            {children({ close })}
-          </div>
-        </>
-      )}
-    </div>
-  )
+// Avec un seul examen, le bouton dit lequel et à quel taux ; au-delà, leur nombre.
+function describeExams(examRequirements, exams, { t, translateReference }) {
+  if (examRequirements.length === 0) return t('filters.any')
+  if (examRequirements.length > 1) return t('filters.selected', { count: examRequirements.length })
+  const [requirement] = examRequirements
+  const exam = exams.find((listedExam) => String(listedExam.id) === String(requirement.examId))
+  const examName = exam ? translateReference('exams', exam.name) : t('filters.exam')
+  return `${examName} ${t('filters.atLeast', { rate: formatPercent(requirement.minRate) })}`
 }
 
-function BudgetPanel({ minFee, maxFee, onApply }) {
-  const { t } = useTranslation('home')
-  const [minimumFee, setMinimumFee] = useState(minFee || '')
-  const [maximumFee, setMaximumFee] = useState(maxFee || '')
-
-  return (
-    <div>
-      <div className="grid gap-3">
-        <TextField
-          label={t('filters.minimumPerYear')}
-          type="number"
-          min="0"
-          step="1000"
-          value={minimumFee}
-          onChange={(event) => setMinimumFee(event.target.value)}
-          placeholder="0"
-        />
-        <TextField
-          label={t('filters.maximumPerYear')}
-          type="number"
-          min="0"
-          step="1000"
-          value={maximumFee}
-          onChange={(event) => setMaximumFee(event.target.value)}
-          placeholder={t('filters.noLimit')}
-        />
-      </div>
-      <div className="mt-4 flex justify-end gap-2">
-        <Button variant="ghost" onClick={() => onApply('', '')}>
-          {t('filters.clear')}
-        </Button>
-        <Button onClick={() => onApply(minimumFee, maximumFee)}>{t('filters.applyBudget')}</Button>
-      </div>
-    </div>
-  )
+// Les trois filtres à choix unique ont la même forme : seules changent leurs
+// données. Les décrire en liste évite trois blocs de code identiques.
+function listChoiceFilters(advancedFilters, { t, translateReference }) {
+  const { meta } = advancedFilters
+  return [
+    {
+      id: 'section',
+      removalKey: 'lang',
+      icon: Languages,
+      label: t('filters.languageSection'),
+      description: t('filters.sectionHint'),
+      anyLabel: t('filters.allSections'),
+      options: translateOptionNames(meta.languages, 'sections', translateReference),
+      selectedId: advancedFilters.sectionId,
+      onSelect: advancedFilters.onSectionChange,
+    },
+    {
+      id: 'sector',
+      removalKey: 'sector',
+      icon: Landmark,
+      label: t('filters.sector'),
+      description: t('filters.sectorHint'),
+      anyLabel: t('filters.allSectors'),
+      options: translateOptionNames(meta.sectors, 'sectors', translateReference),
+      selectedId: advancedFilters.sectorId,
+      onSelect: advancedFilters.onSectorChange,
+    },
+    {
+      id: 'region',
+      removalKey: 'region',
+      icon: MapPin,
+      label: t('filters.region'),
+      description: t('filters.regionHint'),
+      anyLabel: t('filters.allRegions'),
+      options: translateOptionNames(meta.regions, 'regions', translateReference),
+      selectedId: advancedFilters.regionId,
+      onSelect: advancedFilters.onRegionChange,
+    },
+  ]
 }
 
-function ServicesPanel({ services, selectedNames, onToggle }) {
-  const { t } = useTranslation('home')
-
-  if (services.length === 0) {
-    return <p className="text-sm text-ink-soft">{t('filters.noService')}</p>
-  }
-
-  return (
-    <ul>
-      {services.map((serviceName) => (
-        <li key={serviceName}>
-          <label className="flex min-h-11 cursor-pointer items-center gap-3 rounded-control px-2 text-sm transition-colors hover:bg-muted">
-            <input
-              type="checkbox"
-              checked={selectedNames.includes(serviceName)}
-              onChange={() => onToggle(serviceName)}
-              className="size-4 accent-primary"
-            />
-            {serviceName}
-          </label>
-        </li>
-      ))}
-    </ul>
-  )
-}
-
-function ExamRequirementRow({ requirement, exams, onChange, onRemove }) {
-  const { t } = useTranslation('home')
-  const translateReference = useReferenceLabel()
-
-  return (
-    <div className="flex items-center gap-2">
-      <select
-        aria-label={t('filters.exam')}
-        value={requirement.examId}
-        onChange={(event) => onChange({ examId: event.target.value })}
-        className={`${CONTROL_CLASSES} min-w-0 flex-1`}
-      >
-        <option value="">{t('filters.exam')}</option>
-        {exams.map((exam) => (
-          <option key={exam.id} value={exam.id}>
-            {translateReference('exams', exam.name)}
-          </option>
-        ))}
-      </select>
-      <input
-        aria-label={t('filters.minimumPassRate')}
-        type="number"
-        min="0"
-        max="100"
-        value={requirement.minRate}
-        onChange={(event) => onChange({ minRate: event.target.value })}
-        placeholder="%"
-        className={`${CONTROL_CLASSES} w-20 shrink-0`}
-      />
-      <button
-        type="button"
-        aria-label={t('filters.removeExam')}
-        onClick={onRemove}
-        className="flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-control text-ink-soft transition-colors hover:bg-danger-soft hover:text-danger"
-      >
-        <X aria-hidden="true" className="size-4" />
-      </button>
-    </div>
-  )
-}
-
-function ExamPanel({ exams, requirements, onApply }) {
-  const { t } = useTranslation('home')
-  const [draftRequirements, setDraftRequirements] = useState(
-    requirements.length > 0 ? requirements : [EMPTY_EXAM_REQUIREMENT],
-  )
-
-  const updateRequirement = (changedIndex, changes) =>
-    setDraftRequirements((current) =>
-      current.map((requirement, index) =>
-        index === changedIndex ? { ...requirement, ...changes } : requirement,
-      ),
-    )
-  const removeRequirement = (removedIndex) =>
-    setDraftRequirements((current) => current.filter((_, index) => index !== removedIndex))
-  const addRequirement = () =>
-    setDraftRequirements((current) => [...current, EMPTY_EXAM_REQUIREMENT])
-  // Une ligne incomplète n'est pas un critère : seules les lignes ayant un
-  // examen ET un taux sont envoyées.
-  const applyCompleteRequirements = () =>
-    onApply(draftRequirements.filter((requirement) => requirement.examId && requirement.minRate))
-
-  return (
-    <div>
-      <div className="grid gap-2">
-        {draftRequirements.map((requirement, index) => (
-          <ExamRequirementRow
-            key={index}
-            requirement={requirement}
-            exams={exams}
-            onChange={(changes) => updateRequirement(index, changes)}
-            onRemove={() => removeRequirement(index)}
-          />
-        ))}
-      </div>
-      <div className="mt-4 flex flex-wrap justify-between gap-2">
-        <Button variant="ghost" onClick={addRequirement}>
-          {t('filters.addExam')}
-        </Button>
-        <Button onClick={applyCompleteRequirements}>{t('filters.applyPassRates')}</Button>
-      </div>
-    </div>
-  )
-}
-
+// Filtres avancés : six boutons, chacun ouvre sa fenêtre de choix (une seule
+// à la fois, d'où un seul état). Rien ne s'ouvre plus par-dessus la page.
 function AdvancedFilters({ advancedFilters }) {
   const { t } = useTranslation('home')
   const translateReference = useReferenceLabel()
-  const {
-    meta,
-    sectionId,
-    sectorId,
-    regionId,
-    minFee,
-    maxFee,
-    serviceNames,
-    examRequirements,
-    onSectionChange,
-    onSectorChange,
-    onRegionChange,
-    onApplyBudget,
-    onToggleService,
-    onApplyExams,
-  } = advancedFilters
+  const [openFilterId, setOpenFilterId] = useState(null)
+  const closeDialog = () => setOpenFilterId(null)
+  const { meta, minFee, maxFee, serviceNames, examRequirements, selectedTypeName, onRemoveFilter } =
+    advancedFilters
+  const translators = { t, translateReference }
+  const choiceFilters = listChoiceFilters(advancedFilters, translators)
+  const openChoiceFilter = choiceFilters.find((choiceFilter) => choiceFilter.id === openFilterId)
+  const offeredExams = listExamsForType(meta.exams, meta.exam_allowed_types, selectedTypeName)
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      <SelectField
-        label={t('filters.languageSection')}
-        value={sectionId}
-        onChange={(event) => onSectionChange(event.target.value)}
-        placeholder={t('filters.allSections')}
-        options={translateOptionNames(meta.languages, 'sections', translateReference)}
-      />
-      <SelectField
-        label={t('filters.sector')}
-        value={sectorId}
-        onChange={(event) => onSectorChange(event.target.value)}
-        placeholder={t('filters.allSectors')}
-        options={translateOptionNames(meta.sectors, 'sectors', translateReference)}
-      />
-      <SelectField
-        label={t('filters.region')}
-        value={regionId}
-        onChange={(event) => onRegionChange(event.target.value)}
-        placeholder={t('filters.allRegions')}
-        options={translateOptionNames(meta.regions, 'regions', translateReference)}
-      />
-      <PopoverFilter label={t('filters.yearlyBudget')} activeCount={minFee || maxFee ? 1 : 0}>
-        {({ close }) => (
-          <BudgetPanel
-            minFee={minFee}
-            maxFee={maxFee}
-            onApply={(minimumFee, maximumFee) => {
-              onApplyBudget(minimumFee, maximumFee)
-              close()
-            }}
+    <>
+      <p className="mb-4 text-sm text-ink-soft">{t('filters.appliedAtOnce')}</p>
+      <div className="grid gap-3 sm:grid-cols-2">
+        {choiceFilters.map((choiceFilter) => (
+          <FilterButton
+            key={choiceFilter.id}
+            icon={choiceFilter.icon}
+            label={choiceFilter.label}
+            value={findSelectedName(choiceFilter)}
+            isActive={Boolean(choiceFilter.selectedId)}
+            onOpen={() => setOpenFilterId(choiceFilter.id)}
+            onClear={() => onRemoveFilter(choiceFilter.removalKey)}
           />
-        )}
-      </PopoverFilter>
-      <PopoverFilter label={t('filters.services')} activeCount={serviceNames.length}>
-        {() => (
-          <ServicesPanel
-            services={meta.services}
-            selectedNames={serviceNames}
-            onToggle={onToggleService}
-          />
-        )}
-      </PopoverFilter>
-      <PopoverFilter label={t('filters.examPassRate')} activeCount={examRequirements.length}>
-        {({ close }) => (
-          <ExamPanel
-            exams={meta.exams}
-            requirements={examRequirements}
-            onApply={(requirements) => {
-              onApplyExams(requirements)
-              close()
-            }}
-          />
-        )}
-      </PopoverFilter>
-    </div>
+        ))}
+        <FilterButton
+          icon={Wallet}
+          label={t('filters.yearlyBudget')}
+          value={describeBudget(minFee, maxFee, t)}
+          isActive={Boolean(minFee || maxFee)}
+          onOpen={() => setOpenFilterId('budget')}
+          onClear={() => onRemoveFilter('budget')}
+        />
+        <FilterButton
+          icon={ConciergeBell}
+          label={t('filters.services')}
+          value={
+            serviceNames.length > 0
+              ? t('filters.selected', { count: serviceNames.length })
+              : t('filters.any')
+          }
+          isActive={serviceNames.length > 0}
+          onOpen={() => setOpenFilterId('services')}
+          onClear={() => onRemoveFilter('services')}
+        />
+        <FilterButton
+          icon={ClipboardCheck}
+          label={t('filters.examPassRate')}
+          value={describeExams(examRequirements, meta.exams, translators)}
+          isActive={examRequirements.length > 0}
+          onOpen={() => setOpenFilterId('exams')}
+          onClear={() => onRemoveFilter('exams')}
+        />
+      </div>
+
+      {openChoiceFilter && (
+        <ChoiceDialog
+          icon={openChoiceFilter.icon}
+          title={openChoiceFilter.label}
+          description={openChoiceFilter.description}
+          anyLabel={openChoiceFilter.anyLabel}
+          options={openChoiceFilter.options}
+          selectedId={openChoiceFilter.selectedId}
+          onSelect={openChoiceFilter.onSelect}
+          onClose={closeDialog}
+        />
+      )}
+      {openFilterId === 'budget' && (
+        <BudgetDialog
+          icon={Wallet}
+          minFee={minFee}
+          maxFee={maxFee}
+          onApply={advancedFilters.onApplyBudget}
+          onClose={closeDialog}
+        />
+      )}
+      {openFilterId === 'services' && (
+        <ServicesDialog
+          icon={ConciergeBell}
+          services={meta.services}
+          selectedNames={serviceNames}
+          onToggle={advancedFilters.onToggleService}
+          onClose={closeDialog}
+        />
+      )}
+      {openFilterId === 'exams' && (
+        <ExamsDialog
+          icon={ClipboardCheck}
+          exams={offeredExams}
+          requirements={examRequirements}
+          typeName={selectedTypeName}
+          onApply={advancedFilters.onApplyExams}
+          onClose={closeDialog}
+        />
+      )}
+    </>
   )
 }
 

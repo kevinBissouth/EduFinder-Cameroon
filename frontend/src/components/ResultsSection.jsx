@@ -137,8 +137,6 @@ function ResultsSection({
   onReset,
   onRetry,
   onView,
-  comparedIds,
-  onToggleCompare,
 }) {
   const { t } = useTranslation('home')
   // Le nombre de cartes affichées est mémorisé AVEC la liste qu'il concerne :
@@ -212,8 +210,6 @@ function ResultsSection({
                 <InstitutionCard
                   key={institution.uuid}
                   institution={institution}
-                  isCompared={comparedIds.includes(institution.uuid)}
-                  onToggleCompare={() => onToggleCompare(institution.uuid)}
                   onView={onView}
                 />
               ))}

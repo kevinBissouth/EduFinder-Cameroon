@@ -3,3 +3,7 @@
 export function scrollToSection(sectionId) {
   document.getElementById(sectionId)?.scrollIntoView()
 }
+
+export function scrollToPageTop() {
+  window.scrollTo({ top: 0 })
+}

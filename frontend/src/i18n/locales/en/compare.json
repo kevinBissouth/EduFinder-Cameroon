@@ -1,0 +1,100 @@
+{
+  "title": "Comparison",
+  "eyebrow": "Compare schools",
+  "heading": "Side by side, on the same criteria.",
+  "lead": "Each theme shows what the schools have published. Nothing is ranked: you decide what matters.",
+  "notPublished": "Not published",
+  "copyLink": "Copy the link",
+  "linkCopied": "Link copied",
+  "copyFailed": "Copy the address from your browser bar",
+  "backToSearch": "Back to the search",
+  "viewProfile": "View school",
+  "remove": "Remove {{name}} from the comparison",
+  "loading": "Loading the schools to compare",
+  "errorTitle": "The schools could not be loaded",
+  "errorDescription": "The server did not answer. Check your connection, then try again.",
+  "retry": "Try again",
+  "emptyTitle": "No school to compare yet",
+  "emptyDescription": "Pick two to four schools in the search with the “Compare” button, then come back here.",
+  "needOneMoreTitle": "One more school to compare",
+  "needOneMoreDescription": "A comparison needs at least two schools. Add another one from the search.",
+  "unavailable_one": "{{count}} school of this link is no longer available.",
+  "unavailable_other": "{{count}} schools of this link are no longer available.",
+  "groups": {
+    "identity": "Profile",
+    "fees": "Fees",
+    "results": "Exam results",
+    "offer": "Programmes and services",
+    "contact": "Contact"
+  },
+  "rows": {
+    "type": "Type of school",
+    "sector": "Sector",
+    "section": "Language section",
+    "location": "Location",
+    "programmes": "Programmes",
+    "services": "Services",
+    "phone": "Phone",
+    "email": "Email",
+    "website": "Website"
+  },
+  "bar": {
+    "label": "Schools selected for comparison",
+    "selected_one": "{{count}} school selected",
+    "selected_other": "{{count}} schools selected",
+    "compare": "Compare",
+    "clear": "Remove all",
+    "needOneMore": "Add a second one to compare.",
+    "full": "{{maximum}} at most: remove one first."
+  },
+  "saved": {
+    "title": "Saved schools",
+    "eyebrow": "Your list",
+    "heading": "The schools you set aside.",
+    "lead": "This list stays on this device. It does not follow you to another phone or browser.",
+    "emptyTitle": "No saved school yet",
+    "emptyDescription": "Tap the heart on a school to find it again here.",
+    "count_one": "{{count}} saved school",
+    "count_other": "{{count}} saved schools",
+    "unavailable_one": "{{count}} saved school is no longer available and was removed from your list.",
+    "unavailable_other": "{{count}} saved schools are no longer available and were removed from your list.",
+    "compare": "Compare these schools"
+  },
+  "header": {
+    "compare": "Comparison",
+    "compareTotal": "Comparison ({{total}})",
+    "savedTotal": "Saved ({{total}})"
+  },
+  "shared": {
+    "notice": "You are viewing a comparison opened from a link. Your own selection has not changed.",
+    "keep": "Keep this selection"
+  },
+  "toggle": {
+    "compare": "Compare",
+    "addToComparison": "Add to comparison",
+    "removeFromComparison": "Remove from comparison",
+    "save": "Save this school",
+    "unsave": "Remove from saved schools"
+  },
+  "schoolsLabel": "Schools compared",
+  "inCommon": "What they have in common",
+  "examSession": "{{session}} session",
+  "fees": {
+    "title": "Yearly fees",
+    "legend": "In large, the school's lowest yearly fee. The bar places it against the most expensive school in the comparison.",
+    "from": "From",
+    "byClass_one": "See the class and its fee, {{schoolYear}}",
+    "byClass_other": "See the {{count}} classes and their fees, {{schoolYear}}"
+  },
+  "results": {
+    "legend": "Pass rate of the latest session each school has published."
+  },
+  "offer": {
+    "legend": "Ticked items are offered by every school compared.",
+    "sharedByAll": "offered by all"
+  },
+  "notApplicableFor": "Not applicable to: {{names}}",
+  "feesUpTo": "up to {{highest}}",
+  "bestPassRate": "Best pass rate",
+  "themesNavigation": "Comparison themes"
+}

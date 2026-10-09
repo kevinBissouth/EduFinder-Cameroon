@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import CriteriaSection from '../components/CriteriaSection'
@@ -16,13 +16,16 @@ import { useInstitutions } from '../hooks/useInstitutions'
 import { usePlatformStats } from '../hooks/usePlatformStats'
 import { navigateToSchool } from '../routes'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
+import SelectionBar from '../components/compare/SelectionBar'
+import { useRevealOnScroll } from '../hooks/useRevealOnScroll'
 
 function HomePage() {
+  const pageRef = useRef(null)
+  useRevealOnScroll(pageRef)
   const { t } = useTranslation('home')
   useDocumentTitle()
   const api = useInstitutions()
   const { stats: platformStats, error: statsError } = usePlatformStats()
-  const [comparedIds, setComparedIds] = useState([])
 
   // Avant la réponse de l'API, la liste des types mis en avant n'existe pas
   // encore : je pars alors d'une liste vide.
@@ -37,13 +40,6 @@ function HomePage() {
   const typeNamesWithSchools = new Set(api.allInstitutions.map((institution) => institution.type))
   const searchableTypes = api.meta.types.filter((type) => typeNamesWithSchools.has(type.name))
 
-  const toggleCompare = (schoolUuid) =>
-    setComparedIds((currentIds) =>
-      currentIds.includes(schoolUuid)
-        ? currentIds.filter((comparedUuid) => comparedUuid !== schoolUuid)
-        : [...currentIds, schoolUuid],
-    )
-
   return (
     <div className="min-h-screen overflow-x-clip bg-paper font-sans text-ink">
       <Header
@@ -51,9 +47,8 @@ function HomePage() {
         onNavigateToType={api.toggleType}
         types={api.meta.types}
         featuredTypeIds={api.meta.featured_type_ids}
-        compareCount={comparedIds.length}
       />
-      <main>
+      <main ref={pageRef}>
         {(api.metaError || statsError) && (
           <Container className="pt-4">
             <p
@@ -71,8 +66,8 @@ function HomePage() {
             typeId: api.typeId,
             onSearchChange: (event) => api.setSearch(event.target.value),
             onSubmit: api.handleSubmit,
-            onCityChange: api.handleCityChange,
-            onTypeChange: api.handleTypeChange,
+            onCityChange: api.selectCity,
+            onTypeChange: api.selectType,
           }}
           cities={searchableCities}
           types={searchableTypes}
@@ -85,12 +80,14 @@ function HomePage() {
             maxFee: api.maxFee,
             serviceNames: api.serviceNames,
             examRequirements: api.examRequirements,
+            selectedTypeName: api.activeType?.name ?? null,
             onSectionChange: api.selectSection,
             onSectorChange: api.selectSector,
             onRegionChange: api.selectRegion,
             onApplyBudget: api.applyBudget,
             onToggleService: api.toggleService,
             onApplyExams: api.applyExams,
+            onRemoveFilter: api.handleRemoveFilter,
           }}
           figures={{
             schoolCount: api.allInstitutions.length,
@@ -126,8 +123,6 @@ function HomePage() {
           onReset={api.handleReset}
           onRetry={() => api.fetchInstitutions(api.buildParams())}
           onView={navigateToSchool}
-          comparedIds={comparedIds}
-          onToggleCompare={toggleCompare}
         />
         <CriteriaSection institutions={api.institutions} onView={navigateToSchool} />
         <PopularDestinations
@@ -146,6 +141,7 @@ function HomePage() {
         <CtaBand />
       </main>
       <Footer types={searchableTypes} onNavigateToType={api.toggleType} />
+      <SelectionBar schools={api.allInstitutions} />
     </div>
   )
 }

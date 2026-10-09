@@ -1,32 +1,31 @@
 import { lazy, Suspense, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import ComparePage from './pages/ComparePage'
 import HomePage from './pages/HomePage'
+import SavedSchoolsPage from './pages/SavedSchoolsPage'
 import SchoolProfilePage from './pages/SchoolProfilePage'
 import LoginPage from './pages/LoginPage'
 import ToastProvider from './components/workspace/ToastProvider'
-import { parseCurrentRoute } from './routes'
+import { useHashRoute } from './hooks/useHashRoute'
+import { useScrollOnPageChange } from './hooks/useScrollOnPageChange'
 import { clearAuthToken, fetchAuthenticatedProfile } from './utils/auth'
 
 // Les espaces privés embarquent la bibliothèque de graphiques : ils sont
 // chargés à part, pour ne pas alourdir le site public.
 const ManagerHomePage = lazy(() => import('./pages/ManagerHomePage'))
-const AdminHomePage = lazy(() => import('./pages/AdminHomePage'))
 
 function App() {
   // Abonne la racine à la langue : au changement, tout l'arbre se redessine,
   // y compris les montants et les dates formatés hors des composants.
   useTranslation()
-  const [route, setRoute] = useState(() => parseCurrentRoute())
+  const { route, pageKey } = useHashRoute()
   // Profil restauré depuis /auth/me (le cookie httpOnly n'est pas lisible en
   // JS) ; authChecked évite un faux redirection vers /login le temps du test.
   const [profile, setProfile] = useState(null)
   const [authChecked, setAuthChecked] = useState(false)
-
-  useEffect(() => {
-    const onHashChange = () => setRoute(parseCurrentRoute())
-    window.addEventListener('hashchange', onHashChange)
-    return () => window.removeEventListener('hashchange', onHashChange)
-  }, [])
+  // Retirer un établissement d'une comparaison change l'adresse sans changer
+  // de page : seule la fiche compte son identifiant dans la clé.
+  useScrollOnPageChange(pageKey)
 
   useEffect(() => {
     fetchAuthenticatedProfile()
@@ -55,6 +54,14 @@ function App() {
 
   if (route.page === 'school-detail' && route.id) {
     return <SchoolProfilePage schoolId={route.id} />
+  }
+
+  if (route.page === 'compare') {
+    return <ComparePage schoolIds={route.ids} />
+  }
+
+  if (route.page === 'saved') {
+    return <SavedSchoolsPage />
   }
 
   if (route.page === 'login') {

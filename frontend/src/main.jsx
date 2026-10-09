@@ -4,12 +4,15 @@ import 'leaflet/dist/leaflet.css'
 import './index.css'
 import './i18n'
 import App from './App.jsx'
+import SchoolSelectionProvider from './components/compare/SchoolSelectionProvider'
 import ReferenceLabelsProvider from './i18n/ReferenceLabelsProvider'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <ReferenceLabelsProvider>
-      <App />
+      <SchoolSelectionProvider>
+        <App />
+      </SchoolSelectionProvider>
     </ReferenceLabelsProvider>
   </StrictMode>,
 )

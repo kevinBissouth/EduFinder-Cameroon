@@ -1,13 +1,17 @@
 import { useEffect, useId } from 'react'
+import { createPortal } from 'react-dom'
 import { X } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
-// Fenêtre modale des espaces privés : plein bas d'écran sur téléphone, centrée
+// Fenêtre modale du site : feuille en bas d'écran sur téléphone, centrée
 // au-delà. Elle se ferme par Échap, par le bouton ou par un clic sur le voile.
-const SIZE_CLASSES = { md: 'max-w-xl', lg: 'max-w-4xl' }
+// Elle est rendue à la racine du document : un ancêtre animé ou transformé
+// (le haut de la page d'accueil) piégerait sinon son positionnement fixe, et
+// la fenêtre ne couvrirait plus tout l'écran.
+const SIZE_CLASSES = { sm: 'max-w-md', md: 'max-w-xl', lg: 'max-w-4xl' }
 
-function Modal({ title, headerExtra, footer, size = 'md', onClose, children }) {
-  const { t } = useTranslation('workspace')
+function Modal({ icon: Icon, title, description, headerExtra, footer, size = 'md', onClose, children }) {
+  const { t } = useTranslation('common')
   const titleId = useId()
 
   useEffect(() => {
@@ -23,21 +27,35 @@ function Modal({ title, headerExtra, footer, size = 'md', onClose, children }) {
     }
   }, [onClose])
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center sm:p-4">
-      <div aria-hidden="true" onClick={onClose} className="absolute inset-0 bg-navy/60" />
+  return createPortal(
+    <div className="fixed inset-0 z-60 flex items-end justify-center font-sans text-ink sm:items-center sm:p-4">
+      <div
+        aria-hidden="true"
+        onClick={onClose}
+        className="absolute inset-0 animate-veil-fade bg-navy/60 backdrop-blur-xs"
+      />
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className={`relative flex max-h-[90vh] w-full flex-col rounded-t-panel bg-surface shadow-raised sm:rounded-panel ${SIZE_CLASSES[size]}`}
+        className={`relative flex max-h-[90svh] w-full animate-sheet-rise flex-col rounded-t-panel bg-surface shadow-raised sm:rounded-panel ${SIZE_CLASSES[size]}`}
       >
-        <div className="flex items-start justify-between gap-3 border-b border-line p-5">
-          <div className="min-w-0">
-            <h2 id={titleId} className="font-display text-2xl text-navy text-balance">
-              {title}
-            </h2>
-            {headerExtra}
+        {/* Petite poignée : sur téléphone elle dit que la feuille vient du bas. */}
+        <span aria-hidden="true" className="mx-auto mt-2.5 h-1 w-10 rounded-full bg-line sm:hidden" />
+        <div className="flex items-start justify-between gap-3 border-b border-line px-5 pb-4 pt-3 sm:pt-5">
+          <div className="flex min-w-0 items-start gap-3">
+            {Icon && (
+              <span className="flex size-11 shrink-0 items-center justify-center rounded-control bg-linear-to-br from-primary to-violet-deep text-white shadow-glow">
+                <Icon aria-hidden="true" className="size-5" />
+              </span>
+            )}
+            <div className="min-w-0">
+              <h2 id={titleId} className="font-display text-2xl text-navy text-balance">
+                {title}
+              </h2>
+              {description && <p className="mt-1 text-sm text-ink-soft">{description}</p>}
+              {headerExtra}
+            </div>
           </div>
           <button
             type="button"
@@ -52,7 +70,8 @@ function Modal({ title, headerExtra, footer, size = 'md', onClose, children }) {
         <div className="flex-1 overflow-y-auto p-5">{children}</div>
         {footer && <div className="border-t border-line p-5">{footer}</div>}
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }
 

@@ -95,18 +95,15 @@ export function useInstitutions() {
     scrollToResults()
   }
 
-  const handleCityChange = (event) => {
-    const nextCity = event.target.value
-    setCityId(nextCity)
-    fetchInstitutions(buildParams({ city: nextCity }))
+  const selectCity = (id) => {
+    setCityId(id)
+    fetchInstitutions(buildParams({ city: id }))
   }
 
-  const handleTypeChange = (event) => {
-    const nextType = event.target.value
-    setTypeId(nextType)
-    fetchInstitutions(buildParams({ type: nextType }))
+  const selectType = (id) => {
+    setTypeId(id)
+    fetchInstitutions(buildParams({ type: id }))
   }
-
 
   const toggleCity = (id) => {
     const next = cityId === String(id) ? '' : String(id)
@@ -265,8 +262,8 @@ export function useInstitutions() {
     meta,
     metaError,
     handleSubmit,
-    handleCityChange,
-    handleTypeChange,
+    selectCity,
+    selectType,
     toggleCity,
     toggleType,
     selectSection,

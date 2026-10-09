@@ -28,7 +28,7 @@ function Button({
     <Element
       {...elementProps}
       {...buttonType}
-      className={`inline-flex shrink-0 cursor-pointer items-center justify-center gap-2 rounded-button font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${VARIANT_CLASSES[variant]} ${SIZE_CLASSES[size]} ${className}`}
+      className={`inline-flex shrink-0 cursor-pointer items-center justify-center gap-2 rounded-button font-semibold transition active:scale-[0.97] disabled:cursor-not-allowed disabled:active:scale-100 disabled:opacity-60 ${VARIANT_CLASSES[variant]} ${SIZE_CLASSES[size]} ${className}`}
     >
       {children}
     </Element>
