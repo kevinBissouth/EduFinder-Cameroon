@@ -11,6 +11,7 @@ import { API_URL } from '../../constants'
 import { useReferenceLabel } from '../../hooks/useReferenceLabel'
 import { trackInstitutionEvent } from '../../utils/tracking'
 import { useLinkCopy } from '../../hooks/useLinkCopy'
+import { useSchoolText } from '../../hooks/useSchoolText'
 import { HOME_PATH } from '../../routes'
 
 
@@ -220,6 +221,7 @@ function ProfileHero({ institution, coverUrl }) {
   const [hasPhotoFailed, setHasPhotoFailed] = useState(false)
   const photoUrl = coverUrl && !hasPhotoFailed ? `${API_URL}${coverUrl}` : null
   const photoProps = { institution, photoUrl, onPhotoError: () => setHasPhotoFailed(true) }
+  const description = useSchoolText(institution)('description').text
 
   return (
     <section className="bg-surface">
@@ -242,10 +244,8 @@ function ProfileHero({ institution, coverUrl }) {
               </li>
             ))}
           </ul>
-          {institution.description && (
-            <p className="mt-6 line-clamp-3 max-w-[60ch] text-pretty text-base text-ink">
-              {institution.description}
-            </p>
+          {description && (
+            <p className="mt-6 line-clamp-3 max-w-[60ch] text-pretty text-base text-ink">{description}</p>
           )}
           <ProfileActions institution={institution} />
         </div>

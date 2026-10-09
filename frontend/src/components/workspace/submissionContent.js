@@ -1,5 +1,6 @@
 import i18next from 'i18next'
 
+import { findLanguage } from '../../i18n/languages'
 import { formatFcfa, formatPercent } from '../../utils/format'
 
 // Champs qui portent l'identifiant d'une valeur de référence : j'affiche son
@@ -16,6 +17,7 @@ const PHOTO_FIELDS = new Set(['cover_photo', 'director_photo'])
 const FILE_LIST_FIELDS = new Set(['videos', 'media_additions', 'media_removals'])
 
 const MEDIA_ADDITIONS_KEY = 'media_additions'
+const CONTENT_LANGUAGE_KEY = 'content_language'
 const IMAGE_MEDIA_TYPE = 'image'
 
 const translate = (key, options) => i18next.t(`workspace:content.${key}`, options)
@@ -82,6 +84,7 @@ function describeEntry(key, value, meta, translateReference) {
       text: describeReference(meta[metaKey], value, referenceKind, translateReference),
     }
   }
+  if (key === CONTENT_LANGUAGE_KEY) return { label: translate(key), text: findLanguage(value).name }
   if (PHOTO_FIELDS.has(key)) return { label: translate(key), text: translate('newPhoto') }
   if (FILE_LIST_FIELDS.has(key)) {
     return { label: translate(key), text: translate('fileCount', { count: value.length }) }

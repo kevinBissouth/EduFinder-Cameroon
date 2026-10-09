@@ -132,5 +132,9 @@
       "or": " or ",
       "answer": "You can {{ways}}."
     }
+  },
+  "writtenIn": {
+    "en": "Text written in English by the school.",
+    "fr": "Text written in French by the school."
   }
 }
