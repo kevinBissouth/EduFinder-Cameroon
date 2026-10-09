@@ -1,0 +1,13 @@
+{
+  "enabledPlugins": {
+    "john-toolkit@john-marketplace": true
+  },
+  "extraKnownMarketplaces": {
+    "john-marketplace": {
+      "source": {
+        "source": "github",
+        "repo": "kevinBissouth/claude-config"
+      }
+    }
+  }
+}
