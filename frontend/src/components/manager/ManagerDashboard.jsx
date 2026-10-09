@@ -23,6 +23,7 @@ import { useActivity } from '../../hooks/useActivity'
 import { typeSupportsExamResults } from '../../utils/establishmentType'
 import { formatPercent } from '../../utils/format'
 import { useReferenceLabel } from '../../hooks/useReferenceLabel'
+import SuspensionNotice from './SuspensionNotice'
 
 // Un graphique n'a de sens qu'avec au moins deux points : en dessous,
 // j'affiche les valeurs en clair.
@@ -102,6 +103,7 @@ function ManagerDashboard({
 
   return (
     <div className="space-y-6">
+      <SuspensionNotice detail={detail} />
       <SchoolBanner detail={detail} onEditSchool={onEditSchool} onOpenSchool={onOpenSchool} />
       <StatTiles tiles={buildTiles(detail, schoolSubmissions, onNavigate)} />
 

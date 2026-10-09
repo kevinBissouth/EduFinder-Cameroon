@@ -4,12 +4,18 @@ import { useTranslation } from 'react-i18next'
 import Button from '../ui/Button'
 import SchoolCover from './SchoolCover'
 import { formatShortDate } from '../../utils/format'
+import { listChangedSections } from './submissionContent'
+
+const MODIFICATION_TYPE = 'modification'
 
 // Carte d'une soumission, commune aux deux espaces : la photo et le nom de
 // l'établissement, le type et la date, l'auteur quand il est connu, le motif
 // d'un refus, puis l'action de l'espace (relire ou décider).
 function SubmissionCard({ submission, coverUrl, actionLabel, actionAriaLabel, onAction }) {
   const { t } = useTranslation('workspace')
+  // Une création touche toutes les rubriques : les lister n'apprendrait rien.
+  const changedSections =
+    submission.submission_type === MODIFICATION_TYPE ? listChangedSections(submission) : []
 
   return (
     <li className="group flex h-full flex-col overflow-hidden rounded-panel border border-line bg-surface shadow-soft transition-shadow hover:shadow-raised">
@@ -30,6 +36,11 @@ function SubmissionCard({ submission, coverUrl, actionLabel, actionAriaLabel, on
             {formatShortDate(submission.submitted_at)}
           </span>
         </div>
+        {changedSections.length > 0 && (
+          <p className="mt-3 line-clamp-2 text-sm text-navy">
+            {t('submission.changes', { sections: changedSections.join(', ') })}
+          </p>
+        )}
         {submission.proposer_name && (
           <p className="mt-3 text-sm text-ink">
             {t('submission.proposedBy')}{' '}

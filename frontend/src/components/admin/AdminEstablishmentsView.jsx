@@ -41,7 +41,7 @@ function EstablishmentCard({ establishment, onOpen }) {
           {tags.map((tag) => (
             <li
               key={tag}
-              className="rounded-full bg-primary-soft px-3 py-1 text-xs font-semibold capitalize text-primary-deep"
+              className="rounded-full bg-primary-soft px-3 py-1 text-xs font-semibold text-primary-deep"
             >
               {tag}
             </li>

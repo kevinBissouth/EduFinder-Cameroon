@@ -7,6 +7,7 @@ import ViewHero from '../workspace/ViewHero'
 import { formatShortDate } from '../../utils/format'
 
 const ALL_STATUSES = 'all'
+const PENDING_STATUS = 'pending'
 const STATUS_FILTERS = [
   { id: 'pending', labelKey: 'submissions.filterPending' },
   { id: 'approved', labelKey: 'submissions.filterApproved' },
@@ -97,7 +98,11 @@ function AdminSubmissionsView({
               key={submission.submission_uuid}
               submission={submission}
               coverUrl={coverUrlBySchool.get(submission.establishment_uuid)}
-              actionLabel={t('submissions.review')}
+              actionLabel={
+                submission.submission_status === PENDING_STATUS
+                  ? t('submissions.review')
+                  : t('workspace:submission.view')
+              }
               actionAriaLabel={t('submissions.reviewNamed', {
                 school: submission.establishment_name,
                 date: formatShortDate(submission.submitted_at),

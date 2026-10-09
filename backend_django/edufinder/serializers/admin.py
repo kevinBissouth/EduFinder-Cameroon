@@ -1,7 +1,8 @@
 from rest_framework import serializers
 
-from edufinder.models import Establishment, EstablishmentStatus, SubmissionStatus
+from edufinder.models import Establishment, Submission, SubmissionStatus
 from edufinder.serializers.submission import SubmissionItemSerializer
+from edufinder.services.suspension import read_current_suspension_reason
 
 REASON_MIN_LENGTH = 3
 REASON_MAX_LENGTH = 500
@@ -21,8 +22,21 @@ class DecisionReasonSerializer(serializers.Serializer):
     )
 
 
+EMPTY_CONTENT_VALUES = (None, "", [])
+
+
 class AdminSubmissionItemSerializer(SubmissionItemSerializer):
     proposer_name = serializers.CharField(source="user.name")
+    changed_fields = serializers.SerializerMethodField()
+
+    # La liste ne porte que le nom des rubriques touchées, pour distinguer deux
+    # soumissions sans les ouvrir ; leur contenu reste réservé au détail.
+    def get_changed_fields(self, submission: Submission) -> list[str]:
+        return [
+            field_name
+            for field_name, value in submission.content.items()
+            if value not in EMPTY_CONTENT_VALUES
+        ]
 
 
 class AdminSubmissionDetailSerializer(AdminSubmissionItemSerializer):
@@ -46,12 +60,8 @@ class AdminEstablishmentItemSerializer(serializers.Serializer):
             ownership.user.name for ownership in establishment.user_establishments.all()
         ]
 
-    # Le motif n'est rendu que tant que la fiche est suspendue : une fois
-    # réactivée, l'ancienne suspension n'a plus à s'afficher.
     def get_suspension_reason(self, establishment: Establishment) -> str | None:
-        if establishment.status != EstablishmentStatus.SUSPENDED:
-            return None
-        return establishment.latest_suspension_reason
+        return read_current_suspension_reason(establishment)
 
 
 class AdminDecisionSerializer(serializers.Serializer):

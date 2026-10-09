@@ -101,6 +101,23 @@ def test_suspension_from_untrusted_origin_is_rejected(
 # --- GET /admin/submissions ---------------------------------------------------
 
 
+# La liste dit quelles rubriques une soumission touche, sans en livrer le
+# contenu ; une rubrique proposée vide n'est pas une modification.
+@pytest.mark.django_db
+def test_submission_list_names_changed_fields_without_their_content(
+    client, log_in_as, super_admin, manager, establishment
+):
+    submission = add_submission(manager, establishment)
+    submission.content = {"phone": "699000000", "services": [], "address": None}
+    submission.save()
+    log_in_as(super_admin)
+
+    listed_item = client.get("/admin/submissions").json()[0]
+
+    assert listed_item["changed_fields"] == ["phone"]
+    assert "content" not in listed_item
+
+
 @pytest.mark.django_db
 def test_submissions_default_to_pending_newest_first(
     client, log_in_as, super_admin, manager, establishment
@@ -125,6 +142,7 @@ def test_submissions_default_to_pending_newest_first(
         "establishment_uuid": establishment.uuid,
         "establishment_name": "Collège de la Paix",
         "proposer_name": "Awa Manager",
+        "changed_fields": ["name"],
         "submission_type": "modification",
         "submission_status": "pending",
         "submitted_at": newest_item["submitted_at"],

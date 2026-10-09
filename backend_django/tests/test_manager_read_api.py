@@ -19,6 +19,10 @@ from edufinder.models import (
     UserRole,
     ValidationDecision,
 )
+from edufinder.services.suspension import (
+    reactivate_establishment,
+    suspend_establishment,
+)
 from tests.factories import add_exam_result, add_school_fee
 
 INVALID_CREDENTIALS_BODY = {"detail": "Invalid or missing credentials"}
@@ -233,6 +237,40 @@ def test_detail_adds_the_private_fields_to_the_public_profile(
     assert detail["recommended"] is False
     assert detail["updated_at"] is None
     assert detail["fees"] == []
+    assert detail["suspension_reason"] is None
+
+
+# Le responsable lit sur sa fiche pourquoi elle a quitté le site public ; une
+# fois réactivée, l'ancien motif ne s'affiche plus.
+@pytest.mark.django_db
+def test_detail_tells_the_manager_why_the_school_is_suspended(
+    client, log_in_as, create_establishment, manager, super_admin
+):
+    establishment = create_establishment()
+    UserEstablishment.objects.create(user=manager, establishment=establishment)
+    suspend_establishment(establishment, super_admin, "Fees are out of date")
+    log_in_as(manager)
+    detail_url = f"/my/establishments/{establishment.uuid}"
+
+    assert client.get(detail_url).json()["suspension_reason"] == "Fees are out of date"
+
+    reactivate_establishment(establishment, super_admin)
+
+    assert client.get(detail_url).json()["suspension_reason"] is None
+
+
+# Le motif d'une suspension reste privé : il ne sort jamais de l'API publique.
+@pytest.mark.django_db
+def test_suspension_reason_never_reaches_the_public_api(
+    client, create_establishment, super_admin
+):
+    establishment = create_establishment()
+    suspend_establishment(establishment, super_admin, "Fees are out of date")
+    reactivate_establishment(establishment, super_admin)
+
+    public_profile = client.get(f"/institutions/{establishment.uuid}").json()
+
+    assert "suspension_reason" not in public_profile
 
 
 @pytest.mark.django_db

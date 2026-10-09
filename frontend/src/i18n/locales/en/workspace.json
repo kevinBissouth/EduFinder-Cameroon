@@ -57,7 +57,9 @@
   "submission": {
     "proposedBy": "Proposed by",
     "reason": "Reason: {{reason}}",
-    "noDetail": "This submission carries no detail."
+    "noDetail": "This submission carries no detail.",
+    "changes": "Changes: {{sections}}",
+    "view": "View"
   },
   "content": {
     "phone": "Phone",
@@ -98,7 +100,8 @@
     "approved": "Approved",
     "pending": "Awaiting review",
     "rejected": "Rejected",
-    "countedSince": "Counted since {{date}}."
+    "countedSince": "Counted since {{date}}.",
+    "periodTotals": "Totals for the last {{count}} weeks."
   },
   "pages": "Pages",
   "pageOf": "Page {{current}} of {{total}}"

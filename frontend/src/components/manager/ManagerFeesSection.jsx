@@ -3,7 +3,7 @@ import { Pencil } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 import Button from '../ui/Button'
-import { TextField } from '../ui/Field'
+import { AmountField } from '../ui/Field'
 import OverflowList from '../workspace/OverflowList'
 import PagedCards from '../workspace/PagedCards'
 import ToggleChipGroup from '../workspace/ToggleChipGroup'
@@ -30,14 +30,11 @@ function FeeEditor({ fee, paymentMethods, isSubmitting, onSubmit, onCancel }) {
 
   return (
     <form onSubmit={handleSubmit} className="mt-4 space-y-4 rounded-control bg-paper p-4">
-      <TextField
+      <AmountField
         label={t('fees.amountLabel', { year: fee.school_year })}
-        type="number"
-        min="1"
-        step="any"
         autoFocus
         value={amountDraft}
-        onChange={(event) => setAmountDraft(event.target.value)}
+        onChange={setAmountDraft}
         className="sm:max-w-xs"
       />
       <ToggleChipGroup

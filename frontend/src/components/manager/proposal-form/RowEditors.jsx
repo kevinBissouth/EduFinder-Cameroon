@@ -2,7 +2,7 @@ import { Plus, Trash2 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 import Button from '../../ui/Button'
-import { SelectField, TextField } from '../../ui/Field'
+import { AmountField, SelectField, TextField } from '../../ui/Field'
 import ToggleChipGroup from '../../workspace/ToggleChipGroup'
 import { toggleValue } from '../../workspace/toggleChips'
 import { createExamResultRow, createFeeRow, removeRow, replaceRow } from './proposalDraft'
@@ -10,6 +10,8 @@ import { useReferenceLabel } from '../../../hooks/useReferenceLabel'
 
 const SEPTEMBER_MONTH_INDEX = 8
 const MAX_PASS_RATE = 100
+// Sans step="any", un champ numérique n'accepte que des entiers : un taux de
+// 72,5 % déjà enregistré bloquerait l'étape, le navigateur refusant d'avancer.
 
 // Au Cameroun l'année scolaire va de septembre à août : avant septembre,
 // l'année en cours a commencé l'année civile précédente.
@@ -67,12 +69,10 @@ export function FeeRowsEditor({ feeRows, levels, paymentMethods, onChange }) {
                 value={feeRow.id_level}
                 onChange={(event) => changeRow(feeRow.rowId, { id_level: event.target.value })}
               />
-              <TextField
+              <AmountField
                 label={t('form.rows.yearlyAmount')}
-                type="number"
-                min="1"
                 value={feeRow.amount}
-                onChange={(event) => changeRow(feeRow.rowId, { amount: event.target.value })}
+                onChange={(amount) => changeRow(feeRow.rowId, { amount })}
               />
               <TextField
                 label={t('form.rows.schoolYear')}
@@ -139,6 +139,7 @@ export function ExamResultRowsEditor({ examResultRows, exams, onChange }) {
                 type="number"
                 min="0"
                 max={MAX_PASS_RATE}
+                step="any"
                 value={examResultRow.pass_rate}
                 onChange={(event) =>
                   changeRow(examResultRow.rowId, { pass_rate: event.target.value })
