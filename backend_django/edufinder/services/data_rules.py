@@ -13,6 +13,10 @@ EXAM_ALLOWED_TYPE_LABELS = {
     "GCE A-Level": {"Secondary general", "Secondary technical"},
 }
 
+# Types qui présentent au moins un examen officiel : eux seuls ont des
+# résultats à publier. Une maternelle ou une université n'en a pas.
+TYPES_WITH_OFFICIAL_EXAMS = frozenset().union(*EXAM_ALLOWED_TYPE_LABELS.values())
+
 
 # Garde-fou : un résultat dont l'examen contredit le type de l'établissement
 # (un CEP dans un lycée) ne doit jamais sortir de l'API publique. J'exprime la

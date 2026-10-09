@@ -27,6 +27,21 @@ export function buildContactHref({ name, contact_email: contactEmail, phone }) {
   return phone ? `tel:${phone}` : null
 }
 
+const CAMEROON_DIALLING_CODE = '237'
+const LOCAL_NUMBER_LENGTH = 9
+const WHATSAPP_BASE_URL = 'https://wa.me/'
+
+// WhatsApp attend le numéro en chiffres, indicatif compris. Un numéro saisi
+// sans indicatif (neuf chiffres) est camerounais ; trop court, il n'est pas
+// exploitable et aucun lien n'est proposé.
+export function toWhatsAppUrl(phone) {
+  const digits = (phone ?? '').replace(/\D/g, '')
+  if (digits.length < LOCAL_NUMBER_LENGTH) return null
+  const internationalNumber =
+    digits.length === LOCAL_NUMBER_LENGTH ? `${CAMEROON_DIALLING_CODE}${digits}` : digits
+  return `${WHATSAPP_BASE_URL}${internationalNumber}`
+}
+
 // Années scolaires de la plus récente à la plus ancienne, chacune avec ses frais.
 export function groupFeesByYear(fees) {
   const feesBySchoolYear = new Map()

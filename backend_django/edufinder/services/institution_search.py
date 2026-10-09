@@ -10,12 +10,13 @@ from dataclasses import dataclass
 from decimal import Decimal
 from typing import NamedTuple
 
-from django.db.models import Exists, OuterRef, QuerySet
+from django.db.models import Exists, OuterRef, Q, QuerySet
 
-from edufinder.models import Establishment, Sector, Service
+from edufinder.models import Establishment, ProgramOffer, Sector, Service
 from edufinder.services.summary_aggregates import (
     coherent_exam_results_of_outer_establishment,
     with_cover_url,
+    with_profile_completeness,
     with_tuition_and_pass_rate,
 )
 
@@ -58,20 +59,28 @@ def search_published_establishments(filters: InstitutionSearchFilters) -> QueryS
     establishments = _with_summary_aggregates(Establishment.objects.published())
     establishments = _filter_by_exact_match(establishments, filters)
     establishments = _filter_by_sector_group(establishments, filters.sector_id)
-    establishments = _filter_by_name(establishments, filters.search_term)
+    establishments = _filter_by_search_term(establishments, filters.search_term)
     establishments = _filter_by_budget(establishments, filters)
     establishments = _filter_by_services(establishments, filters.service_names)
     establishments = _filter_by_exam_results(establishments, filters.exam_requirements)
-    establishments = establishments.order_by("-recommended", "id_establishment")
+    # Les fiches complètes d'abord, puis l'ordre alphabétique : aucun
+    # établissement n'est mis en avant par choix de la plateforme.
+    establishments = establishments.order_by(
+        "-is_profile_complete", "name", "id_establishment"
+    )
     return _paginate(establishments, filters)
 
 
 # Le filtre budget et le résumé lisent le même frais minimum, annoté une seule
 # fois par la requête de recherche.
 def _with_summary_aggregates(establishments: QuerySet) -> QuerySet:
-    return with_cover_url(
-        with_tuition_and_pass_rate(
-            establishments.select_related("city", "type", "sector", "linguistic_section")
+    return with_profile_completeness(
+        with_cover_url(
+            with_tuition_and_pass_rate(
+                establishments.select_related(
+                    "city", "type", "sector", "linguistic_section"
+                )
+            )
         )
     )
 
@@ -99,10 +108,27 @@ def _filter_by_sector_group(establishments: QuerySet, sector_id: int | None) -> 
     return establishments.filter(sector__is_public=selected_sector.is_public)
 
 
-def _filter_by_name(establishments: QuerySet, search_term: str | None) -> QuerySet:
+# La recherche libre porte sur ce qu'un parent tape spontanément : le nom de
+# l'établissement, sa ville ou une filière. La filière se cherche sous sa clé
+# et sous ses deux libellés, pour répondre dans la langue du visiteur. Je passe
+# par EXISTS : une jointure renverrait l'établissement une fois par filière.
+def _filter_by_search_term(
+    establishments: QuerySet, search_term: str | None
+) -> QuerySet:
     if not search_term:
         return establishments
-    return establishments.filter(name__icontains=search_term)
+    offers_matching_program = ProgramOffer.objects.filter(
+        establishment=OuterRef("pk")
+    ).filter(
+        Q(program__name__icontains=search_term)
+        | Q(program__label_fr__icontains=search_term)
+        | Q(program__label_en__icontains=search_term)
+    )
+    return establishments.filter(
+        Q(name__icontains=search_term)
+        | Q(city__name__icontains=search_term)
+        | Exists(offers_matching_program)
+    )
 
 
 # Le budget se compare au frais annuel le plus bas de l'établissement : c'est

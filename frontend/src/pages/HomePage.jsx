@@ -15,9 +15,11 @@ import Container from '../components/ui/Container'
 import { useInstitutions } from '../hooks/useInstitutions'
 import { usePlatformStats } from '../hooks/usePlatformStats'
 import { navigateToSchool } from '../routes'
+import { useDocumentTitle } from '../hooks/useDocumentTitle'
 
 function HomePage() {
   const { t } = useTranslation('home')
+  useDocumentTitle()
   const api = useInstitutions()
   const { stats: platformStats, error: statsError } = usePlatformStats()
   const [comparedIds, setComparedIds] = useState([])
@@ -27,6 +29,13 @@ function HomePage() {
   const featuredTypes = (api.meta.featured_type_ids ?? [])
     .map((typeId) => api.meta.types.find((type) => type.id === typeId))
     .filter(Boolean)
+
+  // La recherche ne propose que les villes et les types qui ont un
+  // établissement publié : en choisir un vide donnerait une liste sans résultat.
+  const cityNamesWithSchools = new Set(api.allInstitutions.map((institution) => institution.city))
+  const searchableCities = api.meta.cities.filter((city) => cityNamesWithSchools.has(city.name))
+  const typeNamesWithSchools = new Set(api.allInstitutions.map((institution) => institution.type))
+  const searchableTypes = api.meta.types.filter((type) => typeNamesWithSchools.has(type.name))
 
   const toggleCompare = (schoolUuid) =>
     setComparedIds((currentIds) =>
@@ -65,8 +74,8 @@ function HomePage() {
             onCityChange: api.handleCityChange,
             onTypeChange: api.handleTypeChange,
           }}
-          cities={api.meta.cities}
-          types={api.meta.types}
+          cities={searchableCities}
+          types={searchableTypes}
           advancedFilters={{
             meta: api.meta,
             sectionId: api.langId,
@@ -85,8 +94,9 @@ function HomePage() {
           }}
           figures={{
             schoolCount: api.allInstitutions.length,
+            resultCount: api.institutions.length,
             cityCount: api.cityCount,
-            regionCount: api.meta.regions.length,
+            regionCount: platformStats.regions,
           }}
         />
         <HeroSteps />
@@ -135,7 +145,7 @@ function HomePage() {
         />
         <CtaBand />
       </main>
-      <Footer types={api.meta.types} onNavigateToType={api.toggleType} />
+      <Footer types={searchableTypes} onNavigateToType={api.toggleType} />
     </div>
   )
 }
