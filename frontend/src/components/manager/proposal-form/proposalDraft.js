@@ -32,7 +32,7 @@ export function createFeeRow(fee) {
   return {
     rowId: crypto.randomUUID(),
     id_level: fee ? String(fee.id_level) : '',
-    amount: fee ? String(fee.amount) : '',
+    amount: fee ? String(Number(fee.amount)) : '',
     school_year: fee?.school_year ?? '',
     payment_methods: fee?.payment_methods ?? [],
   }
@@ -43,7 +43,7 @@ export function createExamResultRow(examResult) {
     rowId: crypto.randomUUID(),
     id_exam: examResult ? String(examResult.id_exam) : '',
     session: examResult?.session ?? '',
-    pass_rate: examResult ? String(examResult.pass_rate) : '',
+    pass_rate: examResult ? String(Number(examResult.pass_rate)) : '',
   }
 }
 

@@ -1,5 +1,7 @@
 import { ChevronDown } from 'lucide-react'
 
+import { formatAmount } from '../../utils/format'
+
 export const CONTROL_CLASSES =
   'h-11 w-full rounded-control border border-line bg-surface px-3 text-sm font-medium text-navy transition-colors placeholder:font-normal placeholder:text-ink-soft hover:border-primary'
 
@@ -13,6 +15,25 @@ export function TextField({ label, className = '', ...inputProps }) {
       <FieldLabel>{label}</FieldLabel>
       <input {...inputProps} className={CONTROL_CLASSES} />
     </label>
+  )
+}
+
+const NON_DIGITS = /\D/g
+
+// Montant entier, affiché avec le séparateur de milliers de la langue. Un
+// champ numérique du navigateur ne sait pas l'afficher : c'est donc un champ
+// texte, qui ne retient que les chiffres et rend au parent la valeur brute.
+export function AmountField({ value, onChange, ...fieldProps }) {
+  const digits = String(value ?? '').replace(NON_DIGITS, '')
+
+  return (
+    <TextField
+      {...fieldProps}
+      type="text"
+      inputMode="numeric"
+      value={digits ? formatAmount(digits) : ''}
+      onChange={(event) => onChange(event.target.value.replace(NON_DIGITS, ''))}
+    />
   )
 }
 
