@@ -1,5 +1,6 @@
 import { MapContainer, Marker, TileLayer } from 'react-leaflet'
 import L from 'leaflet'
+import 'leaflet/dist/leaflet.css'
 
 const STREET_ZOOM = 15
 
