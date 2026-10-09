@@ -18,6 +18,7 @@ import { authedRequest } from '../utils/auth'
 import { findFirstName } from '../utils/format'
 import '../i18n/privateTexts'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
+import WorkspaceSkeleton from '../components/workspace/WorkspaceSkeleton'
 
 const NAV_ITEMS = [
   {
@@ -176,11 +177,7 @@ function AdminHomePage({ profile, onSignOut }) {
 
   function renderContent() {
     if (loadStatus === 'loading') {
-      return (
-        <p role="status" className="py-16 text-center text-sm text-ink-soft">
-          {t('manager:page.loadingWorkspace')}
-        </p>
-      )
+      return <WorkspaceSkeleton label={t('manager:page.loadingWorkspace')} />
     }
     if (loadStatus === 'error') {
       return (

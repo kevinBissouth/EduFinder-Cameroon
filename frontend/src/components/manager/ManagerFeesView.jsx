@@ -3,7 +3,6 @@ import i18next from 'i18next'
 
 import ViewHero from '../workspace/ViewHero'
 import ManagerFeesSection from './ManagerFeesSection'
-import { listPaymentMethodsForLanguage } from './paymentPlans'
 import SchoolSection from './SchoolSection'
 import { findLatestYear } from './schoolYears'
 import { formatFcfa } from '../../utils/format'
@@ -35,7 +34,7 @@ function buildFeeFigures(fees) {
   ]
 }
 
-function ManagerFeesView({ paymentMethods, onProposalSubmitted, ...sectionProps }) {
+function ManagerFeesView({ paymentMethods, onEditSchool, onProposalSubmitted, ...sectionProps }) {
   const { t } = useTranslation('manager')
 
   return (
@@ -51,7 +50,8 @@ function ManagerFeesView({ paymentMethods, onProposalSubmitted, ...sectionProps 
             key={detail.uuid}
             fees={detail.fees}
             establishmentUuid={detail.uuid}
-            paymentMethods={listPaymentMethodsForLanguage(detail.linguistic_section, paymentMethods)}
+            paymentMethods={paymentMethods}
+            onProposeChanges={() => onEditSchool(detail)}
             onProposalSubmitted={onProposalSubmitted}
           />
         </>
