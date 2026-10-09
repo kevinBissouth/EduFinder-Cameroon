@@ -7,12 +7,13 @@ import Container from './ui/Container'
 import LanguageSwitch from './ui/LanguageSwitch'
 import { useReferenceLabel } from '../hooks/useReferenceLabel'
 import { useSchoolSelection } from '../hooks/useSchoolSelection'
-import { buildComparisonHash } from '../utils/comparison'
+import { buildComparisonPath } from '../utils/comparison'
+import { HOME_PATH, LOGIN_PATH, SAVED_SCHOOLS_PATH, SEARCH_RESULTS_PATH } from '../routes'
 
 const SECTION_LINKS = [
-  { labelKey: 'header.destinations', href: '#destinations' },
-  { labelKey: 'header.globalPicture', href: '#global-picture', isWideScreenOnly: true },
-  { labelKey: 'header.howItWorks', href: '#how-it-works', isWideScreenOnly: true },
+  { labelKey: 'header.destinations', href: '/#destinations' },
+  { labelKey: 'header.globalPicture', href: '/#global-picture', isWideScreenOnly: true },
+  { labelKey: 'header.howItWorks', href: '/#how-it-works', isWideScreenOnly: true },
 ]
 
 const NAV_PILL_CLASSES =
@@ -22,7 +23,7 @@ const ICON_BUTTON_CLASSES =
 
 function Brand() {
   return (
-    <a href="#" className="flex min-h-11 items-center gap-2 rounded-control text-white">
+    <a href={HOME_PATH} className="flex min-h-11 items-center gap-2 rounded-control text-white">
       <GraduationCap aria-hidden="true" className="size-7 text-primary" />
       <span className="text-base">
         <span className="font-bold">EduFinder</span>
@@ -32,7 +33,6 @@ function Brand() {
   )
 }
 
-const SAVED_SCHOOLS_HASH = '#/saved'
 
 // La barre ne descend qu'une fois, à l'ouverture du site : chaque page a sa
 // propre barre, et la rejouer à chaque changement de page lasserait vite.
@@ -66,7 +66,7 @@ function ComparisonLink() {
 
   return (
     <CountedLink
-      href={buildComparisonHash(comparedIds)}
+      href={buildComparisonPath(comparedIds)}
       icon={Scale}
       label={`${t('compare:header.compare')}${selectedLabel}`}
       count={comparedIds.length}
@@ -80,7 +80,7 @@ function SavedSchoolsLink() {
 
   return (
     <CountedLink
-      href={SAVED_SCHOOLS_HASH}
+      href={SAVED_SCHOOLS_PATH}
       icon={Heart}
       label={t('compare:saved.count', { count: savedIds.length })}
       count={savedIds.length}
@@ -95,12 +95,12 @@ function MobileListLinks() {
   const { comparedIds, savedIds } = useSchoolSelection()
   const listLinks = [
     {
-      href: buildComparisonHash(comparedIds),
+      href: buildComparisonPath(comparedIds),
       icon: Scale,
       label: t('compare:header.compareTotal', { total: comparedIds.length }),
     },
     {
-      href: SAVED_SCHOOLS_HASH,
+      href: SAVED_SCHOOLS_PATH,
       icon: Heart,
       label: t('compare:header.savedTotal', { total: savedIds.length }),
     },
@@ -157,7 +157,7 @@ function TypeMenu({ types, activeTypeId, onSelectType }) {
 
   if (types.length === 0) {
     return (
-      <a href="#results" className={NAV_PILL_CLASSES}>
+      <a href={SEARCH_RESULTS_PATH} className={NAV_PILL_CLASSES}>
         {t('header.findSchools')}
       </a>
     )
@@ -209,7 +209,7 @@ function MobileMenu({ types, activeTypeId, onSelectType }) {
       className="animate-menu-drop border-t border-white/10 lg:hidden"
     >
       <Container className="py-3">
-        <a href="#results" className={NAV_PILL_CLASSES}>
+        <a href={SEARCH_RESULTS_PATH} className={NAV_PILL_CLASSES}>
           {t('header.findSchools')}
         </a>
         {types.length > 0 && (
@@ -234,7 +234,7 @@ function MobileMenu({ types, activeTypeId, onSelectType }) {
         <div className="mt-3 sm:hidden">
           <LanguageSwitch />
         </div>
-        <Button as="a" href="#/login" variant="accent" className="mt-3 w-full rounded-full">
+        <Button as="a" href={LOGIN_PATH} variant="accent" className="mt-3 w-full rounded-full">
           {t('header.forSchools')}
         </Button>
       </Container>
@@ -307,14 +307,14 @@ function Header({ activeTypeId, onNavigateToType, types = [], featuredTypeIds = 
             <LanguageSwitch />
           </div>
           <a
-            href="#search"
+            href="/#search"
             aria-label={t('header.searchSchools')}
             className={`${ICON_BUTTON_CLASSES} lg:hidden`}
           >
             <Search aria-hidden="true" className="size-4" />
           </a>
           <div className="hidden lg:block">
-            <Button as="a" href="#/login" variant="accent" className="whitespace-nowrap rounded-full">
+            <Button as="a" href={LOGIN_PATH} variant="accent" className="whitespace-nowrap rounded-full">
               {t('header.forSchools')}
             </Button>
           </div>

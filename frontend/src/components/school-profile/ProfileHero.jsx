@@ -11,6 +11,7 @@ import { API_URL } from '../../constants'
 import { useReferenceLabel } from '../../hooks/useReferenceLabel'
 import { trackInstitutionEvent } from '../../utils/tracking'
 import { useLinkCopy } from '../../hooks/useLinkCopy'
+import { HOME_PATH } from '../../routes'
 
 
 function capitalize(text) {
@@ -35,7 +36,7 @@ function Breadcrumb({ institution }) {
     <nav aria-label={t('hero.breadcrumb')}>
       <ol className="flex flex-wrap items-center gap-x-2 text-sm text-ink-soft">
         <li>
-          <a href="#/" className="inline-flex min-h-11 items-center rounded-control transition-colors hover:text-primary-deep">
+          <a href={HOME_PATH} className="inline-flex min-h-11 items-center rounded-control transition-colors hover:text-primary-deep">
             {t('hero.schools')}
           </a>
         </li>

@@ -9,6 +9,7 @@ from edufinder.views import (
     manager_media,
     notifications,
     public,
+    site_pages,
 )
 
 urlpatterns = [
@@ -124,4 +125,20 @@ urlpatterns = [
         {"tracked_event": TrackedEvent.INQUIRY},
         name="institution-track-inquiry",
     ),
+    # Pages du site, servies avec le frontend compilé. Le nom lisible qui suit
+    # l'identifiant d'une fiche est décoratif : seul l'identifiant compte.
+    path("school/<str:institution_uuid>", site_pages.school_page, name="school-page"),
+    path(
+        "school/<str:institution_uuid>/<path:slug>",
+        site_pages.school_page,
+        name="school-page-with-slug",
+    ),
+    path("compare/", site_pages.site_page, name="comparison-page-empty"),
+    path("compare/<path:school_ids>", site_pages.site_page, name="comparison-page"),
+    path("saved", site_pages.site_page, name="saved-schools-page"),
+    path("login", site_pages.site_page, name="login-page"),
+    path("manager", site_pages.site_page, name="manager-page"),
+    path("school-admin", site_pages.site_page, name="school-admin-page"),
+    path("sitemap.xml", site_pages.sitemap, name="sitemap"),
+    path("robots.txt", site_pages.robots, name="robots"),
 ]

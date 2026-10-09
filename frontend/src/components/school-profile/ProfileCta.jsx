@@ -4,6 +4,7 @@ import { Trans, useTranslation } from 'react-i18next'
 import Button from '../ui/Button'
 import Container from '../ui/Container'
 import { Emphasis } from '../ui/SectionHeading'
+import { SEARCH_RESULTS_PATH } from '../../routes'
 
 // Panneau de fin de fiche : il ramène vers la liste pour continuer à comparer.
 function ProfileCta() {
@@ -26,7 +27,7 @@ function ProfileCta() {
                 {t('cta.lead')}
               </p>
             </div>
-            <Button as="a" href="#results" size="lg" className="group self-start whitespace-nowrap rounded-full max-sm:w-full max-sm:px-4 lg:self-auto">
+            <Button as="a" href={SEARCH_RESULTS_PATH} size="lg" className="group self-start whitespace-nowrap rounded-full max-sm:w-full max-sm:px-4 lg:self-auto">
               {t('cta.action')}
               <ArrowRight aria-hidden="true" className="size-4 transition-transform group-hover:translate-x-0.5" />
             </Button>

@@ -63,6 +63,14 @@ SECRET_KEY = os.environ["SECRET_KEY"]
 DEBUG = _read_boolean("DEBUG")
 ALLOWED_HOSTS = json.loads(os.environ.get("ALLOWED_HOSTS", '["localhost", "127.0.0.1"]'))
 
+# En production le site est derrière le serveur de l'hébergeur, qui reçoit le
+# HTTPS et transmet la requête en HTTP en ajoutant cet en-tête. Sans ce
+# réglage, les adresses complètes données aux robots (plan du site, image de
+# partage) commenceraient par « http:// ». En développement il n'y a pas
+# d'intermédiaire : je ne fais confiance à cet en-tête qu'hors DEBUG.
+if not DEBUG:
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
 INSTALLED_APPS = [
     "corsheaders",
     "rest_framework",

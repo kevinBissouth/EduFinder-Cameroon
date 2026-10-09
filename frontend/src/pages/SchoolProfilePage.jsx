@@ -22,6 +22,7 @@ import StateMessage from '../components/ui/StateMessage'
 import { useSchoolProfile } from '../hooks/useSchoolProfile'
 import { navigateToHome } from '../routes'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
+import { useCanonicalSchoolAddress } from '../hooks/useCanonicalSchoolAddress'
 import { useRevealOnScroll } from '../hooks/useRevealOnScroll'
 
 const PAGE_CLASSES = 'min-h-screen overflow-x-clip bg-paper font-sans text-ink'
@@ -97,6 +98,7 @@ function SchoolProfilePage({ schoolId }) {
   useRevealOnScroll(pageRef)
   const { institution, status } = useSchoolProfile(schoolId)
   useDocumentTitle(institution?.name)
+  useCanonicalSchoolAddress(institution)
 
   return (
     <div className={PAGE_CLASSES}>
