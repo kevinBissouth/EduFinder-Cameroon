@@ -5,6 +5,7 @@ from rest_framework import serializers
 from edufinder.models import Establishment, EstablishmentStatus
 from edufinder.serializers.public import InstitutionDetailSerializer
 from edufinder.serializers.submission import SubmissionItemSerializer
+from edufinder.services.suspension import read_current_suspension_reason
 
 
 class ManagerEstablishmentItemSerializer(serializers.Serializer):
@@ -35,6 +36,12 @@ class ManagerEstablishmentDetailSerializer(InstitutionDetailSerializer):
     recommended = serializers.BooleanField()
     views_count = serializers.IntegerField()
     inquiries_count = serializers.IntegerField()
+    # Pourquoi la fiche a quitté le site public : le responsable doit pouvoir
+    # le lire sur sa fiche, pas seulement dans une notification.
+    suspension_reason = serializers.SerializerMethodField()
+
+    def get_suspension_reason(self, establishment: Establishment) -> str | None:
+        return read_current_suspension_reason(establishment)
 
 
 class ManagerSubmissionItemSerializer(SubmissionItemSerializer):

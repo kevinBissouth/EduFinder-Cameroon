@@ -16,6 +16,7 @@ from edufinder.services.summary_aggregates import (
     with_cover_url,
     with_tuition_and_pass_rate,
 )
+from edufinder.services.suspension import with_latest_suspension_reason
 
 
 # Règle d'autorisation du cahier des besoins : un responsable n'accède qu'aux
@@ -41,7 +42,9 @@ def list_managed_establishments(user: User) -> QuerySet:
 
 
 def managed_establishment_profiles() -> QuerySet:
-    return with_pending_submission_flag(with_profile_relations(Establishment.objects.all()))
+    return with_latest_suspension_reason(
+        with_pending_submission_flag(with_profile_relations(Establishment.objects.all()))
+    )
 
 
 def with_pending_submission_flag(establishments: QuerySet) -> QuerySet:

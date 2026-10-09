@@ -4,6 +4,7 @@ Ces deux actions changent le statut directement, sans soumission : chacune
 laisse une ligne dans establishment_status_change (qui, quand, pourquoi).
 """
 from django.db import transaction
+from django.db.models import OuterRef, QuerySet, Subquery
 
 from edufinder.models import (
     Establishment,
@@ -75,3 +76,26 @@ def _change_status(
     locked_establishment.save(update_fields=["status"])
     notify_establishment_status_changed(locked_establishment, reason)
     return locked_establishment
+
+
+# Motif de la suspension la plus récente, annoté par la base pour toute une
+# liste en une seule requête.
+def with_latest_suspension_reason(establishments: QuerySet) -> QuerySet:
+    latest_suspension_reason = (
+        EstablishmentStatusChange.objects.filter(
+            establishment=OuterRef("pk"), new_status=EstablishmentStatus.SUSPENDED
+        )
+        .order_by("-id_status_change")
+        .values("reason")[:1]
+    )
+    return establishments.annotate(
+        latest_suspension_reason=Subquery(latest_suspension_reason)
+    )
+
+
+# Le motif n'est rendu que tant que la fiche est suspendue : une fois
+# réactivée, l'ancienne suspension n'a plus à s'afficher.
+def read_current_suspension_reason(establishment: Establishment) -> str | None:
+    if establishment.status != EstablishmentStatus.SUSPENDED:
+        return None
+    return establishment.latest_suspension_reason

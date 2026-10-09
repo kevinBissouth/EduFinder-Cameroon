@@ -1,17 +1,16 @@
 """Espace super administrateur : vue d'ensemble des soumissions et des
 établissements."""
-from django.db.models import OuterRef, Prefetch, QuerySet, Subquery
+from django.db.models import Prefetch, QuerySet
 
 from edufinder.models import (
     Establishment,
-    EstablishmentStatus,
-    EstablishmentStatusChange,
     Submission,
     SubmissionStatus,
     UserEstablishment,
 )
 from edufinder.services.submissions import describe_submissions
 from edufinder.services.summary_aggregates import with_cover_url
+from edufinder.services.suspension import with_latest_suspension_reason
 
 
 def list_submissions_by_status(submission_status: SubmissionStatus) -> QuerySet:
@@ -30,18 +29,7 @@ def list_establishments_with_owners() -> QuerySet:
     )
     establishments = Establishment.objects.select_related("city", "type", "sector")
     return (
-        with_cover_url(establishments)
+        with_latest_suspension_reason(with_cover_url(establishments))
         .prefetch_related(Prefetch("user_establishments", queryset=ordered_ownerships))
-        .annotate(latest_suspension_reason=Subquery(_latest_suspension_reason()))
         .order_by("name")
-    )
-
-
-def _latest_suspension_reason() -> QuerySet:
-    return (
-        EstablishmentStatusChange.objects.filter(
-            establishment=OuterRef("pk"), new_status=EstablishmentStatus.SUSPENDED
-        )
-        .order_by("-id_status_change")
-        .values("reason")[:1]
     )
