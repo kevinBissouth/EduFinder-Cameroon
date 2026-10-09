@@ -1,10 +1,11 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { ChevronDown, GraduationCap, Heart, Menu, Scale, Search, X } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 import Button from './ui/Button'
 import Container from './ui/Container'
 import LanguageSwitch from './ui/LanguageSwitch'
+import { useDismissibleMenu } from '../hooks/useDismissibleMenu'
 import { useSession } from '../hooks/useSession'
 import { findWorkspacePath } from '../utils/sessionRoutes'
 import { useReferenceLabel } from '../hooks/useReferenceLabel'
@@ -135,27 +136,7 @@ function TypeMenuItem({ type, isActive, onSelect }) {
 
 function TypeMenu({ types, activeTypeId, onSelectType }) {
   const { t } = useTranslation()
-  const [isOpen, setIsOpen] = useState(false)
-  const menuRef = useRef(null)
-
-  // Le menu se referme dès qu'on clique ailleurs ou qu'on appuie sur Échap,
-  // comme n'importe quel menu déroulant du système.
-  useEffect(() => {
-    if (!isOpen) return undefined
-
-    const closeOnOutsideClick = (event) => {
-      if (!menuRef.current?.contains(event.target)) setIsOpen(false)
-    }
-    const closeOnEscape = (event) => {
-      if (event.key === 'Escape') setIsOpen(false)
-    }
-    document.addEventListener('mousedown', closeOnOutsideClick)
-    document.addEventListener('keydown', closeOnEscape)
-    return () => {
-      document.removeEventListener('mousedown', closeOnOutsideClick)
-      document.removeEventListener('keydown', closeOnEscape)
-    }
-  }, [isOpen])
+  const { isOpen, setIsOpen, menuRef } = useDismissibleMenu()
 
   if (types.length === 0) {
     return (
@@ -248,7 +229,7 @@ function MobileMenu({ types, activeTypeId, onSelectType }) {
         ))}
         <MobileListLinks />
         <div className="mt-3 sm:hidden">
-          <LanguageSwitch />
+          <LanguageSwitch menuAlign="start" />
         </div>
         <SchoolSpaceButton className="mt-3 w-full" />
       </Container>

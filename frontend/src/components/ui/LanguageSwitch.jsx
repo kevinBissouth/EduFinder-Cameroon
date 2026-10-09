@@ -1,55 +1,102 @@
-import { Check } from 'lucide-react'
+import { Check, ChevronDown } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 import { chooseLanguage } from '../../i18n'
-import { SUPPORTED_LANGUAGES } from '../../i18n/languages'
+import FlagIcon from './FlagIcon'
+import { useDismissibleMenu } from '../../hooks/useDismissibleMenu'
+import { SUPPORTED_LANGUAGES, findLanguage } from '../../i18n/languages'
 
-// Version compacte (sigles) pour les barres ; les deux tons suivent le fond.
+// Version compacte pour les barres : un bouton qui montre la langue en cours
+// (drapeau et sigle) et ouvre la liste des langues. Les deux tons suivent le fond.
 const COMPACT_TONE_CLASSES = {
   // Sur l'en-tête bleu nuit du site public.
   onDark: {
-    group: 'border-white/20',
-    active: 'bg-white text-navy',
-    inactive: 'text-on-navy-soft hover:text-white',
+    trigger: 'border-white/20 text-white hover:border-white/50',
+    menu: 'border-white/10 bg-navy',
+    active: 'bg-white/10 text-white',
+    inactive: 'text-on-navy-soft hover:bg-white/10 hover:text-white',
   },
   // Sur les fonds clairs : connexion et espaces privés.
   onLight: {
-    group: 'border-line bg-surface',
-    active: 'bg-primary text-white',
-    inactive: 'text-ink-soft hover:text-navy',
+    trigger: 'border-line bg-surface text-navy hover:border-primary',
+    menu: 'border-line bg-surface',
+    active: 'bg-primary-soft text-primary-deep',
+    inactive: 'text-navy hover:bg-muted',
   },
 }
 
 const SEGMENT_CLASSES =
   'flex h-11 cursor-pointer items-center justify-center text-sm font-semibold transition-colors'
 
-function CompactSwitch({ tone, activeLanguage, groupLabel }) {
+function LanguageOption({ language, isActive, toneClasses, onChoose }) {
+  return (
+    <li role="none">
+      <button
+        type="button"
+        role="menuitemradio"
+        aria-checked={isActive}
+        lang={language.code}
+        onClick={() => onChoose(language.code)}
+        className={`flex min-h-11 w-full cursor-pointer items-center gap-3 rounded-control px-3 text-left text-sm font-semibold transition-colors ${
+          isActive ? toneClasses.active : toneClasses.inactive
+        }`}
+      >
+        <FlagIcon languageCode={language.code} />
+        <span className="flex-1">{language.name}</span>
+        {isActive && <Check aria-hidden="true" className="size-4" />}
+      </button>
+    </li>
+  )
+}
+
+// La liste s'ouvre sous le bouton, calée sur le bord où il se trouve : à
+// droite dans une barre, à gauche dans le menu du téléphone. Calée du mauvais
+// côté, elle sortirait de l'écran.
+const MENU_ALIGN_CLASSES = { start: 'left-0', end: 'right-0' }
+
+function CompactSwitch({ tone, menuAlign, activeLanguage, groupLabel }) {
   const toneClasses = COMPACT_TONE_CLASSES[tone]
+  const { isOpen, setIsOpen, menuRef } = useDismissibleMenu()
+  const currentLanguage = findLanguage(activeLanguage)
+  const chooseAndClose = (languageCode) => {
+    chooseLanguage(languageCode)
+    setIsOpen(false)
+  }
 
   return (
-    <div
-      role="group"
-      aria-label={groupLabel}
-      className={`inline-flex rounded-full border ${toneClasses.group}`}
-    >
-      {SUPPORTED_LANGUAGES.map((language) => {
-        const isActive = activeLanguage === language.code
-        return (
-          <button
-            key={language.code}
-            type="button"
-            lang={language.code}
-            title={language.name}
-            aria-pressed={isActive}
-            onClick={() => chooseLanguage(language.code)}
-            className={`${SEGMENT_CLASSES} min-w-11 rounded-full px-3 ${
-              isActive ? toneClasses.active : toneClasses.inactive
-            }`}
-          >
-            {language.shortLabel}
-          </button>
-        )
-      })}
+    <div ref={menuRef} className="relative inline-block">
+      <button
+        type="button"
+        aria-haspopup="menu"
+        aria-expanded={isOpen}
+        aria-label={`${groupLabel} : ${currentLanguage.name}`}
+        onClick={() => setIsOpen(!isOpen)}
+        className={`flex h-11 cursor-pointer items-center gap-2 rounded-full border pl-3 pr-2.5 text-sm font-semibold transition-colors ${toneClasses.trigger}`}
+      >
+        <FlagIcon languageCode={currentLanguage.code} />
+        {currentLanguage.shortLabel}
+        <ChevronDown
+          aria-hidden="true"
+          className={`size-4 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+        />
+      </button>
+      {isOpen && (
+        <ul
+          role="menu"
+          aria-label={groupLabel}
+          className={`absolute top-full z-20 mt-2 flex w-44 animate-menu-drop flex-col gap-1.5 rounded-panel border p-2 shadow-raised ${MENU_ALIGN_CLASSES[menuAlign]} ${toneClasses.menu}`}
+        >
+          {SUPPORTED_LANGUAGES.map((language) => (
+            <LanguageOption
+              key={language.code}
+              language={language}
+              isActive={language.code === currentLanguage.code}
+              toneClasses={toneClasses}
+              onChoose={chooseAndClose}
+            />
+          ))}
+        </ul>
+      )}
     </div>
   )
 }
@@ -78,8 +125,9 @@ function WideSwitch({ activeLanguage, groupLabel }) {
                 : 'text-navy hover:bg-surface'
             }`}
           >
-            {isActive && <Check aria-hidden="true" className="size-4" />}
+            <FlagIcon languageCode={language.code} />
             {language.name}
+            {isActive && <Check aria-hidden="true" className="size-4" />}
           </button>
         )
       })}
@@ -87,14 +135,15 @@ function WideSwitch({ activeLanguage, groupLabel }) {
   )
 }
 
-function LanguageSwitch({ tone = 'onDark', isWide = false }) {
+function LanguageSwitch({ tone = 'onDark', menuAlign = 'end', isWide = false }) {
   const { t, i18n } = useTranslation()
   const switchProps = {
     activeLanguage: i18n.resolvedLanguage,
     groupLabel: t('language.switchLabel'),
   }
 
-  return isWide ? <WideSwitch {...switchProps} /> : <CompactSwitch tone={tone} {...switchProps} />
+  if (isWide) return <WideSwitch {...switchProps} />
+  return <CompactSwitch tone={tone} menuAlign={menuAlign} {...switchProps} />
 }
 
 export default LanguageSwitch
