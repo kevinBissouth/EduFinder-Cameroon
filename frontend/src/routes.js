@@ -9,6 +9,8 @@ export const LOGIN_PATH = '/login'
 export const SAVED_SCHOOLS_PATH = '/saved'
 export const MANAGER_PATH = '/manager'
 export const SCHOOL_ADMIN_PATH = '/school-admin'
+export const LEGAL_NOTICE_PATH = '/legal'
+export const PRIVACY_PATH = '/privacy'
 // La page d'accueil, à la hauteur des résultats : c'est là qu'on choisit.
 export const SEARCH_RESULTS_PATH = '/#results'
 const SCHOOL_PATH = '/school/'
@@ -21,6 +23,8 @@ const FIXED_PAGES = {
   [SCHOOL_ADMIN_PATH]: 'school-admin',
   [LOGIN_PATH]: 'login',
   [SAVED_SCHOOLS_PATH]: 'saved',
+  [LEGAL_NOTICE_PATH]: 'legal-notice',
+  [PRIVACY_PATH]: 'privacy',
 }
 
 // L'identifiant suffit à trouver la fiche ; le nom qui le suit ne sert qu'à

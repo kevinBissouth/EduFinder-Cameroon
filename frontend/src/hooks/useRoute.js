@@ -6,7 +6,7 @@ import { scrollToPageTop } from '../utils/scroll'
 
 // Pages du site public, connexion comprise : ce sont les seules dont le
 // passage de l'une à l'autre est animé. Les espaces privés restent sobres.
-const PUBLIC_PAGES = ['home', 'school-detail', 'compare', 'saved', 'login']
+const PUBLIC_PAGES = ['home', 'school-detail', 'compare', 'saved', 'login', 'legal-notice', 'privacy']
 const PRIMARY_BUTTON = 0
 
 function toPageKey(route) {

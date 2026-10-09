@@ -1,0 +1,68 @@
+{
+  "backToHome": "Back to the home page",
+  "updated": "Last updated: {{date}}",
+  "notice": {
+    "title": "Legal notice",
+    "lead": "Who publishes this site, who hosts it and who answers for what you read on it.",
+    "sections": {
+      "publisher": {
+        "title": "Publisher",
+        "body": "EduFinder Cameroon is published by {{publisher}}.\n\nFor any question about the site: {{email}}."
+      },
+      "hosting": {
+        "title": "Hosting",
+        "body": "The site is hosted by PythonAnywhere (www.pythonanywhere.com)."
+      },
+      "content": {
+        "title": "Where the information comes from",
+        "body": "Fees, exam results, services, photos and contact details are entered by each school, then reviewed by the site's team before being published.\n\nDespite this review, a piece of information may be incomplete or may have changed since it was published. Before enrolling, always confirm fees and conditions with the school itself."
+      },
+      "independence": {
+        "title": "Independence",
+        "body": "The site never names a school as \"the best\". No school can pay to appear before another: the order of results depends only on your criteria and on whether a school's page is complete."
+      },
+      "report": {
+        "title": "Report an error",
+        "body": "Have you seen wrong or outdated information? Write to {{email}} and name the school concerned: its page will be checked with the school."
+      },
+      "rights": {
+        "title": "Reusing content",
+        "body": "The texts and photos on a school's page belong to the school that provided them. Reusing them elsewhere requires its agreement."
+      }
+    }
+  },
+  "privacy": {
+    "title": "Privacy",
+    "lead": "What the site knows about you when you browse it, and what it does not record.",
+    "sections": {
+      "summary": {
+        "title": "In short",
+        "body": "You browse the site without creating an account. It shows no advertising and uses no audience measurement tool from another company."
+      },
+      "device": {
+        "title": "What stays on your device",
+        "body": "Your saved schools, your comparison selection and your chosen language are kept in your browser, on your device. They are not sent to the site.\n\nYou erase them by removing schools from your lists or by clearing the site's data in your browser."
+      },
+      "counters": {
+        "title": "Visit counters",
+        "body": "The site counts how many times each school page is viewed and how many times a visitor uses one of its contact options. These counters are anonymous: they do not say who viewed the page.\n\nTo avoid counting the same visit twice, your IP address is kept in memory for thirty minutes, then forgotten. It is not written to the site's database."
+      },
+      "contact": {
+        "title": "When you contact a school",
+        "body": "The contact buttons open your own email, phone or WhatsApp application. Your message goes straight to the school: the site does not see it and does not keep it."
+      },
+      "thirdParties": {
+        "title": "Outside services",
+        "body": "The map on a school page is provided by OpenStreetMap: to display it, your browser contacts its servers, which then see your IP address.\n\nThe site's host, PythonAnywhere, keeps technical connection logs, as any host does."
+      },
+      "accounts": {
+        "title": "School accounts",
+        "body": "Only school managers and the site's administrators have an account. The site keeps their name, their email address and their password, hashed so that it cannot be read back, along with the history of their changes.\n\nOnce signed in, a session cookie is placed in their browser. It only serves to recognise them and expires after a few hours."
+      },
+      "rights": {
+        "title": "Your rights",
+        "body": "You can ask what the site holds about you, have it corrected or have it deleted by writing to {{email}}."
+      }
+    }
+  }
+}
