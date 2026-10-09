@@ -29,6 +29,11 @@
         "title": "Réutilisation des contenus",
         "body": "Les textes et les photos d'une fiche appartiennent à l'établissement qui les a fournis. Les réutiliser ailleurs demande son accord."
       }
+    },
+    "highlights": {
+      "independent": "Aucun établissement ne paie pour être mieux placé",
+      "reviewed": "Chaque fiche est relue avant publication",
+      "reportable": "Une erreur ? Elle se signale par courriel"
     }
   },
   "privacy": {
@@ -63,6 +68,18 @@
         "title": "Vos droits",
         "body": "Vous pouvez demander à savoir ce que le site conserve à votre sujet, à le faire corriger ou à le faire supprimer en écrivant à {{email}}."
       }
+    },
+    "highlights": {
+      "noAccount": "Aucun compte à créer",
+      "noAdvertising": "Aucune publicité",
+      "noTracker": "Aucun traceur d'une autre entreprise"
     }
+  },
+  "onThisPage": "Sur cette page",
+  "documents": "Documents légaux",
+  "contact": {
+    "title": "Une question sur ces informations ?",
+    "lead": "Écrivez à l'éditeur du site : une personne vous répond.",
+    "action": "Écrire à l'éditeur"
   }
 }

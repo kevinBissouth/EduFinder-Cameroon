@@ -29,6 +29,11 @@
         "title": "Reusing content",
         "body": "The texts and photos on a school's page belong to the school that provided them. Reusing them elsewhere requires its agreement."
       }
+    },
+    "highlights": {
+      "independent": "No school pays to rank higher",
+      "reviewed": "Every school page is reviewed before publication",
+      "reportable": "Found an error? Report it by email"
     }
   },
   "privacy": {
@@ -63,6 +68,18 @@
         "title": "Your rights",
         "body": "You can ask what the site holds about you, have it corrected or have it deleted by writing to {{email}}."
       }
+    },
+    "highlights": {
+      "noAccount": "No account to create",
+      "noAdvertising": "No advertising",
+      "noTracker": "No tracker from another company"
     }
+  },
+  "onThisPage": "On this page",
+  "documents": "Legal documents",
+  "contact": {
+    "title": "A question about this information?",
+    "lead": "Write to the site's publisher: a person answers you.",
+    "action": "Write to the publisher"
   }
 }
