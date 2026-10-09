@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import Button from './ui/Button'
 import Container from './ui/Container'
 import { useReferenceLabel } from '../hooks/useReferenceLabel'
+import { LOGIN_PATH } from '../routes'
 import { scrollToPageTop } from '../utils/scroll'
 
 const FOOTER_LINK_CLASSES =
@@ -11,10 +12,10 @@ const FOOTER_LINK_CLASSES =
 const COLUMN_TITLE_CLASSES = 'text-xs font-semibold uppercase tracking-eyebrow text-violet'
 
 const DIRECTORY_LINKS = [
-  { labelKey: 'footer.findSchools', href: '#results' },
-  { labelKey: 'footer.popularDestinations', href: '#destinations' },
-  { labelKey: 'footer.globalPicture', href: '#global-picture' },
-  { labelKey: 'footer.howItWorks', href: '#how-it-works' },
+  { labelKey: 'footer.findSchools', href: '/#results' },
+  { labelKey: 'footer.popularDestinations', href: '/#destinations' },
+  { labelKey: 'footer.globalPicture', href: '/#global-picture' },
+  { labelKey: 'footer.howItWorks', href: '/#how-it-works' },
 ]
 
 // Le filtre par type n'a de sens que sur la page de recherche : sans
@@ -43,7 +44,7 @@ function Footer({ types = [], onNavigateToType }) {
             <p className="mt-2 text-balance text-sm text-on-navy-soft">
               {t('footer.runSchoolLead')}
             </p>
-            <Button as="a" href="#/login" variant="accent" className="mt-5 rounded-full">
+            <Button as="a" href={LOGIN_PATH} variant="accent" className="mt-5 rounded-full">
               {t('footer.manageSchoolPage')}
             </Button>
           </div>

@@ -13,8 +13,8 @@ export function normalizeComparedIds(schoolIds) {
   return uniqueIds.slice(0, MAX_COMPARED_SCHOOLS)
 }
 
-export function buildComparisonHash(schoolIds) {
-  return `#${COMPARISON_PATH}${normalizeComparedIds(schoolIds).join(ID_SEPARATOR)}`
+export function buildComparisonPath(schoolIds) {
+  return `${COMPARISON_PATH}${normalizeComparedIds(schoolIds).join(ID_SEPARATOR)}`
 }
 
 // Identifiants portés par le chemin « /compare/a,b,c » ; null pour un autre chemin.

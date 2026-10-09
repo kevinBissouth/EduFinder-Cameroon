@@ -15,12 +15,11 @@ import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import useFiltersMeta from '../hooks/useFiltersMeta'
 import { useLinkCopy } from '../hooks/useLinkCopy'
 import { useSchoolSelection } from '../hooks/useSchoolSelection'
-import { navigateToComparison, navigateToSearchResults } from '../routes'
+import { SEARCH_RESULTS_PATH, navigateToComparison, navigateToSearchResults } from '../routes'
 import { canCompare, includesAllIds, isSameSelection } from '../utils/comparison'
 import { useRevealOnScroll } from '../hooks/useRevealOnScroll'
 
 const PAGE_CLASSES = 'min-h-screen overflow-x-clip bg-paper font-sans text-ink'
-const SEARCH_RESULTS_HASH = '#results'
 
 // Le message a sa ligne réservée sous le bouton : il apparaît et disparaît
 // sans déplacer le bouton ni le titre.
@@ -171,7 +170,7 @@ function ComparePage({ schoolIds }) {
           />
           <Container className="relative pb-8 pt-6 sm:pb-12 sm:pt-10">
             <a
-              href={SEARCH_RESULTS_HASH}
+              href={SEARCH_RESULTS_PATH}
               className="inline-flex min-h-11 items-center gap-2 rounded-control text-sm font-semibold text-primary-deep hover:text-primary"
             >
               <ArrowLeft aria-hidden="true" className="size-4" />

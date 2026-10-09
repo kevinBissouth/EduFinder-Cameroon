@@ -370,7 +370,7 @@ function LoginPage({ onAuthenticated }) {
             </p>
 
             <a
-              href="#/"
+              href="/"
               className="mt-2 flex min-h-11 items-center justify-center gap-1.5 rounded-control text-sm font-semibold text-primary-deep transition-colors hover:text-primary"
             >
               {t('backToSearch')}

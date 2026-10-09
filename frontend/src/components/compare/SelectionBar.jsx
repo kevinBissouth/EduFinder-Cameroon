@@ -8,7 +8,7 @@ import { useElementHeight } from '../../hooks/useElementHeight'
 import { useSchoolSelection } from '../../hooks/useSchoolSelection'
 import {
   MAX_COMPARED_SCHOOLS,
-  buildComparisonHash,
+  buildComparisonPath,
   canCompare,
 } from '../../utils/comparison'
 
@@ -47,7 +47,7 @@ function CompareAction({ comparedIds }) {
     )
   }
   return (
-    <Button as="a" href={buildComparisonHash(comparedIds)} variant="accent" className={COMPARE_BUTTON_CLASSES}>
+    <Button as="a" href={buildComparisonPath(comparedIds)} variant="accent" className={COMPARE_BUTTON_CLASSES}>
       {t('bar.compare')}
     </Button>
   )

@@ -13,11 +13,15 @@ import StateMessage from '../components/ui/StateMessage'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import { usePublishedSchools } from '../hooks/usePublishedSchools'
 import { useSchoolSelection } from '../hooks/useSchoolSelection'
-import { navigateToComparison, navigateToSchool, navigateToSearchResults } from '../routes'
+import {
+  SEARCH_RESULTS_PATH,
+  navigateToComparison,
+  navigateToSchool,
+  navigateToSearchResults,
+} from '../routes'
 import { MAX_COMPARED_SCHOOLS, canCompare } from '../utils/comparison'
 
 const PAGE_CLASSES = 'min-h-screen overflow-x-clip bg-paper font-sans text-ink'
-const SEARCH_RESULTS_HASH = '#results'
 const GRID_CLASSES = 'grid gap-6 md:grid-cols-2 lg:grid-cols-3'
 
 function SavedSchoolsBody({ catalog, savedSchools }) {
@@ -112,7 +116,7 @@ function SavedSchoolsPage() {
       <main>
         <Container className="py-12 sm:py-16">
           <a
-            href={SEARCH_RESULTS_HASH}
+            href={SEARCH_RESULTS_PATH}
             className="inline-flex min-h-11 items-center gap-2 rounded-control text-sm font-semibold text-primary-deep hover:text-primary"
           >
             <ArrowLeft aria-hidden="true" className="size-4" />

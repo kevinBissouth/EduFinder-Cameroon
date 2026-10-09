@@ -6,6 +6,7 @@ import { pickColumnClasses, pickSchoolTone } from './comparisonLayout'
 import { API_URL } from '../../constants'
 import { buildKeyFigures, findCoverUrl } from '../../utils/comparisonView'
 import { formatFcfa, formatPercent } from '../../utils/format'
+import { buildSchoolPath } from '../../routes'
 
 function SchoolPhoto({ school }) {
   const [hasPhotoFailed, setHasPhotoFailed] = useState(false)
@@ -67,7 +68,7 @@ function SchoolTile({ school, schoolIndex, onRemove }) {
   const { t } = useTranslation('compare')
   const tone = pickSchoolTone(schoolIndex)
   const removeLabel = t('remove', { name: school.name })
-  const profileHash = `#/school/${school.uuid}`
+  const profilePath = buildSchoolPath(school.uuid, school.name)
 
   return (
     <li
@@ -78,14 +79,14 @@ function SchoolTile({ school, schoolIndex, onRemove }) {
       </div>
       <div className="min-w-0 flex-1 sm:p-5">
         <h2 className="text-sm font-bold leading-snug text-navy sm:font-display sm:text-2xl sm:font-normal sm:leading-tight">
-          <a href={profileHash} className="block rounded-control py-1.5 hover:text-primary-deep sm:py-0">
+          <a href={profilePath} className="block rounded-control py-1.5 hover:text-primary-deep sm:py-0">
             {school.name}
           </a>
         </h2>
         <p className="text-xs text-ink-soft sm:mt-1 sm:text-sm">{school.city}</p>
         <KeyFigures school={school} />
         <a
-          href={profileHash}
+          href={profilePath}
           className="mt-3 hidden min-h-11 items-center gap-1.5 rounded-control text-sm font-semibold text-primary-deep hover:text-primary sm:inline-flex"
         >
           {t('viewProfile')}
