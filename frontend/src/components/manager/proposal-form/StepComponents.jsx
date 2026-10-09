@@ -11,6 +11,7 @@ import {
   translateOptionNames,
   useReferenceLabel,
 } from '../../../hooks/useReferenceLabel'
+import { SUPPORTED_LANGUAGES } from '../../../i18n/languages'
 
 const BIOGRAPHY_ROWS = 4
 const DESCRIPTION_ROWS = 5
@@ -30,9 +31,26 @@ function UploadStatus({ upload }) {
   )
 }
 
+const CONTENT_LANGUAGE_OPTIONS = SUPPORTED_LANGUAGES.map((language) => ({
+  id: language.code,
+  name: language.name,
+}))
+
+// Libellés des champs de traduction : « Biographie en anglais (facultatif) ».
+// La traduction se fait vers l'autre langue du site ; tant que le responsable
+// n'a pas dit dans laquelle il écrit, il n'y a rien à proposer.
+function useTranslationLabels(contentLanguage) {
+  const { t } = useTranslation('manager')
+  const targetLanguage = SUPPORTED_LANGUAGES.find((language) => language.code !== contentLanguage)
+  if (!contentLanguage || !targetLanguage) return null
+  const language = t(`form.translationTarget.${targetLanguage.code}`)
+  return { describe: (field) => t('form.fields.translationOf', { field, language }) }
+}
+
 export function GeneralStep({ form }) {
   const { t } = useTranslation('manager')
   const { fields } = form.draft
+  const translationLabels = useTranslationLabels(fields.content_language)
   const requiredSuffix = form.isCreation ? t('form.required') : ''
 
   return (
@@ -67,6 +85,22 @@ export function GeneralStep({ form }) {
         value={fields.description}
         onChange={(event) => form.setField('description', event.target.value)}
       />
+      <SelectField
+        label={t('form.fields.contentLanguage')}
+        placeholder={t('form.fields.contentLanguagePlaceholder')}
+        options={CONTENT_LANGUAGE_OPTIONS}
+        value={fields.content_language}
+        onChange={(event) => form.setField('content_language', event.target.value)}
+      />
+      <p className="-mt-2 text-sm text-ink-soft">{t('form.fields.contentLanguageHint')}</p>
+      {translationLabels && (
+        <TextAreaField
+          label={translationLabels.describe(t('detail.description'))}
+          rows={DESCRIPTION_ROWS}
+          value={fields.description_translation}
+          onChange={(event) => form.setField('description_translation', event.target.value)}
+        />
+      )}
     </>
   )
 }
@@ -191,6 +225,7 @@ export function ResultsStep({ form }) {
 export function LeadershipStep({ form }) {
   const { t } = useTranslation('manager')
   const { fields } = form.draft
+  const translationLabels = useTranslationLabels(fields.content_language)
 
   return (
     <>
@@ -206,12 +241,27 @@ export function LeadershipStep({ form }) {
         value={fields.director_title}
         onChange={(event) => form.setField('director_title', event.target.value)}
       />
+      {translationLabels && (
+        <TextField
+          label={translationLabels.describe(t('form.fields.directorTitle'))}
+          value={fields.director_title_translation}
+          onChange={(event) => form.setField('director_title_translation', event.target.value)}
+        />
+      )}
       <TextAreaField
         label={t('form.fields.biography')}
         rows={BIOGRAPHY_ROWS}
         value={fields.director_bio}
         onChange={(event) => form.setField('director_bio', event.target.value)}
       />
+      {translationLabels && (
+        <TextAreaField
+          label={translationLabels.describe(t('form.fields.biography'))}
+          rows={BIOGRAPHY_ROWS}
+          value={fields.director_bio_translation}
+          onChange={(event) => form.setField('director_bio_translation', event.target.value)}
+        />
+      )}
       <PhotoUpload
         title={t('form.fields.portrait')}
         photoUrl={form.draft.directorPhotoUrl}

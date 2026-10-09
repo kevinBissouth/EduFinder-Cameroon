@@ -89,7 +89,11 @@
     "unknown": "Unknown",
     "newPhoto": "New photo attached",
     "fileCount_one": "{{count}} file",
-    "fileCount_other": "{{count}} files"
+    "fileCount_other": "{{count}} files",
+    "content_language": "Language of the texts",
+    "description_translation": "Description, other language",
+    "director_title_translation": "Head of school title, other language",
+    "director_bio_translation": "Head of school biography, other language"
   },
   "charts": {
     "visits": "Visits",

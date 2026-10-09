@@ -4,7 +4,9 @@ import { Trans, useTranslation } from 'react-i18next'
 
 import Container from '../ui/Container'
 import SectionHeading, { Emphasis } from '../ui/SectionHeading'
+import WrittenInNotice from './WrittenInNotice'
 import { useReferenceLabel } from '../../hooks/useReferenceLabel'
+import { useSchoolText } from '../../hooks/useSchoolText'
 
 // Au-delà de cette longueur, la description est repliée derrière « Read more ».
 const LONG_DESCRIPTION_LENGTH = 420
@@ -125,6 +127,7 @@ function Landmarks({ institution }) {
 
 function OverviewSection({ institution }) {
   const { t } = useTranslation('profile')
+  const description = useSchoolText(institution)('description')
 
   return (
     <section id="overview" className="scroll-mt-36 bg-surface py-16 sm:py-20">
@@ -135,8 +138,11 @@ function OverviewSection({ institution }) {
             eyebrow={t('overview.eyebrow')}
             title={<Trans t={t} i18nKey="overview.title" components={{ emphasis: <Emphasis /> }} />}
           />
-          {institution.description ? (
-            <Description description={institution.description} />
+          {description.text ? (
+            <>
+              <Description description={description.text} />
+              <WrittenInNotice languageCode={description.writtenIn} className="mt-3" />
+            </>
           ) : (
             <p className="mt-5 text-base text-ink-soft">
               {t('overview.noDescription')}

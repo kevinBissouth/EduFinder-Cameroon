@@ -41,3 +41,9 @@ class NotificationKind(models.TextChoices):
     SUBMISSION_REJECTED = "submission_rejected"
     ESTABLISHMENT_SUSPENDED = "establishment_suspended"
     ESTABLISHMENT_REACTIVATED = "establishment_reactivated"
+
+
+# Langue dans laquelle un établissement a rédigé ses textes libres.
+class ContentLanguage(models.TextChoices):
+    FRENCH = "fr"
+    ENGLISH = "en"

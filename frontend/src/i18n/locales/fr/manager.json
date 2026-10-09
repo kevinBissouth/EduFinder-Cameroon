@@ -250,7 +250,11 @@
       "directorTitlePlaceholder": "Proviseur",
       "biography": "Biographie",
       "portrait": "Portrait",
-      "coverPhoto": "Photo de couverture"
+      "coverPhoto": "Photo de couverture",
+      "contentLanguage": "Langue de vos textes",
+      "contentLanguagePlaceholder": "Choisir la langue",
+      "contentLanguageHint": "La langue dans laquelle vous écrivez la description et la biographie. Vous pourrez alors ajouter leur version dans l'autre langue du site.",
+      "translationOf": "{{field}} en {{language}} (facultatif)"
     },
     "rows": {
       "removeFee": "Retirer ces frais",
@@ -274,6 +278,10 @@
       "videos": "Vidéos",
       "removeVideo": "Retirer cette vidéo",
       "addVideo": "Ajouter une vidéo (MP4 ou WebM)"
+    },
+    "translationTarget": {
+      "en": "anglais",
+      "fr": "français"
     }
   }
 }

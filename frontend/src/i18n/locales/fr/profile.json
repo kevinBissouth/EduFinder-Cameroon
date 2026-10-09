@@ -133,5 +133,9 @@
       "or": " ou ",
       "answer": "Vous pouvez {{ways}}."
     }
+  },
+  "writtenIn": {
+    "en": "Texte rédigé en anglais par l'établissement.",
+    "fr": "Texte rédigé en français par l'établissement."
   }
 }

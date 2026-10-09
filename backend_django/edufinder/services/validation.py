@@ -69,6 +69,10 @@ _ESTABLISHMENT_ATTRIBUTE_BY_CONTENT_KEY = {
     "director_name": "director_name",
     "director_title": "director_title",
     "director_bio": "director_bio",
+    "content_language": "content_language",
+    "description_translation": "description_translation",
+    "director_title_translation": "director_title_translation",
+    "director_bio_translation": "director_bio_translation",
     DIRECTOR_PHOTO_KEY: "director_photo_url",
 }
 COVER_PHOTO_KEY = "cover_photo"

@@ -91,7 +91,11 @@
     "newPhoto": "Nouvelle photo jointe",
     "fileCount_one": "{{count}} fichier",
     "fileCount_many": "{{count}} fichiers",
-    "fileCount_other": "{{count}} fichiers"
+    "fileCount_other": "{{count}} fichiers",
+    "content_language": "Langue des textes",
+    "description_translation": "Description, autre langue",
+    "director_title_translation": "Titre du chef d'établissement, autre langue",
+    "director_bio_translation": "Biographie du chef d'établissement, autre langue"
   },
   "charts": {
     "visits": "Visites",

@@ -241,7 +241,11 @@
       "directorTitlePlaceholder": "Principal",
       "biography": "Biography",
       "portrait": "Portrait",
-      "coverPhoto": "Cover photo"
+      "coverPhoto": "Cover photo",
+      "contentLanguage": "Language of your texts",
+      "contentLanguagePlaceholder": "Choose the language",
+      "contentLanguageHint": "The language you write the description and the biography in. You can then add their version in the site's other language.",
+      "translationOf": "{{field}} in {{language}} (optional)"
     },
     "rows": {
       "removeFee": "Remove this fee",
@@ -265,6 +269,10 @@
       "videos": "Videos",
       "removeVideo": "Remove this video",
       "addVideo": "Add a video (MP4 or WebM)"
+    },
+    "translationTarget": {
+      "en": "English",
+      "fr": "French"
     }
   }
 }
