@@ -1,8 +1,9 @@
 import { useRef, useState } from 'react'
-import { Ellipsis, GraduationCap, LogOut } from 'lucide-react'
+import { Ellipsis, Globe, GraduationCap, LogOut } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 import { useDismiss } from '../../hooks/useDismiss'
+import { HOME_PATH } from '../../routes'
 
 const TAB_COUNT = 4
 const MORE_TAB_ID = 'more'
@@ -78,12 +79,16 @@ export function WorkspaceRail({ navItems, activeView, onSelectView, onSignOut })
 
   return (
     <aside className="sticky top-0 z-40 hidden h-screen w-32 shrink-0 flex-col bg-navy [--focus-ring:var(--color-accent)] lg:flex">
+      {/* Retour au site des visiteurs, sans se déconnecter : la session reste
+          ouverte et « Mon espace » y ramène. Le libellé sous le logo le dit ;
+          placé ici, il n'allonge pas le rail sur un écran peu haut. */}
       <a
-        href="/"
+        href={HOME_PATH}
         aria-label={t('backToPublicSite')}
-        className="flex h-20 items-center justify-center text-primary"
+        className="flex h-20 flex-col items-center justify-center gap-0.5 text-xs font-medium text-on-navy-soft transition-colors hover:text-white"
       >
-        <GraduationCap aria-hidden="true" className="size-8" />
+        <GraduationCap aria-hidden="true" className="size-8 text-primary" />
+        {t('publicSite')}
       </a>
       <nav aria-label={t('navigation')} className="flex-1">
         <ul>
@@ -229,6 +234,12 @@ function MoreSheet({ navItems, activeView, onSelect, onSignOut }) {
           )
         })}
         <li className="mt-1 border-t border-line pt-1">
+          <a href={HOME_PATH} className={`${sheetItemClasses} text-navy hover:bg-muted`}>
+            <Globe aria-hidden="true" className="size-5" />
+            {t('publicSite')}
+          </a>
+        </li>
+        <li>
           <button
             type="button"
             onClick={onSignOut}
