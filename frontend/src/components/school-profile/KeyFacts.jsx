@@ -46,16 +46,25 @@ function KeyFacts({ institution }) {
   const translateReference = useReferenceLabel()
   const keyFacts = listKeyFacts(institution, t, translateReference)
 
+  // Sur téléphone, une ligne par fait, le libellé à gauche et la valeur à
+  // droite : en grille de deux colonnes, les valeurs longues se chevauchaient.
   return (
     <section aria-label={t('facts.label')} className="border-y border-line bg-surface">
       <Container>
-        <dl className="grid grid-cols-2 gap-x-6 gap-y-6 py-6 sm:grid-cols-3 lg:flex lg:divide-x lg:divide-line lg:gap-0">
+        <dl className="divide-y divide-line py-2 sm:grid sm:grid-cols-3 sm:gap-6 sm:divide-y-0 sm:py-6 lg:flex lg:gap-0 lg:divide-x">
           {keyFacts.map((fact) => (
-            <div key={fact.label} className="flex items-center gap-4 lg:flex-1 lg:px-6 lg:first:pl-0 lg:last:pr-0">
-              <fact.icon aria-hidden="true" className="size-8 shrink-0 text-primary-deep" strokeWidth={1.25} />
-              <div>
-                <dt className="text-xs text-ink-soft">{fact.label}</dt>
-                <dd className="mt-0.5 text-sm font-bold text-navy">{fact.value}</dd>
+            <div
+              key={fact.label}
+              className="flex items-center gap-3 py-3 sm:gap-4 sm:py-0 lg:flex-1 lg:px-6 lg:first:pl-0 lg:last:pr-0"
+            >
+              <fact.icon
+                aria-hidden="true"
+                className="size-6 shrink-0 text-primary-deep sm:size-8"
+                strokeWidth={1.25}
+              />
+              <div className="flex min-w-0 flex-1 items-baseline justify-between gap-4 sm:block">
+                <dt className="text-sm text-ink-soft sm:text-xs">{fact.label}</dt>
+                <dd className="text-right text-sm font-bold text-navy sm:mt-0.5 sm:text-left">{fact.value}</dd>
               </div>
             </div>
           ))}

@@ -1,0 +1,105 @@
+{
+  "title": "Comparaison",
+  "eyebrow": "Comparer des établissements",
+  "heading": "Côte à côte, sur les mêmes critères.",
+  "lead": "Chaque thème montre ce que les établissements ont publié. Rien n'est classé : c'est vous qui décidez de ce qui compte.",
+  "notPublished": "Non communiqué",
+  "copyLink": "Copier le lien",
+  "linkCopied": "Lien copié",
+  "copyFailed": "Copiez l'adresse depuis la barre de votre navigateur",
+  "backToSearch": "Retour à la recherche",
+  "viewProfile": "Voir la fiche",
+  "remove": "Retirer {{name}} de la comparaison",
+  "loading": "Chargement des établissements à comparer",
+  "errorTitle": "Les établissements n'ont pas pu être chargés",
+  "errorDescription": "Le serveur n'a pas répondu. Vérifiez votre connexion, puis réessayez.",
+  "retry": "Réessayer",
+  "emptyTitle": "Aucun établissement à comparer",
+  "emptyDescription": "Choisissez de deux à quatre établissements dans la recherche avec le bouton « Comparer », puis revenez ici.",
+  "needOneMoreTitle": "Encore un établissement à choisir",
+  "needOneMoreDescription": "Une comparaison demande au moins deux établissements. Ajoutez-en un autre depuis la recherche.",
+  "unavailable_one": "{{count}} établissement de ce lien n'est plus disponible.",
+  "unavailable_many": "{{count}} établissements de ce lien ne sont plus disponibles.",
+  "unavailable_other": "{{count}} établissements de ce lien ne sont plus disponibles.",
+  "groups": {
+    "identity": "Profil",
+    "fees": "Frais",
+    "results": "Résultats aux examens",
+    "offer": "Filières et services",
+    "contact": "Contact"
+  },
+  "rows": {
+    "type": "Type d'établissement",
+    "sector": "Secteur",
+    "section": "Section linguistique",
+    "location": "Localisation",
+    "programmes": "Filières",
+    "services": "Services",
+    "phone": "Téléphone",
+    "email": "E-mail",
+    "website": "Site web"
+  },
+  "bar": {
+    "label": "Établissements sélectionnés pour la comparaison",
+    "selected_one": "{{count}} établissement sélectionné",
+    "selected_many": "{{count}} établissements sélectionnés",
+    "selected_other": "{{count}} établissements sélectionnés",
+    "compare": "Comparer",
+    "clear": "Tout retirer",
+    "needOneMore": "Ajoutez-en un second pour comparer.",
+    "full": "{{maximum}} au plus : retirez-en un d'abord."
+  },
+  "saved": {
+    "title": "Favoris",
+    "eyebrow": "Votre liste",
+    "heading": "Vos favoris, mis de côté pour plus tard.",
+    "lead": "Cette liste reste sur cet appareil. Elle ne vous suit pas sur un autre téléphone ni un autre navigateur.",
+    "emptyTitle": "Aucun favori pour l'instant",
+    "emptyDescription": "Touchez le cœur d'un établissement pour l'ajouter à vos favoris.",
+    "count_one": "{{count}} favori",
+    "count_many": "{{count}} favoris",
+    "count_other": "{{count}} favoris",
+    "unavailable_one": "{{count}} favori n'est plus disponible et a été retiré de votre liste.",
+    "unavailable_many": "{{count}} favoris ne sont plus disponibles et ont été retirés de votre liste.",
+    "unavailable_other": "{{count}} favoris ne sont plus disponibles et ont été retirés de votre liste.",
+    "compare": "Comparer ces établissements"
+  },
+  "header": {
+    "compare": "Comparaison",
+    "compareTotal": "Comparaison ({{total}})",
+    "savedTotal": "Favoris ({{total}})"
+  },
+  "shared": {
+    "notice": "Vous regardez une comparaison ouverte depuis un lien. Votre propre sélection n'a pas changé.",
+    "keep": "Garder cette sélection"
+  },
+  "toggle": {
+    "compare": "Comparer",
+    "addToComparison": "Ajouter à la comparaison",
+    "removeFromComparison": "Retirer de la comparaison",
+    "save": "Ajouter aux favoris",
+    "unsave": "Retirer des favoris"
+  },
+  "schoolsLabel": "Établissements comparés",
+  "inCommon": "Ce qu'ils ont en commun",
+  "examSession": "Session {{session}}",
+  "fees": {
+    "title": "Frais annuels",
+    "legend": "En grand, les frais annuels les plus bas de l'établissement. La barre situe ce montant par rapport à l'établissement le plus cher de la comparaison.",
+    "from": "À partir de",
+    "byClass_one": "Voir la classe et ses frais, {{schoolYear}}",
+    "byClass_many": "Voir les {{count}} classes et leurs frais, {{schoolYear}}",
+    "byClass_other": "Voir les {{count}} classes et leurs frais, {{schoolYear}}"
+  },
+  "results": {
+    "legend": "Taux de réussite de la dernière session publiée par chaque établissement."
+  },
+  "offer": {
+    "legend": "Les éléments cochés sont proposés par tous les établissements comparés.",
+    "sharedByAll": "proposé par tous"
+  },
+  "notApplicableFor": "Sans objet pour : {{names}}",
+  "feesUpTo": "jusqu'à {{highest}}",
+  "bestPassRate": "Meilleur taux de réussite",
+  "themesNavigation": "Thèmes de la comparaison"
+}

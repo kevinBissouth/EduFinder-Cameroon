@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { BookOpen, ClipboardCheck, ConciergeBell, Images, MapPin } from 'lucide-react'
 import { Trans, useTranslation } from 'react-i18next'
 
 import Container from '../ui/Container'
@@ -40,29 +41,90 @@ function countDistinct(values) {
   return new Set(values).size
 }
 
-// Repères chiffrés de la fiche, sans répéter la barre de faits clés.
-function listLandmarks(institution, t, translateReference) {
+// Compteurs de la fiche, sans répéter la barre de faits clés. Un compteur à
+// zéro n'est pas affiché.
+function listCounters(institution, t) {
   const photoCount = (institution.media ?? []).filter((media) => media.type === 'image').length
   return [
+    { icon: BookOpen, label: t('overview.programsOffered'), value: institution.programs?.length },
+    { icon: ConciergeBell, label: t('overview.servicesOnSite'), value: institution.services?.length },
     {
-      label: t('overview.location'),
-      value: [institution.city, translateReference('regions', institution.region)]
-        .filter(Boolean)
-        .join(', '),
-    },
-    { label: t('overview.programsOffered'), value: institution.programs?.length || null },
-    { label: t('overview.servicesOnSite'), value: institution.services?.length || null },
-    {
+      icon: ClipboardCheck,
       label: t('overview.examSessions'),
-      value: countDistinct((institution.exam_results ?? []).map((result) => result.session)) || null,
+      value: countDistinct((institution.exam_results ?? []).map((result) => result.session)),
     },
-    { label: t('overview.photos'), value: photoCount || null },
-  ].filter((landmark) => landmark.value)
+    { icon: Images, label: t('overview.photos'), value: photoCount },
+  ].filter((counter) => counter.value)
+}
+
+// Sous 1024 px chaque repère est une tuile ; au-delà c'est une ligne de la
+// liste d'origine, d'où le préfixe max-lg sur tout l'habillage de tuile.
+const TILE_CLASSES =
+  'max-lg:rounded-panel max-lg:border max-lg:border-line max-lg:bg-linear-to-br max-lg:from-primary-soft/50 max-lg:to-surface max-lg:p-4 max-lg:shadow-soft lg:py-4'
+
+function LocationLandmark({ location }) {
+  const { t } = useTranslation('profile')
+
+  return (
+    <div className={`col-span-2 flex items-center gap-3 ${TILE_CLASSES}`}>
+      <span className="flex size-11 shrink-0 items-center justify-center rounded-control bg-linear-to-br from-primary to-violet-deep text-white shadow-glow lg:hidden">
+        <MapPin aria-hidden="true" className="size-5" />
+      </span>
+      <div>
+        <dt className="text-xs text-ink-soft">{t('overview.location')}</dt>
+        <dd className="mt-0.5 text-sm font-bold text-navy">{location}</dd>
+      </div>
+    </div>
+  )
+}
+
+// Sur téléphone le chiffre passe au-dessus de son libellé, en grand, avec
+// l'icône du repère dans le coin.
+function CounterLandmark({ counter, isFullWidth }) {
+  return (
+    <div className={`relative flex flex-col max-lg:flex-col-reverse ${TILE_CLASSES} ${isFullWidth ? 'col-span-2' : ''}`}>
+      <counter.icon
+        aria-hidden="true"
+        className="absolute right-4 top-4 size-5 text-primary lg:hidden"
+        strokeWidth={1.5}
+      />
+      <dt className="text-xs text-ink-soft max-lg:mt-1">{counter.label}</dt>
+      <dd className="text-sm font-bold tabular-nums text-navy max-lg:font-display max-lg:text-4xl max-lg:font-normal max-lg:text-primary-deep lg:mt-0.5">
+        {counter.value}
+      </dd>
+    </div>
+  )
+}
+
+// Repères de la fiche. Sur téléphone : l'adresse en bandeau, puis les
+// compteurs en tuiles sur deux colonnes ; avec un nombre impair de compteurs,
+// le dernier prend toute la largeur, la grille ne laisse jamais de case vide.
+// Sur grand écran : une liste, dans la colonne à côté de la présentation.
+function Landmarks({ institution }) {
+  const { t } = useTranslation('profile')
+  const translateReference = useReferenceLabel()
+  const location = [institution.city, translateReference('regions', institution.region)]
+    .filter(Boolean)
+    .join(', ')
+  const counters = listCounters(institution, t)
+  const hasOddCounters = counters.length % 2 === 1
+
+  return (
+    <dl className="grid grid-cols-2 gap-3 self-start lg:block lg:divide-y lg:divide-line lg:border-y lg:border-line">
+      {location && <LocationLandmark location={location} />}
+      {counters.map((counter, counterIndex) => (
+        <CounterLandmark
+          key={counter.label}
+          counter={counter}
+          isFullWidth={hasOddCounters && counterIndex === counters.length - 1}
+        />
+      ))}
+    </dl>
+  )
 }
 
 function OverviewSection({ institution }) {
   const { t } = useTranslation('profile')
-  const translateReference = useReferenceLabel()
 
   return (
     <section id="overview" className="scroll-mt-36 bg-surface py-16 sm:py-20">
@@ -82,14 +144,7 @@ function OverviewSection({ institution }) {
           )}
         </div>
 
-        <dl className="divide-y divide-line border-y border-line self-start">
-          {listLandmarks(institution, t, translateReference).map((landmark) => (
-            <div key={landmark.label} className="py-4">
-              <dt className="text-xs text-ink-soft">{landmark.label}</dt>
-              <dd className="mt-0.5 text-sm font-bold tabular-nums text-navy">{landmark.value}</dd>
-            </div>
-          ))}
-        </dl>
+        <Landmarks institution={institution} />
       </Container>
     </section>
   )

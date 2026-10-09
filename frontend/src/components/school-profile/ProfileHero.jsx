@@ -5,32 +5,25 @@ import { useTranslation } from 'react-i18next'
 import Button from '../ui/Button'
 import Container from '../ui/Container'
 import { Emphasis, Eyebrow } from '../ui/SectionHeading'
-import { buildContactHref, toExternalUrl } from './helpers'
+import { buildContactHref, splitLastWord, toExternalUrl } from './helpers'
+import { CompareToggle, SaveToggle } from '../compare/SchoolToggles'
 import { API_URL } from '../../constants'
 import { useReferenceLabel } from '../../hooks/useReferenceLabel'
 import { trackInstitutionEvent } from '../../utils/tracking'
+import { useLinkCopy } from '../../hooks/useLinkCopy'
 
-const COPY_FEEDBACK_MILLISECONDS = 2500
 
 function capitalize(text) {
   return text ? text.charAt(0).toUpperCase() + text.slice(1) : ''
 }
 
 // Le dernier mot du nom est mis en italique bleu, comme un mot d'accroche.
-// Un nom d'un seul mot reste entier, sans mise en avant.
 function ProfileTitle({ name }) {
-  const words = name.trim().split(/\s+/)
-  const lastWord = words.pop()
+  const { leadingWords, lastWord } = splitLastWord(name)
 
   return (
     <h1 className="mt-5 text-balance font-display text-4xl leading-display tracking-tight text-navy sm:text-5xl">
-      {words.length > 0 ? (
-        <>
-          {words.join(' ')} <Emphasis>{lastWord}</Emphasis>
-        </>
-      ) : (
-        lastWord
-      )}
+      {leadingWords} <Emphasis>{lastWord}</Emphasis>
     </h1>
   )
 }
@@ -57,21 +50,12 @@ function Breadcrumb({ institution }) {
   )
 }
 
-// Copie l'adresse de la fiche dans le presse-papiers et le confirme. Si le
-// navigateur refuse, le bouton le dit au lieu d'échouer en silence.
+// Le message « lien copié » s'affiche dans une bulle au-dessus du bouton : en
+// ligne, il poussait les autres boutons. La bulle reste dans la page même
+// vide, pour que les lecteurs d'écran annoncent son texte quand il arrive.
 function ShareButton() {
   const { t } = useTranslation('profile')
-  const [copyStatus, setCopyStatus] = useState('idle')
-
-  const copyProfileLink = async () => {
-    try {
-      await navigator.clipboard.writeText(window.location.href)
-      setCopyStatus('copied')
-    } catch {
-      setCopyStatus('failed')
-    }
-    setTimeout(() => setCopyStatus('idle'), COPY_FEEDBACK_MILLISECONDS)
-  }
+  const { copyStatus, copyCurrentLink } = useLinkCopy()
 
   const statusMessages = {
     idle: '',
@@ -80,13 +64,13 @@ function ShareButton() {
   }
 
   return (
-    <div className="flex items-center gap-3">
+    <div className="relative sm:flex-1">
       <button
         type="button"
         aria-label={t('hero.copyLink')}
         title={t('hero.copyLink')}
-        onClick={copyProfileLink}
-        className="flex size-11 cursor-pointer items-center justify-center rounded-button border border-line bg-surface text-navy transition-colors hover:border-primary hover:text-primary-deep"
+        onClick={copyCurrentLink}
+        className="flex h-11 w-11 min-w-11 cursor-pointer items-center justify-center rounded-full border border-line bg-surface text-navy transition hover:border-primary hover:text-primary-deep active:scale-95 sm:w-full"
       >
         {copyStatus === 'copied' ? (
           <Check aria-hidden="true" className="size-4" />
@@ -94,45 +78,77 @@ function ShareButton() {
           <Share2 aria-hidden="true" className="size-4" />
         )}
       </button>
-      <p role="status" className="text-sm font-medium text-ink-soft">
+      <p
+        role="status"
+        className="absolute bottom-full right-0 mb-2 animate-menu-drop whitespace-nowrap rounded-control bg-navy px-3 py-1.5 text-xs font-semibold text-white shadow-raised empty:hidden"
+      >
         {statusMessages[copyStatus]}
       </p>
     </div>
   )
 }
 
-function ProfileActions({ institution }) {
+// Sur téléphone un lien prend toute la largeur ; au-delà il tient dans sa
+// colonne de la grille des actions.
+const LINK_CLASSES = 'rounded-full max-sm:col-span-2'
+
+// Contacter est l'action principale de la fiche. Sans courriel ni téléphone
+// publié, le bouton n'existe pas.
+function ContactLink({ institution }) {
   const { t } = useTranslation('profile')
-  const websiteUrl = toExternalUrl(institution.website)
   const contactHref = buildContactHref(institution)
+  if (!contactHref) return null
 
   return (
-    <div className="mt-8 flex flex-wrap items-center gap-3">
-      {/* Contacter l'établissement est l'action principale : le lien vers
-          son site fait quitter la fiche, il passe au second plan. */}
-      {contactHref && (
-        <Button
-          as="a"
-          href={contactHref}
-          onClick={() => trackInstitutionEvent(institution.uuid, 'inquiry')}
-        >
-          <Mail aria-hidden="true" className="size-4" />
-          {t('hero.contact')}
-        </Button>
-      )}
-      {websiteUrl && (
-        <Button
-          as="a"
-          href={websiteUrl}
-          variant="secondary"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          {t('hero.visitWebsite')}
-          <ArrowUpRight aria-hidden="true" className="size-4" />
-        </Button>
-      )}
-      <ShareButton />
+    <Button
+      as="a"
+      href={contactHref}
+      className={LINK_CLASSES}
+      onClick={() => trackInstitutionEvent(institution.uuid, 'inquiry')}
+    >
+      <Mail aria-hidden="true" className="size-4" />
+      {t('hero.contact')}
+    </Button>
+  )
+}
+
+// Le lien vers le site fait quitter la fiche : il passe au second plan.
+function WebsiteLink({ institution }) {
+  const { t } = useTranslation('profile')
+  const websiteUrl = toExternalUrl(institution.website)
+  if (!websiteUrl) return null
+
+  return (
+    <Button
+      as="a"
+      href={websiteUrl}
+      variant="secondary"
+      className={LINK_CLASSES}
+      target="_blank"
+      rel="noopener noreferrer"
+    >
+      {t('hero.visitWebsite')}
+      <ArrowUpRight aria-hidden="true" className="size-4" />
+    </Button>
+  )
+}
+
+// Une grille de deux colonnes : les liens vers l'établissement sur la
+// première ligne, les outils du visiteur (comparer, garder, partager) sur la
+// seconde. « Comparer » commence toujours la première colonne, sous
+// « Contacter » : les deux boutons ont ainsi la même largeur, celle du plus
+// long. Le cœur et le partage s'élargissent pour couvrir ensemble la seconde
+// colonne. S'il manque un lien, ou les deux, la grille se resserre sans trou.
+function ProfileActions({ institution }) {
+  return (
+    <div className="mt-8 grid grid-cols-[minmax(0,1fr)_auto] gap-3 sm:grid-cols-[auto_auto] sm:justify-start">
+      <ContactLink institution={institution} />
+      <WebsiteLink institution={institution} />
+      <CompareToggle schoolId={institution.uuid} className="col-start-1" />
+      <div className="flex items-center gap-3">
+        <SaveToggle schoolId={institution.uuid} className="sm:flex-1" />
+        <ShareButton />
+      </div>
     </div>
   )
 }

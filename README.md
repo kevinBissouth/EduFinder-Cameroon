@@ -137,6 +137,7 @@ python -m pytest
 cd frontend
 npm run lint          # règles de code
 npm run check:i18n    # mêmes textes en anglais et en français, aucune clé manquante
+npm test              # tests unitaires (règles de comparaison, routes, examens par type)
 npm run build         # compilation de production
 ```
 

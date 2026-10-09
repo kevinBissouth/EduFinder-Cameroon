@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next'
 
 import Button from '../ui/Button'
-import Modal from '../workspace/Modal'
+import Modal from '../ui/Modal'
 import Notice from '../workspace/Notice'
 import StatusBadge from '../workspace/StatusBadge'
 import SubmissionContent from '../workspace/SubmissionContent'

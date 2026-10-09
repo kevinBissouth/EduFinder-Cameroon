@@ -113,6 +113,17 @@ def test_filters_meta_exposes_references_as_id_and_name(client, establishment):
     assert filters_meta["programs"] == []
 
 
+# La comparaison publique doit savoir qu'un BEPC ne concerne pas une
+# université : la règle vient du même tableau que les contrôles de cohérence.
+@pytest.mark.django_db
+def test_filters_meta_tells_which_types_sit_each_exam(client):
+    exam_allowed_types = client.get("/filters-meta").json()["exam_allowed_types"]
+
+    assert exam_allowed_types["CEP"] == ["Primary"]
+    assert exam_allowed_types["BTS"] == ["Higher institute"]
+    assert exam_allowed_types["BEPC"] == ["Secondary general", "Secondary technical"]
+
+
 @pytest.mark.django_db
 def test_filters_meta_orders_regions_by_name(client):
     Region.objects.create(name="Ouest")

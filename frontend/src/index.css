@@ -98,9 +98,106 @@
      courbe de la barre, ce qu'une ombre de boîte ne sait pas faire. */
   --drop-shadow-bar: 0 -6px 14px rgb(8 18 32 / 0.12);
 
-  /* Seule animation d'entrée de l'interface : le haut de page se pose une fois
-     au chargement. Tout le reste ne bouge qu'en réponse à une action. */
-  --animate-settle: settle 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  /* Mouvement du site public. Trois règles : n'animer que des déplacements et
+     des fondus (le téléphone les fait sans effort), rester sous la seconde, et
+     ne jamais faire attendre. Une seule courbe pour tout, pour que l'ensemble
+     bouge d'un même geste. Les animations dont le nom finit sans « both »
+     ne laissent aucune transformation derrière elles : un élément transformé
+     piégerait ses descendants en position fixe. */
+  --ease-settle: cubic-bezier(0.2, 0.8, 0.2, 1);
+  /* Le haut de page se pose au chargement, élément après élément. */
+  --animate-settle: settle 0.6s var(--ease-settle) both;
+  /* À l'ouverture du site, la barre du haut descend. */
+  --animate-header-drop: header-drop 0.55s var(--ease-settle) backwards;
+  --animate-photo-reveal: photo-reveal 0.9s var(--ease-settle) 0.15s backwards;
+  /* Menu qui se déroule, barre de sélection qui monte. */
+  --animate-menu-drop: menu-drop 0.22s var(--ease-settle) backwards;
+  --animate-bar-rise: bar-rise 0.35s var(--ease-settle) backwards;
+  /* Le cœur et « Comparer » quand on vient de les activer : l'icône prend son
+     élan, jaillit hors de son cercle en pivotant, puis revient en rebondissant,
+     pendant que le bouton s'écrase et se détend sous elle. */
+  --animate-pop: pop 0.9s ease-out backwards;
+  --animate-squash: squash 0.6s var(--ease-settle) backwards;
+
+  @keyframes header-drop {
+    from {
+      opacity: 0;
+      transform: translateY(-100%);
+    }
+  }
+
+  @keyframes photo-reveal {
+    from {
+      opacity: 0;
+      transform: scale(0.94);
+    }
+  }
+
+  @keyframes menu-drop {
+    from {
+      opacity: 0;
+      transform: translateY(-8px);
+    }
+  }
+
+  @keyframes bar-rise {
+    from {
+      transform: translateY(100%);
+    }
+  }
+
+  @keyframes pop {
+    0% {
+      transform: scale(0.2) rotate(0deg);
+    }
+    38% {
+      transform: scale(2.5) rotate(-16deg);
+    }
+    56% {
+      transform: scale(0.82) rotate(8deg);
+    }
+    72% {
+      transform: scale(1.22) rotate(-4deg);
+    }
+    86% {
+      transform: scale(0.95) rotate(0deg);
+    }
+    100% {
+      transform: scale(1) rotate(0deg);
+    }
+  }
+
+  @keyframes squash {
+    0% {
+      transform: scale(1);
+    }
+    25% {
+      transform: scale(0.86);
+    }
+    60% {
+      transform: scale(1.08);
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+  /* Ouverture d'une fenêtre, en réponse à un appui : le voile apparaît et la
+     feuille monte. Elle montre d'où vient la fenêtre, sans faire attendre. */
+  --animate-veil-fade: veil-fade 0.2s ease-out both;
+  --animate-sheet-rise: sheet-rise 0.28s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+
+  @keyframes veil-fade {
+    from {
+      opacity: 0;
+    }
+  }
+
+  @keyframes sheet-rise {
+    from {
+      opacity: 0;
+      transform: translateY(24px);
+    }
+  }
 
   @keyframes settle {
     from {
@@ -111,6 +208,152 @@
       opacity: 1;
       transform: translateY(0);
     }
+  }
+}
+
+/* Apparition au défilement. Le crochet useRevealOnScroll marque chaque bloc
+   « pending » (caché, plus bas, un peu plus petit) puis « shown » quand il
+   arrive à l'écran : la transition joue alors une fois, à sa propre vitesse,
+   quelle que soit celle du doigt. Une fois posé, le bloc ne garde aucune
+   transformation : il piégerait sinon ses fenêtres en position fixe, comme
+   la visionneuse de photos de la fiche. */
+@media (prefers-reduced-motion: no-preference) {
+  [data-reveal] {
+    transition:
+      opacity 0.8s var(--ease-settle),
+      transform 0.8s var(--ease-settle);
+  }
+
+  [data-reveal="pending"] {
+    opacity: 0;
+    transform: translateY(56px) scale(0.97);
+  }
+}
+
+/* Fondu enchaîné entre deux pages : l'ancienne recule et s'efface, la
+   nouvelle monte en prenant son temps. Assez long pour se voir même quand la
+   page d'arrivée est lourde à dessiner (la connexion), assez court pour ne
+   pas faire attendre. La barre du haut et la barre de sélection portent un nom
+   de transition à elles : elles restent en place pendant que la page change. */
+@keyframes page-leave {
+  to {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+}
+
+@keyframes page-arrive {
+  from {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+}
+
+::view-transition-old(root) {
+  animation: page-leave 0.3s ease-in both;
+}
+
+::view-transition-new(root) {
+  animation: page-arrive 0.65s var(--ease-settle) 0.15s both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}
+
+/* Éclat autour d'une icône qu'on vient d'activer. Deux ondes partent du
+   centre (un disque plein, puis un anneau), et douze particules s'envolent en
+   éventail : des traits qui vont loin, des points qui restent plus près et
+   partent un instant après. Chaque particule reçoit son angle du composant
+   (--spark-angle) et rétrécit en s'éloignant. Rien d'autre n'est animé que
+   des déplacements, des échelles et des opacités. */
+@keyframes burst-disc {
+  from {
+    opacity: 0.55;
+    transform: scale(0.2);
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.9);
+  }
+}
+
+@keyframes burst-ring {
+  from {
+    opacity: 1;
+    transform: scale(0.4);
+  }
+  to {
+    opacity: 0;
+    transform: scale(2.7);
+  }
+}
+
+@keyframes spark-fly {
+  0% {
+    opacity: 1;
+    transform: rotate(var(--spark-angle)) translateY(-8px) scale(1);
+  }
+  55% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: rotate(var(--spark-angle)) translateY(var(--spark-reach)) scale(0.2);
+  }
+}
+
+@utility press-burst {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+
+  &::before,
+  &::after {
+    content: "";
+    position: absolute;
+    inset: -6px;
+    border-radius: 9999px;
+  }
+
+  &::before {
+    background-color: var(--color-violet);
+    animation: burst-disc 0.45s ease-out both;
+  }
+
+  &::after {
+    border: 2px solid var(--color-accent);
+    animation: burst-ring 0.6s ease-out 0.08s both;
+  }
+}
+
+@utility press-spark {
+  --spark-reach: -34px;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 3px;
+  height: 9px;
+  margin: -4.5px -1.5px;
+  border-radius: 9999px;
+  background-color: var(--color-accent);
+  animation: spark-fly 0.75s cubic-bezier(0.15, 0.7, 0.3, 1) 0.12s both;
+
+  &:nth-child(even) {
+    --spark-reach: -24px;
+    width: 5px;
+    height: 5px;
+    margin: -2.5px;
+    background-color: var(--color-violet);
+    animation-delay: 0.2s;
+  }
+
+  &:nth-child(4n) {
+    background-color: var(--color-primary);
   }
 }
 

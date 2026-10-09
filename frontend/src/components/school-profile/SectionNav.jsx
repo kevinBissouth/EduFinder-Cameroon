@@ -7,13 +7,13 @@ import { scrollToSection } from '../../utils/scroll'
 // Onglets collants vers les sections de la fiche. Ce sont des boutons et non
 // des liens : le routage du site passe par le « # » de l'adresse, et un lien
 // d'ancre ferait quitter la fiche.
-function SectionNav({ sections }) {
+function SectionNav({ sections, navigationLabel }) {
   const { t } = useTranslation('profile')
   const activeSectionId = useActiveSection(sections.map((section) => section.id))
 
   return (
     <nav
-      aria-label={t('sections.navigation')}
+      aria-label={navigationLabel ?? t('sections.navigation')}
       className="sticky top-16 z-40 border-b border-line bg-surface/95 backdrop-blur-md lg:top-20"
     >
       <Container>

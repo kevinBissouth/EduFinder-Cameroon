@@ -23,21 +23,23 @@ function findServiceIcon(serviceName) {
   return SERVICE_ICON_RULES.find((rule) => rule.pattern.test(lowercaseName))?.icon ?? GraduationCap
 }
 
-function ServiceRow({ service }) {
-  const ServiceIcon = findServiceIcon(service.name)
-
+// Une ligne de l'offre, filière ou service : même pastille, même rythme. Une
+// filière n'a pas de description : son nom se centre alors face à l'icône.
+function OfferRow({ icon: RowIcon, name, description }) {
   return (
-    <li className="flex items-start gap-4 py-4">
+    <li className={`flex gap-4 py-4 ${description ? 'items-start' : 'items-center'}`}>
       <span className="flex size-10 shrink-0 items-center justify-center rounded-control bg-primary-soft text-primary-deep">
-        <ServiceIcon aria-hidden="true" className="size-5" />
+        <RowIcon aria-hidden="true" className="size-5" />
       </span>
       <div>
-        <p className="text-sm font-bold text-navy">{service.name}</p>
-        {service.description && <p className="text-sm text-ink">{service.description}</p>}
+        <p className="text-sm font-bold text-navy">{name}</p>
+        {description && <p className="text-sm text-ink">{description}</p>}
       </div>
     </li>
   )
 }
+
+const OFFER_LIST_CLASSES = 'mt-2 divide-y divide-line border-y border-line'
 
 function OfferSection({ programs, services }) {
   const { t } = useTranslation('profile')
@@ -56,11 +58,9 @@ function OfferSection({ programs, services }) {
           {programs.length > 0 && (
             <div>
               <h3 className="text-lg font-bold text-navy">{t('offer.programs')}</h3>
-              <ul className="mt-4 flex flex-wrap gap-2">
+              <ul className={OFFER_LIST_CLASSES}>
                 {programs.map((program) => (
-                  <li key={program} className="rounded-full border border-line bg-surface px-4 py-2 text-sm font-semibold text-navy">
-                    {translateReference('programs', program)}
-                  </li>
+                  <OfferRow key={program} icon={GraduationCap} name={translateReference('programs', program)} />
                 ))}
               </ul>
             </div>
@@ -68,9 +68,14 @@ function OfferSection({ programs, services }) {
           {services.length > 0 && (
             <div>
               <h3 className="text-lg font-bold text-navy">{t('offer.services')}</h3>
-              <ul className="mt-2 divide-y divide-line border-y border-line">
+              <ul className={OFFER_LIST_CLASSES}>
                 {services.map((service) => (
-                  <ServiceRow key={service.name} service={service} />
+                  <OfferRow
+                    key={service.name}
+                    icon={findServiceIcon(service.name)}
+                    name={service.name}
+                    description={service.description}
+                  />
                 ))}
               </ul>
             </div>

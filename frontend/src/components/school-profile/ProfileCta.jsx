@@ -26,7 +26,7 @@ function ProfileCta() {
                 {t('cta.lead')}
               </p>
             </div>
-            <Button as="a" href="#results" size="lg" className="group self-start rounded-full lg:self-auto">
+            <Button as="a" href="#results" size="lg" className="group self-start whitespace-nowrap rounded-full max-sm:w-full max-sm:px-4 lg:self-auto">
               {t('cta.action')}
               <ArrowRight aria-hidden="true" className="size-4 transition-transform group-hover:translate-x-0.5" />
             </Button>
