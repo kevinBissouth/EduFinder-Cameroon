@@ -155,6 +155,7 @@ function ManagerFeesSection({
   paymentMethods,
   gridClassName,
   isCompact = false,
+  onProposeChanges,
   onProposalSubmitted,
 }) {
   const { t } = useTranslation('manager')
@@ -211,9 +212,14 @@ function ManagerFeesSection({
 
   if (fees.length === 0) {
     return (
-      <p className="rounded-panel border border-dashed border-line bg-surface p-8 text-center text-sm text-ink-soft">
-        {t('fees.empty')}
-      </p>
+      <div className="rounded-panel border border-dashed border-line bg-surface p-8 text-center">
+        <p className="text-sm text-ink-soft">{t('fees.empty')}</p>
+        {onProposeChanges && (
+          <Button className="mt-4" onClick={onProposeChanges}>
+            {t('actions.proposeChanges')}
+          </Button>
+        )}
+      </div>
     )
   }
 

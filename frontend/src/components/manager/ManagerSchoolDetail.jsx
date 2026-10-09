@@ -21,7 +21,6 @@ import ManagerFeesSection from './ManagerFeesSection'
 import { BenchmarkComparisons } from './dashboard/BenchmarkCompare'
 import { describeBenchmarkSample } from './dashboard/benchmarkText'
 import { InlineField } from './ManagerShared'
-import { listPaymentMethodsForLanguage } from './paymentPlans'
 import SchoolDetailHero from './SchoolDetailHero'
 import SchoolGallery from './SchoolGallery'
 import SchoolLeadership from './SchoolLeadership'
@@ -148,7 +147,7 @@ function SchoolDetailContent({
           <ManagerFeesSection
             fees={detail.fees}
             establishmentUuid={detail.uuid}
-            paymentMethods={listPaymentMethodsForLanguage(detail.linguistic_section, paymentMethods)}
+            paymentMethods={paymentMethods}
             isCompact
             onProposalSubmitted={onProposalSubmitted}
           />

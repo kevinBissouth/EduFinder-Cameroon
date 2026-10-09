@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { MapPin, UserRound } from 'lucide-react'
+import { MapPin, Search, UserRound } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import i18next from 'i18next'
 
@@ -11,6 +11,7 @@ import ViewHero from '../workspace/ViewHero'
 import StatusBadge from '../workspace/StatusBadge'
 import EstablishmentStatusActions from './EstablishmentStatusActions'
 import { useReferenceLabel } from '../../hooks/useReferenceLabel'
+import { normalizeForSearch } from '../../utils/text'
 
 function describeManagers(owners) {
   if (owners.length === 0) return i18next.t('admin:schools.noManager')
@@ -118,9 +119,38 @@ function EstablishmentModal({ establishment, onClose, onStatusChanged }) {
 }
 
 // Tous les établissements de la plateforme, quel que soit leur état.
+function matchesSearch(establishment, normalizedTerm) {
+  return [establishment.name, establishment.city].some((text) =>
+    normalizeForSearch(text).includes(normalizedTerm),
+  )
+}
+
+function SchoolSearch({ searchTerm, onSearchChange }) {
+  const { t } = useTranslation('admin')
+
+  return (
+    <label className="mb-6 flex h-12 items-center gap-3 rounded-full border border-line bg-surface px-4 focus-within:border-primary focus-within:ring-4 focus-within:ring-primary-soft sm:max-w-md">
+      <Search aria-hidden="true" className="size-4 shrink-0 text-ink-soft" />
+      <span className="sr-only">{t('schools.search')}</span>
+      <input
+        type="search"
+        value={searchTerm}
+        onChange={(event) => onSearchChange(event.target.value)}
+        placeholder={t('schools.search')}
+        className="h-full w-full bg-transparent text-sm font-medium text-navy outline-none placeholder:font-normal placeholder:text-ink-soft"
+      />
+    </label>
+  )
+}
+
 function AdminEstablishmentsView({ establishments, onStatusChanged }) {
   const { t } = useTranslation('admin')
   const [openedEstablishment, setOpenedEstablishment] = useState(null)
+  const [searchTerm, setSearchTerm] = useState('')
+  const normalizedTerm = normalizeForSearch(searchTerm)
+  const matchingEstablishments = establishments.filter((establishment) =>
+    matchesSearch(establishment, normalizedTerm),
+  )
 
   // La fenêtre montre l'ancien état : je la ferme avant de recharger la
   // liste, pour ne jamais laisser un état périmé à l'écran.
@@ -145,16 +175,27 @@ function AdminEstablishmentsView({ establishments, onStatusChanged }) {
           {t('dashboard.noSchool')}
         </p>
       ) : (
-        <PagedCards
-          items={establishments}
-          renderCard={(establishment) => (
-            <EstablishmentCard
-              key={establishment.establishment_uuid}
-              establishment={establishment}
-              onOpen={setOpenedEstablishment}
+        <>
+          <SchoolSearch searchTerm={searchTerm} onSearchChange={setSearchTerm} />
+          {matchingEstablishments.length === 0 ? (
+            <p className="rounded-panel border border-dashed border-line bg-surface p-8 text-center text-sm text-ink-soft">
+              {t('schools.noMatch')}
+            </p>
+          ) : (
+            // La clé remet la pagination à la première page à chaque recherche.
+            <PagedCards
+              key={normalizedTerm}
+              items={matchingEstablishments}
+              renderCard={(establishment) => (
+                <EstablishmentCard
+                  key={establishment.establishment_uuid}
+                  establishment={establishment}
+                  onOpen={setOpenedEstablishment}
+                />
+              )}
             />
           )}
-        />
+        </>
       )}
       {openedEstablishment && (
         <EstablishmentModal

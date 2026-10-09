@@ -31,6 +31,7 @@ import { findFirstName } from '../utils/format'
 import { authedRequest } from '../utils/auth'
 import '../i18n/privateTexts'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
+import WorkspaceSkeleton from '../components/workspace/WorkspaceSkeleton'
 
 const NAV_ITEMS = [
   { id: 'overview', labelKey: 'nav.dashboard', shortLabelKey: 'nav.home', icon: LayoutDashboard },
@@ -291,6 +292,7 @@ function ManagerHomePage({ profile, onSignOut }) {
       <ManagerFeesView
         {...schoolSectionProps}
         paymentMethods={managerData.meta.payment_methods ?? []}
+        onEditSchool={handleEditSchool}
       />
     ),
     exam: () => <ManagerExamResultsView {...schoolSectionProps} />,
@@ -332,11 +334,7 @@ function ManagerHomePage({ profile, onSignOut }) {
 
   function renderContent() {
     if (managerData.status === 'loading') {
-      return (
-        <p role="status" className="py-16 text-center text-sm text-ink-soft">
-          {t('page.loadingWorkspace')}
-        </p>
-      )
+      return <WorkspaceSkeleton label={t('page.loadingWorkspace')} />
     }
     if (managerData.status === 'error') {
       return (

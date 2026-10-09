@@ -22,21 +22,30 @@ function findCurrentSchoolYear() {
   return `${startYear}-${startYear + 1}`
 }
 
+// Une ligne tient en peu de hauteur : avec trente résultats d'examens, chaque
+// ligne gagnée évite un long défilement sur téléphone. La suppression est une
+// icône à droite, son nom reste lisible par les lecteurs d'écran et au survol.
 function RowFrame({ removeLabel, onRemove, children }) {
   return (
-    <li className="rounded-control border border-line bg-paper p-4">
-      {children}
+    <li className="flex items-start gap-2 rounded-control border border-line bg-paper p-3 sm:p-4">
+      <div className="min-w-0 flex-1">{children}</div>
       <button
         type="button"
+        aria-label={removeLabel}
+        title={removeLabel}
         onClick={onRemove}
-        className="mt-3 inline-flex min-h-11 cursor-pointer items-center gap-1.5 rounded-control px-2 text-sm font-semibold text-danger-deep hover:bg-danger-soft"
+        className="mt-6 flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-control text-danger-deep hover:bg-danger-soft"
       >
         <Trash2 aria-hidden="true" className="size-4" />
-        {removeLabel}
       </button>
     </li>
   )
 }
+
+// Sur téléphone, la liste déroulante prend la largeur et les deux champs
+// courts se partagent la ligne suivante.
+const ROW_GRID_CLASSES = 'grid grid-cols-2 gap-3 sm:grid-cols-3'
+const WIDE_FIELD_CLASSES = 'col-span-2 sm:col-span-1'
 
 function AddRowButton({ label, onAdd }) {
   return (
@@ -61,8 +70,9 @@ export function FeeRowsEditor({ feeRows, levels, paymentMethods, onChange }) {
             removeLabel={t('form.rows.removeFee')}
             onRemove={() => onChange(removeRow(feeRows, feeRow.rowId))}
           >
-            <div className="grid gap-3 sm:grid-cols-3">
+            <div className={ROW_GRID_CLASSES}>
               <SelectField
+                className={WIDE_FIELD_CLASSES}
                 label={t('form.rows.level')}
                 placeholder={t('form.rows.chooseLevel')}
                 options={levels}
@@ -120,8 +130,9 @@ export function ExamResultRowsEditor({ examResultRows, exams, onChange }) {
             removeLabel={t('form.rows.removeResult')}
             onRemove={() => onChange(removeRow(examResultRows, examResultRow.rowId))}
           >
-            <div className="grid gap-3 sm:grid-cols-3">
+            <div className={ROW_GRID_CLASSES}>
               <SelectField
+                className={WIDE_FIELD_CLASSES}
                 label={t('form.rows.exam')}
                 placeholder={t('form.rows.chooseExam')}
                 options={exams}

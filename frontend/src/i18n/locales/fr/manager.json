@@ -101,7 +101,7 @@
     "title": "Frais de scolarité",
     "amountAboveZero": "Saisissez un montant supérieur à zéro.",
     "unchanged": "Rien n'a été envoyé : le montant et les modalités de paiement sont inchangés.",
-    "empty": "Aucun frais n'est encore enregistré. Utilisez « Proposer des modifications » sur l'établissement pour en ajouter.",
+    "empty": "Aucun frais n'est encore enregistré.",
     "levelsIn_one": "niveau en {{year}}",
     "levelsIn_many": "niveaux en {{year}}",
     "levelsIn_other": "niveaux en {{year}}",
