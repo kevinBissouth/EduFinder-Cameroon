@@ -223,18 +223,10 @@ export function useInstitutions() {
 
   const cityCount = new Set(allInstitutions.map((inst) => inst.city)).size
 
-  const recommendedCity = allInstitutions.find((inst) => inst.recommended)?.city
-
   const topDestinations = [...meta.cities]
     .map((city) => ({ ...city, count: cityCounts[city.name] || 0 }))
     .filter((city) => city.count > 0)
-    .sort((a, b) => {
-      if (recommendedCity) {
-        if (a.name === recommendedCity) return -1
-        if (b.name === recommendedCity) return 1
-      }
-      return b.count - a.count
-    })
+    .sort((a, b) => b.count - a.count)
     .slice(0, 5)
 
   const activeCity = meta.cities.find((city) => city.id === Number(cityId))

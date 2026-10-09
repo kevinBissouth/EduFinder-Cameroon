@@ -49,7 +49,9 @@
     "loadingSchool": "Loading the school…",
     "schoolErrorTitle": "This school could not be loaded",
     "awaitingReview": "Changes awaiting review",
-    "school": "School"
+    "school": "School",
+    "suspended": "This school is suspended: it no longer appears on the public site.",
+    "suspensionReason": "Reason given: {{reason}}"
   },
   "dashboard": {
     "passRatesTitle": "Exam pass rates",
@@ -97,7 +99,7 @@
     "title": "School fees",
     "amountAboveZero": "Enter an amount above zero.",
     "unchanged": "Nothing was sent: the amount and payment plans are unchanged.",
-    "empty": "No fee is recorded yet. Use “Propose changes” on the school to add them.",
+    "empty": "No fee is recorded yet.",
     "levelsIn_one": "level in {{year}}",
     "levelsIn_other": "levels in {{year}}",
     "perYear": "per year",

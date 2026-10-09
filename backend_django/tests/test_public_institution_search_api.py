@@ -9,12 +9,14 @@ from edufinder.models import (
     Establishment,
     EstablishmentType,
     Exam,
+    ExamResult,
     LinguisticSection,
     Media,
     MediaType,
     Program,
     ProgramOffer,
     Region,
+    SchoolFee,
     Sector,
     Service,
 )
@@ -36,8 +38,9 @@ class SearchCatalog:
     cep_exam: Exam
 
 
-# Trois établissements publiés aux profils distincts. Alpha est créé en
-# dernier : il ne peut arriver en tête que grâce à son statut recommandé.
+# Trois établissements publiés aux profils distincts, sans description : aucune
+# fiche n'est complète au départ. Alpha porte le drapeau interne « recommandé »,
+# qui ne doit plus rien changer à l'ordre.
 #   Gamma : Douala, secondaire, francophone, privé, frais 50 000, aucun résultat.
 #   Beta  : Yaoundé, primaire, anglophone, privé (autre libellé), frais 300 000,
 #           CEP 75 %, services « cantine » et « Internat », un PDF seulement.
@@ -114,6 +117,43 @@ def search_names(client, query_string: str = "") -> list[str]:
     return [institution["name"] for institution in response.json()]
 
 
+def find_summary(client, establishment_name: str) -> dict:
+    summaries = client.get("/institutions").json()
+    return next(summary for summary in summaries if summary["name"] == establishment_name)
+
+
+# Ajoute ce qui manque le plus souvent à une fiche : une description, un frais
+# et une photo. Les résultats d'examens restent ceux que l'établissement a déjà.
+def complete_profile(establishment: Establishment) -> None:
+    Establishment.objects.filter(pk=establishment.pk).update(
+        description="What the school offers, in a few lines."
+    )
+    add_school_fee(establishment, "Completion level", "90000")
+    Media.objects.create(
+        establishment=establishment, type=MediaType.IMAGE, url="/media/cover.jpg"
+    )
+
+
+PROFILE_PART_REMOVERS = {
+    "description": lambda establishment: Establishment.objects.filter(
+        pk=establishment.pk
+    ).update(description=""),
+    "fees": lambda establishment: SchoolFee.objects.filter(
+        establishment=establishment
+    ).delete(),
+    "photos": lambda establishment: Media.objects.filter(
+        establishment=establishment, type=MediaType.IMAGE
+    ).delete(),
+    "exam_results": lambda establishment: ExamResult.objects.filter(
+        establishment=establishment
+    ).delete(),
+}
+
+
+def remove_profile_part(establishment: Establishment, profile_part: str) -> None:
+    PROFILE_PART_REMOVERS[profile_part](establishment)
+
+
 # --- Liste, ordre et résumé ---------------------------------------------------
 
 
@@ -123,12 +163,66 @@ def test_list_without_data_is_empty(client):
 
 
 @pytest.mark.django_db
-def test_list_orders_recommended_first_then_by_creation(client, catalog):
+def test_list_is_alphabetical_when_no_profile_is_complete(client, catalog):
     assert search_names(client) == [
         "Alpha Primary School",
-        "Gamma College",
         "Beta Primary School",
+        "Gamma College",
     ]
+
+
+@pytest.mark.django_db
+def test_list_puts_complete_profiles_first(client, catalog):
+    complete_profile(catalog.beta)
+
+    assert search_names(client) == [
+        "Beta Primary School",
+        "Alpha Primary School",
+        "Gamma College",
+    ]
+
+
+# Le drapeau interne ne doit plus rien changer à l'ordre : seule la complétude
+# de la fiche, un fait vérifiable, fait remonter un établissement.
+@pytest.mark.django_db
+def test_list_ignores_the_internal_recommended_flag(client, catalog):
+    assert catalog.alpha.recommended is True
+    complete_profile(catalog.beta)
+
+    assert search_names(client)[0] == "Beta Primary School"
+
+
+@pytest.mark.django_db
+def test_profile_is_complete_with_description_fee_photo_and_results(client, catalog):
+    complete_profile(catalog.beta)
+
+    assert find_summary(client, "Beta Primary School")["is_profile_complete"] is True
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "removed_part", ["description", "fees", "photos", "exam_results"]
+)
+def test_profile_is_incomplete_when_one_part_is_missing(client, catalog, removed_part):
+    complete_profile(catalog.beta)
+    remove_profile_part(catalog.beta, removed_part)
+
+    assert find_summary(client, "Beta Primary School")["is_profile_complete"] is False
+
+
+# Une université ne présente aucun examen officiel de la cartographie : lui
+# demander des résultats la priverait à jamais d'une fiche complète.
+@pytest.mark.django_db
+def test_profile_without_official_exams_is_complete_without_results(
+    client, create_establishment
+):
+    university = create_establishment(
+        name="Delta University",
+        type=EstablishmentType.objects.create(label="University"),
+    )
+    complete_profile(university)
+
+    assert find_summary(client, "Delta University")["is_profile_complete"] is True
 
 
 @pytest.mark.django_db
@@ -155,7 +249,7 @@ def test_summary_carries_aggregates_and_public_fields_only(client, catalog):
         "linguistic_section": "Anglophone",
         "phone": None,
         "website": None,
-        "recommended": True,
+        "is_profile_complete": False,
         "min_tuition": "100000.00",
         "best_pass_rate": "85.50",
         "cover_url": "/media/profil_a.jpg",
@@ -230,8 +324,8 @@ def test_sector_filter_groups_all_private_sectors(client, catalog):
     # « Privé laïc » et « private » sont deux secteurs distincts du même
     # groupe : filtrer sur l'un doit renvoyer les deux.
     assert search_names(client, f"?sector_id={catalog.second_private_sector.pk}") == [
-        "Gamma College",
         "Beta Primary School",
+        "Gamma College",
     ]
 
 
@@ -265,6 +359,56 @@ def test_filter_by_program(client, catalog):
 @pytest.mark.django_db
 def test_search_term_filters_by_name_ignoring_case(client, catalog):
     assert search_names(client, "?q=beta") == ["Beta Primary School"]
+
+
+@pytest.mark.django_db
+def test_search_term_finds_schools_by_city(client, catalog):
+    assert search_names(client, "?q=douala") == ["Gamma College"]
+
+
+# Sans accent dans la saisie, la ville accentuée est trouvée quand même.
+@pytest.mark.django_db
+def test_search_term_finds_a_city_typed_without_accents(client, catalog):
+    assert search_names(client, "?q=yaounde") == [
+        "Alpha Primary School",
+        "Beta Primary School",
+    ]
+
+
+@pytest.mark.django_db
+def test_search_term_finds_schools_by_programme(client, catalog):
+    assert search_names(client, "?q=informatique") == [
+        "Alpha Primary School",
+        "Beta Primary School",
+    ]
+
+
+# La filière se trouve aussi sous son libellé dans l'autre langue, et un
+# établissement qui en propose plusieurs ne sort qu'une fois.
+@pytest.mark.django_db
+def test_search_term_finds_a_programme_by_its_translated_label(client, catalog):
+    Program.objects.filter(pk=catalog.computing_program.pk).update(
+        label_fr="Informatique", label_en="Computer science"
+    )
+    second_program = Program.objects.create(
+        name="Sciences informatiques", label_en="Computer engineering"
+    )
+    ProgramOffer.objects.create(establishment=catalog.alpha, program=second_program)
+
+    assert search_names(client, "?q=computer") == [
+        "Alpha Primary School",
+        "Beta Primary School",
+    ]
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("hidden_status", HIDDEN_STATUSES)
+def test_search_term_never_finds_a_hidden_school_by_its_city(
+    client, create_establishment, hidden_status
+):
+    create_establishment(name="Hidden school", status=hidden_status)
+
+    assert search_names(client, "?q=douala") == []
 
 
 @pytest.mark.django_db

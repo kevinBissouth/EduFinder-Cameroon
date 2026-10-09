@@ -37,7 +37,7 @@ Concevoir une plateforme centralisée permettant de rechercher, consulter et com
 
 ### Backend
 - **Django 5.2** et **Django REST Framework** (Python 3.12) - API REST
-- **MySQL** via PyMySQL - Base de données
+- **MySQL** via PyMySQL en développement, **SQLite** en production - Base de données
 - **Migrations Django** - Évolution du schéma
 - **bcrypt** - Hachage des mots de passe
 - **JWT** dans un cookie httpOnly - Authentification
@@ -52,9 +52,11 @@ Concevoir une plateforme centralisée permettant de rechercher, consulter et com
 - **Leaflet** - Carte de localisation
 - **Axios** - Client HTTP
 - **lucide-react** - Pictogrammes
+- **i18next** et react-i18next - Interface en anglais et en français
 
 ### Base de données
-- **MySQL** `edufinder_db` - Stockage des données
+- **MySQL** `edufinder_db` en développement
+- **SQLite** là où MySQL n'est pas offert : `DATABASE_URL=sqlite:///fichier.sqlite3`
 
 ### Outils de développement
 - **Git & GitHub** - Gestion des versions
@@ -130,6 +132,14 @@ cd backend_django
 python -m pytest
 ```
 
+### Vérifications frontend
+```bash
+cd frontend
+npm run lint          # règles de code
+npm run check:i18n    # mêmes textes en anglais et en français, aucune clé manquante
+npm run build         # compilation de production
+```
+
 ### Définir le mot de passe d'un compte
 ```bash
 cd backend_django
@@ -182,6 +192,7 @@ python manage.py set_account_password <email>   # le mot de passe est demandé, 
 - `GET /institutions/{uuid}` - Fiche détaillée
 - `GET /stats` - Statistiques de la plateforme
 - `GET /filters-meta` - Métadonnées pour les filtres
+- `GET /reference-labels` - Libellés français et anglais des listes de référence
 - `POST /institutions/{uuid}/track-view` - Compte une visite
 - `POST /institutions/{uuid}/track-inquiry` - Compte une demande de contact
 
@@ -221,14 +232,15 @@ python manage.py set_account_password <email>   # le mot de passe est demandé, 
 ## Données de démonstration
 
 La base contient des données fictives de démonstration :
-- 11 établissements (3 primaires, 3 secondaires, 3 supérieurs, 1 pending, 1 suspended)
-- 3 villes (Yaoundé, Douala, et une autre)
+- 13 établissements, dont 11 publiés et 2 suspendus : 1 primaire, 4 secondaires,
+  4 instituts supérieurs et 2 universités parmi les publiés
+- 8 villes dans 8 régions
 - Établissements francophones, anglophones et bilingues
-- Diverses classes (CP à Terminale), filières (Informatique, Sciences, etc.)
-- Plusieurs plans de paiement (1 tranche, 2 tranches, trimestriel)
-- Résultats d'examens (CEP, BEPC, Baccalauréat)
-- Médias (images, PDFs)
-- Comptes: 1 manager, 1 super_admin
+- Diverses classes (maternelle à Master), 7 filières
+- Trois modalités de paiement (1, 2 ou 3 tranches)
+- Résultats d'examens (CEP, BEPC, Probatoire, Baccalauréat, CAP, BTS, GCE)
+- Médias (images, vidéos, PDF)
+- Comptes : 2 responsables, 1 super administrateur
 
 ## Limites (non traitées en V1)
 
@@ -269,6 +281,7 @@ EduFinder-Cameroon/
 │   │   ├── components/       # ui, school-profile, workspace, charts, manager, admin
 │   │   ├── hooks/            # État et appels API
 │   │   ├── utils/            # Authentification, formats, médias
+│   │   ├── i18n/             # Choix de langue et textes (locales/en, locales/fr)
 │   │   └── routes.js         # Routage par hash
 │   └── package.json
 ├── media/                    # Fichiers téléversés (images, vidéos, PDF)
@@ -281,5 +294,7 @@ EduFinder-Cameroon/
 - **Sécurité**: Aucun secret dans le code, le `.env` n'est jamais committed
 - **Visibilité**: Seules les établissements `status == published` apparaissent en public
 - **Autorisation**: Routes privées vérifient l'appartenance `user_establishment` (403 sinon)
-- **Données**: Base MySQL de démonstration (11 établissements, 399 lignes au total)
+- **Données**: Base de démonstration fictive (13 établissements, environ 500 lignes)
+- **Langues**: aucun texte visible n'est écrit en dur dans un composant ; il passe par
+  les fichiers `frontend/src/i18n/locales/`, vérifiés par `npm run check:i18n`
 - **Responsive**: Interface utilisable sur ordinateur, tablette, téléphone

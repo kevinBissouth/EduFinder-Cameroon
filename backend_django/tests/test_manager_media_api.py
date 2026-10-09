@@ -249,7 +249,7 @@ def test_upload_size_limit_depends_on_the_type(
 
     assert oversized_image_response.status_code == 400
     assert oversized_image_response.json() == {
-        "detail": "File too large (100 MB max for videos, 5 MB otherwise)"
+        "detail": "File too large (20 MB max for videos, 5 MB otherwise)"
     }
     assert video_response.status_code == 201
     assert oversized_video_response.status_code == 400

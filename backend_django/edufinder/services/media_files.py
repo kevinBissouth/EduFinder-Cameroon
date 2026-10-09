@@ -16,9 +16,17 @@ from django.core.files.uploadedfile import UploadedFile
 from edufinder.models import Establishment, Media, MediaType
 
 BYTES_PER_MEGABYTE = 1024 * 1024
-MAX_IMAGE_OR_PDF_BYTES = 5 * BYTES_PER_MEGABYTE
+MAX_IMAGE_OR_PDF_MEGABYTES = 5
 # Les vidéos sont plus lourdes : plafond distinct, toujours borné côté serveur.
-MAX_VIDEO_BYTES = 100 * BYTES_PER_MEGABYTE
+# Je le garde bas : l'hébergement n'offre que quelques centaines de Mo pour la
+# base et tous les médias, quelques vidéos de 100 Mo le satureraient.
+MAX_VIDEO_MEGABYTES = 20
+MAX_IMAGE_OR_PDF_BYTES = MAX_IMAGE_OR_PDF_MEGABYTES * BYTES_PER_MEGABYTE
+MAX_VIDEO_BYTES = MAX_VIDEO_MEGABYTES * BYTES_PER_MEGABYTE
+FILE_TOO_LARGE_MESSAGE = (
+    f"File too large ({MAX_VIDEO_MEGABYTES} MB max for videos, "
+    f"{MAX_IMAGE_OR_PDF_MEGABYTES} MB otherwise)"
+)
 # Assez d'octets pour reconnaître toutes les signatures ci-dessous.
 SIGNATURE_BYTES = 12
 
@@ -76,9 +84,7 @@ def store_uploaded_file(
             f"{_describe_allowed_extensions(allowed_media_types)})"
         )
     if uploaded_file.size > _get_size_limit(file_signature.media_type):
-        raise UploadRejectedError(
-            "File too large (100 MB max for videos, 5 MB otherwise)"
-        )
+        raise UploadRejectedError(FILE_TOO_LARGE_MESSAGE)
     # Le nom est généré ici : rien de ce que le client a fourni n'entre dans
     # le chemin du fichier.
     stored_name = default_storage.save(

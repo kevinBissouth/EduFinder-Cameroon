@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ArrowRight, GraduationCap, Heart, MapPin, Scale, Star } from 'lucide-react'
+import { ArrowRight, BadgeCheck, GraduationCap, Heart, MapPin, Scale } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 import { API_URL } from '../constants'
@@ -35,10 +35,15 @@ function CardCover({ institution }) {
         <MapPin aria-hidden="true" className="size-4 shrink-0" />
         {institution.city}
       </p>
-      {institution.recommended && (
-        <span className="absolute left-4 top-4 inline-flex items-center gap-1.5 rounded-full bg-accent px-3 py-1 text-xs font-bold text-navy shadow-soft">
-          <Star aria-hidden="true" className="size-3.5" fill="currentColor" />
-          {t('card.recommended')}
+      {/* Une coche sur fond neutre, pas une étoile : le badge constate que la
+          fiche est renseignée, il ne note pas l'établissement. */}
+      {institution.is_profile_complete && (
+        <span
+          title={t('card.completeProfileHint')}
+          className="absolute left-4 top-4 inline-flex items-center gap-1.5 rounded-full bg-surface px-3 py-1 text-xs font-bold text-primary-deep shadow-soft"
+        >
+          <BadgeCheck aria-hidden="true" className="size-3.5" />
+          {t('card.completeProfile')}
         </span>
       )}
     </div>

@@ -49,7 +49,9 @@
     "loadingSchool": "Chargement de l'établissement…",
     "schoolErrorTitle": "Cet établissement n'a pas pu être chargé",
     "awaitingReview": "Modifications en attente de validation",
-    "school": "Établissement"
+    "school": "Établissement",
+    "suspended": "Cet établissement est suspendu : il n'apparaît plus sur le site public.",
+    "suspensionReason": "Motif indiqué : {{reason}}"
   },
   "dashboard": {
     "passRatesTitle": "Taux de réussite aux examens",
@@ -61,7 +63,7 @@
     "activityTitle": "Visites et demandes de contact",
     "activityDescription": "Les familles qui ont ouvert la page publique, et celles qui ont pris contact.",
     "submissionsTitle": "Soumissions",
-    "submissionsDescription": "Examinées par un super administrateur avant d'être publiées.",
+    "submissionsDescription": "Validées par un super administrateur avant publication.",
     "submissionsEmpty": "Rien n'a encore été soumis pour cet établissement.",
     "viewAll": "Tout voir",
     "benchmarkTitle": "Face aux établissements similaires",
@@ -99,7 +101,7 @@
     "title": "Frais de scolarité",
     "amountAboveZero": "Saisissez un montant supérieur à zéro.",
     "unchanged": "Rien n'a été envoyé : le montant et les modalités de paiement sont inchangés.",
-    "empty": "Aucun frais n'est encore enregistré. Utilisez « Proposer des modifications » sur l'établissement pour en ajouter.",
+    "empty": "Aucun frais n'est encore enregistré.",
     "levelsIn_one": "niveau en {{year}}",
     "levelsIn_many": "niveaux en {{year}}",
     "levelsIn_other": "niveaux en {{year}}",

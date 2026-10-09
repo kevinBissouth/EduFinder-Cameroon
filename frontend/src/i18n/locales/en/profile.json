@@ -49,7 +49,8 @@
     "title": "Contact the school",
     "none": "This school has not published its contacts yet.",
     "sendEnquiry": "Send an enquiry",
-    "enquirySubject": "Admission enquiry: {{name}}"
+    "enquirySubject": "Admission enquiry: {{name}}",
+    "whatsapp": "Write on WhatsApp"
   },
   "fees": {
     "eyebrow": "Fees",

@@ -19,6 +19,7 @@ import Container from '../components/ui/Container'
 import StateMessage from '../components/ui/StateMessage'
 import { useSchoolProfile } from '../hooks/useSchoolProfile'
 import { navigateToHome } from '../routes'
+import { useDocumentTitle } from '../hooks/useDocumentTitle'
 
 const PAGE_CLASSES = 'min-h-screen overflow-x-clip bg-paper font-sans text-ink'
 
@@ -90,6 +91,7 @@ function ProfileContent({ institution }) {
 // Fiche publique d'un établissement, alimentée par /institutions/{uuid}.
 function SchoolProfilePage({ schoolId }) {
   const { institution, status } = useSchoolProfile(schoolId)
+  useDocumentTitle(institution?.name)
 
   return (
     <div className={PAGE_CLASSES}>

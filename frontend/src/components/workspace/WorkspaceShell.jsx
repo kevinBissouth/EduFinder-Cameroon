@@ -76,8 +76,8 @@ function WorkspaceShell({
         <header className="sticky top-0 z-30 rounded-b-panel bg-linear-to-b from-primary-soft to-surface pt-[env(safe-area-inset-top)] shadow-soft lg:rounded-none lg:border-b lg:border-line lg:bg-surface/95 lg:bg-none lg:shadow-none lg:backdrop-blur-md">
           <div className="flex min-h-18 items-center gap-3 px-4 py-3 sm:px-6 lg:min-h-20 lg:px-8 lg:py-2">
             <div className="min-w-0 flex-1">
-              <h1 className="truncate font-display text-2xl leading-display text-navy">{title}</h1>
-              {subtitle && <p className="truncate text-xs text-ink sm:text-sm">{subtitle}</p>}
+              <h1 className="line-clamp-2 font-display text-2xl leading-display text-navy">{title}</h1>
+              {subtitle && <p className="line-clamp-2 text-xs text-ink sm:text-sm">{subtitle}</p>}
             </div>
             {toolbar}
             {/* Sous lg la barre est trop étroite : la langue se règle dans la vue du compte. */}

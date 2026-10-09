@@ -57,7 +57,9 @@ function ChartCard({
     <section
       className={`flex h-full min-w-0 flex-col overflow-hidden rounded-panel border border-line bg-surface p-5 shadow-soft sm:p-6 ${className}`}
     >
-      <div className="flex items-start gap-3">
+      {/* Sur un écran étroit, l'action passe sous le titre : à côté de lui,
+          elle ne laisserait pas la place de lire la description. */}
+      <div className="flex flex-wrap items-start gap-3">
         {Icon && (
           <span
             className={`flex size-10 shrink-0 items-center justify-center rounded-control ${ICON_TONE_CLASSES[tone]}`}
@@ -65,16 +67,16 @@ function ChartCard({
             <Icon aria-hidden="true" className="size-5" />
           </span>
         )}
-        <div className="min-w-0 flex-1">
-          <h2 className="flex items-center gap-2 text-lg font-bold text-navy">
-            <span className="truncate">{title}</span>
+        <div className="min-w-40 flex-1">
+          <h2 className="flex items-start gap-2 text-lg font-bold text-navy">
+            <span className="line-clamp-2">{title}</span>
             {count !== undefined && (
               <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-xs font-bold text-navy tabular-nums">
                 {count}
               </span>
             )}
           </h2>
-          {description && <p className="truncate text-sm text-ink-soft">{description}</p>}
+          {description && <p className="line-clamp-3 text-sm text-ink-soft">{description}</p>}
         </div>
         {action}
       </div>

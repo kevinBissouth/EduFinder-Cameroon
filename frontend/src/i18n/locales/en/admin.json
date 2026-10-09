@@ -58,7 +58,9 @@
     "reactivate": "Reactivate the school",
     "suspend": "Suspend the school",
     "suspending": "Suspending…",
-    "suspensionReasonLabel": "Reason for the suspension (the school leaves the public site)"
+    "suspensionReasonLabel": "Reason for the suspension (the school leaves the public site)",
+    "search": "Search a school or a city",
+    "noMatch": "No school matches this search."
   },
   "submissions": {
     "filterPending": "Awaiting review",

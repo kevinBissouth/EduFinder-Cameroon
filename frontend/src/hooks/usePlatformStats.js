@@ -10,6 +10,7 @@ export function usePlatformStats() {
   const [stats, setStats] = useState({
     institutions: 0,
     cities: 0,
+    regions: 0,
     fee_plans: 0,
     exam_results: 0,
   })

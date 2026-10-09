@@ -60,7 +60,7 @@ function RailItem({ navItem, isActive, onSelect }) {
     <button
       type="button"
       onClick={() => onSelect(navItem.id)}
-      className="flex h-16 w-full cursor-pointer flex-col items-center justify-center gap-1 px-1 text-center text-xs font-medium text-on-navy-soft transition-colors hover:text-white"
+      className="flex h-21 w-full cursor-pointer flex-col items-center justify-center gap-1 px-1 text-center text-xs font-medium text-on-navy-soft transition-colors hover:text-white"
     >
       <Icon aria-hidden="true" className="size-5" />
       {findShortLabel(navItem)}
@@ -69,7 +69,8 @@ function RailItem({ navItem, isActive, onSelect }) {
 }
 
 // Rail latéral du bureau. L'entrée active est un bouton rond qui déborde du
-// rail, dans une encoche courbe ; les autres restent à plat. Le rail ne coupe
+// rail, dans une encoche courbe ; les autres restent à plat. Toutes ont la
+// même hauteur, pour qu'aucune ne se déplace quand on change de vue. Le rail ne coupe
 // pas ce qui dépasse, sinon le bouton serait rogné. Sa largeur laisse la
 // place du plus long libellé (« Submissions ») à gauche de l'encoche.
 export function WorkspaceRail({ navItems, activeView, onSelectView, onSignOut }) {

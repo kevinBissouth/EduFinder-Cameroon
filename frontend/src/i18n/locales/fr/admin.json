@@ -63,7 +63,9 @@
     "reactivate": "Réactiver l'établissement",
     "suspend": "Suspendre l'établissement",
     "suspending": "Suspension…",
-    "suspensionReasonLabel": "Motif de la suspension (l'établissement quitte le site public)"
+    "suspensionReasonLabel": "Motif de la suspension (l'établissement quitte le site public)",
+    "search": "Chercher un établissement ou une ville",
+    "noMatch": "Aucun établissement ne correspond à cette recherche."
   },
   "submissions": {
     "filterPending": "En attente",

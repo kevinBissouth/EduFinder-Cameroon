@@ -8,17 +8,6 @@ import { translateOptionNames, useReferenceLabel } from '../hooks/useReferenceLa
 
 const EMPTY_EXAM_REQUIREMENT = { examId: '', minRate: '' }
 
-// La base contient deux lignes pour le secteur privé (« private », « privé »)
-// et la recherche les regroupe déjà : je n'en propose qu'une dans la liste.
-function keepFirstOptionPerName(options) {
-  const seenNames = new Set()
-  return options.filter((option) => {
-    if (seenNames.has(option.name)) return false
-    seenNames.add(option.name)
-    return true
-  })
-}
-
 // Critère dont la saisie demande plus qu'une liste : le bouton ouvre un
 // panneau de la même largeur que lui, qui se referme au clic extérieur ou
 // avec la touche Échap.
@@ -243,9 +232,7 @@ function AdvancedFilters({ advancedFilters }) {
         value={sectorId}
         onChange={(event) => onSectorChange(event.target.value)}
         placeholder={t('filters.allSectors')}
-        options={keepFirstOptionPerName(
-          translateOptionNames(meta.sectors, 'sectors', translateReference),
-        )}
+        options={translateOptionNames(meta.sectors, 'sectors', translateReference)}
       />
       <SelectField
         label={t('filters.region')}

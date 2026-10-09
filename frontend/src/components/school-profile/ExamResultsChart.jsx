@@ -1,12 +1,17 @@
 import { useTranslation } from 'react-i18next'
 
+import { useMediaQuery } from '../../hooks/useMediaQuery'
 import { useReferenceLabel } from '../../hooks/useReferenceLabel'
 import { formatPercent } from '../../utils/format'
 
-const CHART_WIDTH = 640
+// Le graphique est dessiné dans un repère de cette largeur puis étiré à la
+// largeur de l'écran. Sur téléphone je prends un repère étroit : avec le
+// repère large, les libellés des axes étaient réduits de moitié et illisibles.
+const WIDE_CHART_WIDTH = 640
+const NARROW_CHART_WIDTH = 340
+const WIDE_SCREEN_QUERY = '(min-width: 640px)'
 const CHART_HEIGHT = 280
-const MARGIN = { top: 12, right: 16, bottom: 32, left: 40 }
-const PLOT_WIDTH = CHART_WIDTH - MARGIN.left - MARGIN.right
+const MARGIN = { top: 12, right: 16, bottom: 32, left: 44 }
 const PLOT_HEIGHT = CHART_HEIGHT - MARGIN.top - MARGIN.bottom
 const GRADUATION_COUNT = 4
 const RATE_STEP = 10
@@ -66,14 +71,14 @@ function buildSeries(examResults, sessions) {
   }))
 }
 
-function ChartGrid({ sessions, graduations, xOfSession, yOfRate }) {
+function ChartGrid({ chartWidth, sessions, graduations, xOfSession, yOfRate }) {
   return (
     <>
       {graduations.map((rate) => (
         <g key={rate}>
           <line
             x1={MARGIN.left}
-            x2={CHART_WIDTH - MARGIN.right}
+            x2={chartWidth - MARGIN.right}
             y1={yOfRate(rate)}
             y2={yOfRate(rate)}
             className="stroke-line"
@@ -123,12 +128,15 @@ function SeriesLine({ series, xOfSession, yOfRate }) {
 function ExamResultsChart({ examResults = [] }) {
   const { t } = useTranslation('profile')
   const translateReference = useReferenceLabel()
+  const chartWidth = useMediaQuery(WIDE_SCREEN_QUERY) ? WIDE_CHART_WIDTH : NARROW_CHART_WIDTH
+  const plotWidth = chartWidth - MARGIN.left - MARGIN.right
   const sessions = listSessions(examResults)
   if (sessions.length === 0) return null
 
   const series = buildSeries(examResults, sessions)
   const xOfSession = (sessionIndex) =>
-    MARGIN.left + (sessions.length === 1 ? PLOT_WIDTH / 2 : (PLOT_WIDTH * sessionIndex) / (sessions.length - 1))
+    MARGIN.left +
+    (sessions.length === 1 ? plotWidth / 2 : (plotWidth * sessionIndex) / (sessions.length - 1))
   const rateScale = buildRateScale(examResults)
   const yOfRate = (rate) =>
     MARGIN.top +
@@ -136,8 +144,9 @@ function ExamResultsChart({ examResults = [] }) {
 
   return (
     <figure>
-      <svg viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`} role="img" aria-label={t('results.chartLabel')} className="w-full">
+      <svg viewBox={`0 0 ${chartWidth} ${CHART_HEIGHT}`} role="img" aria-label={t('results.chartLabel')} className="w-full">
         <ChartGrid
+          chartWidth={chartWidth}
           sessions={sessions}
           graduations={rateScale.graduations}
           xOfSession={xOfSession}
