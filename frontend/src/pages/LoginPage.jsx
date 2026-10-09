@@ -8,6 +8,7 @@ import {
   requestLogin,
   fetchAuthenticatedProfile,
 } from '../utils/auth'
+import { useDocumentTitle } from '../hooks/useDocumentTitle'
 
 // Fusion de classes utilitaire : évite d'installer clsx pour deux usages.
 const cn = (...classes) => classes.filter(Boolean).join(' ')
@@ -174,6 +175,7 @@ const DotMap = () => {
 
 function LoginPage({ onAuthenticated }) {
   const { t } = useTranslation('auth')
+  useDocumentTitle(t('submit'))
   const [isPasswordVisible, setIsPasswordVisible] = useState(false)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -300,7 +302,7 @@ function LoginPage({ onAuthenticated }) {
                   onChange={(event) => setEmail(event.target.value)}
                   placeholder={t('emailPlaceholder')}
                   required
-                  autoComplete="off"
+                  autoComplete="username"
                   className="flex h-11 w-full rounded-control border border-line bg-paper px-3 py-2 text-sm text-navy placeholder:text-ink-soft focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30 disabled:cursor-not-allowed disabled:opacity-50"
                 />
               </div>
@@ -317,7 +319,7 @@ function LoginPage({ onAuthenticated }) {
                     onChange={(event) => setPassword(event.target.value)}
                     placeholder={t('passwordPlaceholder')}
                     required
-                    autoComplete="new-password"
+                    autoComplete="current-password"
                     className="flex h-11 w-full rounded-control border border-line bg-paper px-3 py-2 pr-12 text-sm text-navy placeholder:text-ink-soft focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30 disabled:cursor-not-allowed disabled:opacity-50"
                   />
                   <button

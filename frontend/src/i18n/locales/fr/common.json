@@ -5,7 +5,7 @@
   "schoolCount_one": "{{count}} établissement",
   "schoolCount_many": "{{count}} établissements",
   "schoolCount_other": "{{count}} établissements",
-  "notPublished": "Non publié",
+  "notPublished": "Non communiqué",
   "justNow": "à l'instant",
   "removeFilter": "Retirer le filtre : {{label}}",
   "header": {
@@ -36,5 +36,7 @@
     "typesNavigation": "Établissements par type",
     "schoolTypes": "Types d'établissement",
     "backToTop": "Haut de page"
-  }
+  },
+  "documentTitle": "EduFinder Cameroon : comparez les établissements avant d'inscrire",
+  "pageDocumentTitle": "{{page}} | EduFinder Cameroon"
 }
