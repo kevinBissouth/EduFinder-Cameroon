@@ -25,6 +25,10 @@ export function buildInitialFields(school) {
     director_name: detail?.director_name ?? '',
     director_title: detail?.director_title ?? '',
     director_bio: detail?.director_bio ?? '',
+    content_language: detail?.content_language ?? '',
+    description_translation: detail?.description_translation ?? '',
+    director_title_translation: detail?.director_title_translation ?? '',
+    director_bio_translation: detail?.director_bio_translation ?? '',
   }
 }
 

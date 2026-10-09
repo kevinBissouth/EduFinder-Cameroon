@@ -5,6 +5,8 @@ import { useTranslation } from 'react-i18next'
 import Container from '../ui/Container'
 import { Emphasis, Eyebrow } from '../ui/SectionHeading'
 import { splitLastWord } from './helpers'
+import WrittenInNotice from './WrittenInNotice'
+import { useSchoolText } from '../../hooks/useSchoolText'
 import { API_URL } from '../../constants'
 
 function buildInitials(name) {
@@ -70,8 +72,11 @@ function PortraitFrame({ name, photoUrl }) {
 // nom tient seul à côté du portrait.
 function LeadershipSection({ institution }) {
   const { t } = useTranslation('profile')
+  const readSchoolText = useSchoolText(institution)
   if (!institution.director_name) return null
   const { leadingWords, lastWord } = splitLastWord(institution.director_name)
+  const directorTitle = readSchoolText('director_title')
+  const biography = readSchoolText('director_bio')
 
   return (
     <section className="overflow-hidden border-y border-line bg-surface py-14 sm:py-20">
@@ -82,17 +87,18 @@ function LeadershipSection({ institution }) {
           <p className="mt-4 text-balance font-display text-4xl leading-display tracking-tight text-navy sm:text-5xl">
             {leadingWords} <Emphasis>{lastWord}</Emphasis>
           </p>
-          {institution.director_title && (
+          {directorTitle.text && (
             <p className="mt-4 inline-flex items-center gap-2 rounded-full border border-line bg-paper px-4 py-1.5 text-sm font-semibold text-navy">
               <span aria-hidden="true" className="size-2 rounded-full bg-accent" />
-              {institution.director_title}
+              {directorTitle.text}
             </p>
           )}
-          {institution.director_bio && (
+          {biography.text && (
             <p className="mt-6 max-w-[60ch] rounded-panel border-l-4 border-primary bg-linear-to-r from-primary-soft/60 to-transparent px-5 py-4 text-left text-pretty text-base text-ink sm:text-lg">
-              {institution.director_bio}
+              {biography.text}
             </p>
           )}
+          <WrittenInNotice languageCode={biography.writtenIn ?? directorTitle.writtenIn} className="mt-3" />
         </div>
       </Container>
     </section>
