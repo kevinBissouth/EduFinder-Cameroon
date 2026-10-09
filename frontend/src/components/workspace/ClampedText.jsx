@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import Modal from './Modal'
+import Modal from '../ui/Modal'
 import { useIsDesktop } from '../../hooks/useIsDesktop'
 
 // En dessous de ces longueurs, le texte tient dans la place prévue : inutile

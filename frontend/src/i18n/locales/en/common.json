@@ -16,12 +16,10 @@
     "forSchools": "For schools",
     "searchSchools": "Search schools",
     "openMenu": "Open menu",
-    "closeMenu": "Close menu",
-    "selectedForComparison_one": "school selected for comparison",
-    "selectedForComparison_other": "schools selected for comparison"
+    "closeMenu": "Close menu"
   },
   "footer": {
-    "tagline": "The school discovery platform for families comparing schools and universities across Cameroon.",
+    "tagline": "The platform that helps families find the school or university that suits their child, anywhere in Cameroon.",
     "runSchool": "Run a school?",
     "runSchoolLead": "Keep your fees, results and photos up to date for families.",
     "manageSchoolPage": "Manage your school's page",
@@ -36,5 +34,6 @@
     "backToTop": "Back to top"
   },
   "documentTitle": "EduFinder Cameroon: compare schools before you enrol",
-  "pageDocumentTitle": "{{page}} | EduFinder Cameroon"
+  "pageDocumentTitle": "{{page}} | EduFinder Cameroon",
+  "close": "Close"
 }

@@ -17,13 +17,10 @@
     "forSchools": "Espace établissements",
     "searchSchools": "Rechercher un établissement",
     "openMenu": "Ouvrir le menu",
-    "closeMenu": "Fermer le menu",
-    "selectedForComparison_one": "établissement sélectionné pour la comparaison",
-    "selectedForComparison_many": "établissements sélectionnés pour la comparaison",
-    "selectedForComparison_other": "établissements sélectionnés pour la comparaison"
+    "closeMenu": "Fermer le menu"
   },
   "footer": {
-    "tagline": "La plateforme qui aide les familles à comparer les écoles et les universités du Cameroun.",
+    "tagline": "La plateforme qui aide les familles à trouver l'école ou l'université qui convient à leur enfant, partout au Cameroun.",
     "runSchool": "Vous dirigez un établissement ?",
     "runSchoolLead": "Tenez vos frais, vos résultats et vos photos à jour pour les familles.",
     "manageSchoolPage": "Gérer la page de votre établissement",
@@ -38,5 +35,6 @@
     "backToTop": "Haut de page"
   },
   "documentTitle": "EduFinder Cameroon : comparez les établissements avant d'inscrire",
-  "pageDocumentTitle": "{{page}} | EduFinder Cameroon"
+  "pageDocumentTitle": "{{page}} | EduFinder Cameroon",
+  "close": "Fermer"
 }

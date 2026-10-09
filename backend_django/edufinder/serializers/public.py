@@ -44,6 +44,9 @@ class FiltersMetaSerializer(serializers.Serializer):
     # choisir, côté gestionnaire, les plans rattachés au frais d'une classe.
     payment_methods = serializers.ListField(child=serializers.CharField())
     featured_type_ids = serializers.ListField(child=serializers.IntegerField())
+    exam_allowed_types = serializers.DictField(
+        child=serializers.ListField(child=serializers.CharField())
+    )
 
 
 class TranslatedLabelSerializer(serializers.Serializer):

@@ -81,9 +81,11 @@ function ContactCard({ institution }) {
           </li>
         )}
       </ul>
+      {/* Sur téléphone le site figure déjà dans la liste au-dessus : son
+          bouton s'efface et la demande prend toute la largeur. */}
       <div className="mt-4 flex flex-wrap gap-3">
         {contactHref && (
-          <Button as="a" href={contactHref} onClick={trackInquiry}>
+          <Button as="a" href={contactHref} onClick={trackInquiry} className="max-sm:w-full">
             {t('contact.sendEnquiry')}
           </Button>
         )}
@@ -92,6 +94,7 @@ function ContactCard({ institution }) {
             as="a"
             href={websiteUrl}
             variant="secondary"
+            className="max-sm:hidden"
             target="_blank"
             rel="noopener noreferrer"
           >

@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next'
 import i18next from 'i18next'
 
 import Button from '../ui/Button'
-import Modal from '../workspace/Modal'
+import Modal from '../ui/Modal'
 import PagedCards from '../workspace/PagedCards'
 import SchoolCover from '../workspace/SchoolCover'
 import ViewHero from '../workspace/ViewHero'

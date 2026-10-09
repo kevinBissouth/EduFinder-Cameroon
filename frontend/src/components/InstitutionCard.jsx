@@ -1,9 +1,10 @@
 import { useState } from 'react'
-import { ArrowRight, BadgeCheck, GraduationCap, Heart, MapPin, Scale } from 'lucide-react'
+import { ArrowRight, BadgeCheck, GraduationCap, MapPin } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 import { API_URL } from '../constants'
 import { formatFcfa, formatPercent } from '../utils/format'
+import { CompareToggle, SaveToggle } from './compare/SchoolToggles'
 import { useReferenceLabel } from '../hooks/useReferenceLabel'
 
 function capitalize(text) {
@@ -86,31 +87,9 @@ function KeyFigures({ institution }) {
   )
 }
 
-// Action secondaire réduite à une pastille ronde : son nom reste lisible par
-// les lecteurs d'écran et au survol.
-function IconToggle({ isActive, label, icon: Icon, onToggle }) {
-  return (
-    <button
-      type="button"
-      aria-pressed={isActive}
-      aria-label={label}
-      title={label}
-      onClick={onToggle}
-      className={`flex size-11 cursor-pointer items-center justify-center rounded-full border transition-colors ${
-        isActive
-          ? 'border-primary bg-primary-soft text-primary-deep'
-          : 'border-line text-ink-soft hover:border-primary hover:text-primary-deep'
-      }`}
-    >
-      <Icon aria-hidden="true" className="size-4" fill={isActive ? 'currentColor' : 'none'} />
-    </button>
-  )
-}
-
-function InstitutionCard({ institution, isCompared, onToggleCompare, onView }) {
+function InstitutionCard({ institution, onView }) {
   const { t } = useTranslation('home')
   const translateReference = useReferenceLabel()
-  const [isSaved, setIsSaved] = useState(false)
   const categories = [
     capitalize(translateReference('sectors', institution.sector)),
     translateReference('types', institution.type),
@@ -121,7 +100,7 @@ function InstitutionCard({ institution, isCompared, onToggleCompare, onView }) {
   const openProfile = () => onView(institution.uuid)
 
   return (
-    <article className="group flex flex-col overflow-hidden rounded-panel border border-line bg-surface shadow-soft transition-shadow hover:shadow-raised">
+    <article className="group flex flex-col overflow-hidden rounded-panel border border-line bg-surface shadow-soft transition duration-300 hover:-translate-y-1 hover:shadow-raised">
       <CardCover institution={institution} />
 
       <div className="flex flex-1 flex-col p-5 sm:p-6">
@@ -141,26 +120,17 @@ function InstitutionCard({ institution, isCompared, onToggleCompare, onView }) {
         <div className="mt-auto">
           <KeyFigures institution={institution} />
 
-          <div className="flex items-center justify-between gap-3 pt-5">
-            <div className="flex items-center gap-2">
-              <IconToggle
-                isActive={isCompared}
-                label={isCompared ? t('card.removeFromComparison') : t('card.addToComparison')}
-                icon={Scale}
-                onToggle={onToggleCompare}
-              />
-              <IconToggle
-                isActive={isSaved}
-                label={isSaved ? t('card.unsave') : t('card.save')}
-                icon={Heart}
-                onToggle={() => setIsSaved(!isSaved)}
-              />
-            </div>
+          {/* Sur téléphone, « Comparer » et « Voir la fiche » s'empilent sur
+              toute la largeur et le cœur se cale à droite, à mi-hauteur des
+              deux. À partir de la tablette, tout tient sur une ligne. */}
+          <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2 pt-5 sm:flex sm:gap-2">
+            <CompareToggle schoolId={institution.uuid} className="max-sm:w-full" />
+            <SaveToggle schoolId={institution.uuid} className="max-sm:row-span-2" />
             <button
               type="button"
               onClick={openProfile}
               aria-label={t('card.viewNamed', { name: institution.name })}
-              className="inline-flex h-11 cursor-pointer items-center gap-2 rounded-full px-1 text-sm font-semibold text-primary-deep transition-colors hover:text-primary"
+              className="inline-flex h-11 cursor-pointer items-center justify-center gap-2 rounded-full text-sm font-semibold text-primary-deep transition-colors hover:text-primary max-sm:bg-primary-soft max-sm:px-4 sm:ml-auto sm:px-1"
             >
               {t('card.view')}
               <ArrowRight aria-hidden="true" className="size-4 transition-transform group-hover:translate-x-1" />

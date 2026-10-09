@@ -1,4 +1,4 @@
-import Modal from '../workspace/Modal'
+import Modal from '../ui/Modal'
 import SubmissionReview, { SubmissionSummaryLine } from './SubmissionReview'
 
 function SubmissionReviewModal({ submission, onClose, ...reviewProps }) {

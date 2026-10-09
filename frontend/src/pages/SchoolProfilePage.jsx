@@ -1,6 +1,8 @@
+import { useRef } from 'react'
 import { SearchX } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
+import SelectionBar from '../components/compare/SelectionBar'
 import Footer from '../components/Footer'
 import Header from '../components/Header'
 import ExamResultsSection from '../components/school-profile/ExamResultsSection'
@@ -20,6 +22,7 @@ import StateMessage from '../components/ui/StateMessage'
 import { useSchoolProfile } from '../hooks/useSchoolProfile'
 import { navigateToHome } from '../routes'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
+import { useRevealOnScroll } from '../hooks/useRevealOnScroll'
 
 const PAGE_CLASSES = 'min-h-screen overflow-x-clip bg-paper font-sans text-ink'
 
@@ -90,18 +93,21 @@ function ProfileContent({ institution }) {
 
 // Fiche publique d'un établissement, alimentée par /institutions/{uuid}.
 function SchoolProfilePage({ schoolId }) {
+  const pageRef = useRef(null)
+  useRevealOnScroll(pageRef)
   const { institution, status } = useSchoolProfile(schoolId)
   useDocumentTitle(institution?.name)
 
   return (
     <div className={PAGE_CLASSES}>
       <Header />
-      <main>
+      <main ref={pageRef}>
         {status === 'loading' && <ProfileSkeleton />}
         {status === 'error' && <ProfileNotFound />}
         {status === 'success' && institution && <ProfileContent institution={institution} />}
       </main>
       <Footer />
+      <SelectionBar schools={institution ? [institution] : []} />
     </div>
   )
 }

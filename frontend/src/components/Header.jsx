@@ -1,20 +1,22 @@
 import { useEffect, useRef, useState } from 'react'
-import { ChevronDown, GraduationCap, Menu, Scale, Search, X } from 'lucide-react'
+import { ChevronDown, GraduationCap, Heart, Menu, Scale, Search, X } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 import Button from './ui/Button'
 import Container from './ui/Container'
 import LanguageSwitch from './ui/LanguageSwitch'
 import { useReferenceLabel } from '../hooks/useReferenceLabel'
+import { useSchoolSelection } from '../hooks/useSchoolSelection'
+import { buildComparisonHash } from '../utils/comparison'
 
 const SECTION_LINKS = [
   { labelKey: 'header.destinations', href: '#destinations' },
-  { labelKey: 'header.globalPicture', href: '#global-picture' },
-  { labelKey: 'header.howItWorks', href: '#how-it-works' },
+  { labelKey: 'header.globalPicture', href: '#global-picture', isWideScreenOnly: true },
+  { labelKey: 'header.howItWorks', href: '#how-it-works', isWideScreenOnly: true },
 ]
 
 const NAV_PILL_CLASSES =
-  'flex h-11 cursor-pointer items-center gap-1.5 rounded-full px-3.5 text-sm font-medium text-on-navy-soft transition-colors hover:bg-white/10 hover:text-white'
+  'flex h-11 cursor-pointer items-center gap-1.5 whitespace-nowrap rounded-full px-3.5 text-sm font-medium text-on-navy-soft transition-colors hover:bg-white/10 hover:text-white'
 const ICON_BUTTON_CLASSES =
   'flex size-11 cursor-pointer items-center justify-center rounded-full border border-white/20 text-white transition-colors hover:border-white/50 hover:bg-white/10'
 
@@ -30,19 +32,86 @@ function Brand() {
   )
 }
 
-// Raccourci affiché seulement quand au moins un établissement est coché pour
-// comparaison (demande produit).
-function CompareCount({ count }) {
+const SAVED_SCHOOLS_HASH = '#/saved'
+
+// La barre ne descend qu'une fois, à l'ouverture du site : chaque page a sa
+// propre barre, et la rejouer à chaque changement de page lasserait vite.
+let hasHeaderEntered = false
+
+// Pastille de l'en-tête vers une liste du visiteur, avec son nombre. Le nom
+// de la liste reste lisible par les lecteurs d'écran et au survol.
+function CountedLink({ href, icon: Icon, label, count }) {
+  return (
+    <a href={href} aria-label={label} title={label} className={`${ICON_BUTTON_CLASSES} relative`}>
+      <Icon aria-hidden="true" className="size-4" />
+      {count > 0 && (
+        <span
+          aria-hidden="true"
+          className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-accent px-1 text-xs font-bold text-navy tabular-nums"
+        >
+          {count}
+        </span>
+      )}
+    </a>
+  )
+}
+
+// Le lien est toujours là, même vide : on découvre ainsi que la comparaison
+// existe avant d'avoir sélectionné quoi que ce soit.
+function ComparisonLink() {
   const { t } = useTranslation()
-  if (count === 0) return null
+  const { comparedIds } = useSchoolSelection()
+  const selectedLabel =
+    comparedIds.length > 0 ? `, ${t('compare:bar.selected', { count: comparedIds.length })}` : ''
 
   return (
-    <span className="inline-flex h-11 items-center gap-2 rounded-full border border-white/30 px-4 text-sm font-semibold text-white">
-      <Scale aria-hidden="true" className="size-4" />
-      {count}
-      <span className="sr-only"> {t('header.selectedForComparison', { count })}</span>
-    </span>
+    <CountedLink
+      href={buildComparisonHash(comparedIds)}
+      icon={Scale}
+      label={`${t('compare:header.compare')}${selectedLabel}`}
+      count={comparedIds.length}
+    />
   )
+}
+
+function SavedSchoolsLink() {
+  const { t } = useTranslation()
+  const { savedIds } = useSchoolSelection()
+
+  return (
+    <CountedLink
+      href={SAVED_SCHOOLS_HASH}
+      icon={Heart}
+      label={t('compare:saved.count', { count: savedIds.length })}
+      count={savedIds.length}
+    />
+  )
+}
+
+// Dans le menu du téléphone, les deux listes sont des lignes de texte comme
+// les autres liens : deux pastilles sans nom n'y disaient rien.
+function MobileListLinks() {
+  const { t } = useTranslation()
+  const { comparedIds, savedIds } = useSchoolSelection()
+  const listLinks = [
+    {
+      href: buildComparisonHash(comparedIds),
+      icon: Scale,
+      label: t('compare:header.compareTotal', { total: comparedIds.length }),
+    },
+    {
+      href: SAVED_SCHOOLS_HASH,
+      icon: Heart,
+      label: t('compare:header.savedTotal', { total: savedIds.length }),
+    },
+  ]
+
+  return listLinks.map(({ href, icon: Icon, label }) => (
+    <a key={href} href={href} className={NAV_PILL_CLASSES}>
+      <Icon aria-hidden="true" className="size-4 shrink-0" />
+      {label}
+    </a>
+  ))
 }
 
 function TypeMenuItem({ type, isActive, onSelect }) {
@@ -114,7 +183,7 @@ function TypeMenu({ types, activeTypeId, onSelectType }) {
         />
       </button>
       {isOpen && (
-        <ul className="absolute left-0 top-full z-20 mt-2 w-64 rounded-panel border border-white/10 bg-navy p-2 shadow-raised">
+        <ul className="absolute left-0 top-full z-20 mt-2 w-64 animate-menu-drop rounded-panel border border-white/10 bg-navy p-2 shadow-raised">
           {types.map((type) => (
             <li key={type.id}>
               <TypeMenuItem
@@ -137,7 +206,7 @@ function MobileMenu({ types, activeTypeId, onSelectType }) {
     <nav
       id="mobile-menu"
       aria-label={t('header.mainNavigation')}
-      className="border-t border-white/10 lg:hidden"
+      className="animate-menu-drop border-t border-white/10 lg:hidden"
     >
       <Container className="py-3">
         <a href="#results" className={NAV_PILL_CLASSES}>
@@ -161,6 +230,7 @@ function MobileMenu({ types, activeTypeId, onSelectType }) {
             {t(link.labelKey)}
           </a>
         ))}
+        <MobileListLinks />
         <div className="mt-3 sm:hidden">
           <LanguageSwitch />
         </div>
@@ -172,9 +242,14 @@ function MobileMenu({ types, activeTypeId, onSelectType }) {
   )
 }
 
-function Header({ activeTypeId, onNavigateToType, types = [], compareCount = 0, featuredTypeIds = [] }) {
+function Header({ activeTypeId, onNavigateToType, types = [], featuredTypeIds = [] }) {
   const { t } = useTranslation()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [isFirstAppearance] = useState(() => !hasHeaderEntered)
+
+  useEffect(() => {
+    hasHeaderEntered = true
+  }, [])
 
   // Le menu ne propose que les types les plus représentés, dans l'ordre fourni
   // par l'API : aucun identifiant de référence n'est figé côté interface.
@@ -190,7 +265,11 @@ function Header({ activeTypeId, onNavigateToType, types = [], compareCount = 0, 
   }
 
   return (
-    <header className="sticky top-0 z-50 border-b border-white/10 bg-navy/95 pt-[env(safe-area-inset-top)] backdrop-blur-md [--focus-ring:var(--color-accent)]">
+    <header
+      className={`sticky top-0 z-50 border-b border-white/10 bg-navy/95 pt-[env(safe-area-inset-top)] backdrop-blur-md [--focus-ring:var(--color-accent)] [view-transition-name:site-header] ${
+        isFirstAppearance ? 'animate-header-drop' : ''
+      }`}
+    >
       <Container className="flex h-16 items-center justify-between gap-4 lg:h-20">
         <Brand />
 
@@ -200,24 +279,42 @@ function Header({ activeTypeId, onNavigateToType, types = [], compareCount = 0, 
             activeTypeId={activeTypeId}
             onSelectType={onNavigateToType}
           />
+          {/* En français les libellés sont longs : entre 1024 et 1280 px les
+              deux derniers liens cèdent leur place (ils restent dans le pied
+              de page). */}
           {SECTION_LINKS.map((link) => (
-            <a key={link.href} href={link.href} className={NAV_PILL_CLASSES}>
-              {t(link.labelKey)}
-            </a>
+            <div key={link.href} className={link.isWideScreenOnly ? 'hidden xl:block' : ''}>
+              <a href={link.href} className={NAV_PILL_CLASSES}>
+                {t(link.labelKey)}
+              </a>
+            </div>
           ))}
         </nav>
 
         <div className="flex items-center gap-2">
-          <CompareCount count={compareCount} />
+          {/* La barre est étroite : la comparaison n'y entre qu'à partir de
+              1366 px (la barre du bas y mène de toute façon), et sur bureau
+              les favoris prennent la place de la loupe, la recherche étant
+              déjà en haut de la page d'accueil. */}
+          <div className="hidden min-[1366px]:block">
+            <ComparisonLink />
+          </div>
+          <div className="hidden lg:block">
+            <SavedSchoolsLink />
+          </div>
           {/* Sous 640 px la barre n'a plus la place : le sélecteur passe dans le menu. */}
           <div className="hidden sm:block">
             <LanguageSwitch />
           </div>
-          <a href="#search" aria-label={t('header.searchSchools')} className={ICON_BUTTON_CLASSES}>
+          <a
+            href="#search"
+            aria-label={t('header.searchSchools')}
+            className={`${ICON_BUTTON_CLASSES} lg:hidden`}
+          >
             <Search aria-hidden="true" className="size-4" />
           </a>
           <div className="hidden lg:block">
-            <Button as="a" href="#/login" variant="accent" className="rounded-full">
+            <Button as="a" href="#/login" variant="accent" className="whitespace-nowrap rounded-full">
               {t('header.forSchools')}
             </Button>
           </div>

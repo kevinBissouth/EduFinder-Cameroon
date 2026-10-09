@@ -66,3 +66,11 @@ export function listLatestExamResults(examResults) {
     (firstResult, secondResult) => Number(secondResult.pass_rate) - Number(firstResult.pass_rate),
   )
 }
+
+// Sépare le dernier mot d'un nom, pour le mettre en avant dans un titre. Un
+// nom d'un seul mot n'a pas de début : il est rendu entier comme dernier mot.
+export function splitLastWord(name) {
+  const words = name.trim().split(/\s+/)
+  const lastWord = words.pop()
+  return { leadingWords: words.join(' '), lastWord }
+}

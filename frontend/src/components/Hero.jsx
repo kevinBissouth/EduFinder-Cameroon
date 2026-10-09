@@ -11,15 +11,31 @@ import {
 import { Trans, useTranslation } from 'react-i18next'
 
 import AdvancedFilters from './AdvancedFilters'
+import ChoiceDialog from './filters/ChoiceDialog'
+import { findSelectedName } from './filters/choiceLabels'
 import Button from './ui/Button'
 import Container from './ui/Container'
 import { Emphasis, Eyebrow } from './ui/SectionHeading'
-import { useReferenceLabel } from '../hooks/useReferenceLabel'
+import { translateOptionNames, useReferenceLabel } from '../hooks/useReferenceLabel'
 
-const PILL_SELECT_CLASSES =
-  'h-12 w-full cursor-pointer appearance-none bg-transparent text-sm font-medium text-navy outline-none'
 const PILL_FIELD_CLASSES =
-  'flex items-center gap-2.5 rounded-control px-4 transition-colors hover:bg-paper xl:rounded-none xl:border-l xl:border-line xl:px-3 xl:hover:bg-transparent'
+  'flex h-12 w-full min-w-0 cursor-pointer items-center gap-2.5 rounded-control px-4 text-left text-sm font-medium text-navy transition-colors hover:bg-paper xl:rounded-none xl:border-l xl:border-line xl:px-3 xl:hover:bg-transparent'
+
+// Un critère de la barre de recherche (ville, type) : un bouton qui dit la
+// valeur en cours. Il ouvre la même fenêtre de choix que les filtres avancés,
+// à la place de la liste déroulante du navigateur.
+function PillChoice({ icon: Icon, label, value, onOpen }) {
+  return (
+    <button type="button" aria-haspopup="dialog" onClick={onOpen} className={PILL_FIELD_CLASSES}>
+      <Icon aria-hidden="true" className="size-4 shrink-0 text-ink-soft" />
+      <span className="sr-only">{label} : </span>
+      <span className="min-w-0 flex-1 truncate">{value}</span>
+      {/* Dans la pilule du grand écran, la place manque : la flèche cède la
+          sienne au texte. */}
+      <ChevronDown aria-hidden="true" className="size-4 shrink-0 text-ink-soft xl:hidden" />
+    </button>
+  )
+}
 
 function countActiveAdvancedFilters(advancedFilters) {
   const { sectionId, sectorId, regionId, minFee, maxFee, serviceNames, examRequirements } =
@@ -38,58 +54,81 @@ function countActiveAdvancedFilters(advancedFilters) {
 function SearchBar({ searchState, cities, types }) {
   const { t } = useTranslation('home')
   const translateReference = useReferenceLabel()
+  const [openChoiceId, setOpenChoiceId] = useState(null)
+  const choices = [
+    {
+      id: 'city',
+      icon: MapPin,
+      label: t('hero.city'),
+      description: t('hero.cityHint'),
+      anyLabel: t('hero.allCities'),
+      options: cities,
+      selectedId: searchState.cityId,
+      onSelect: searchState.onCityChange,
+    },
+    {
+      id: 'type',
+      icon: GraduationCap,
+      label: t('hero.type'),
+      description: t('hero.typeHint'),
+      anyLabel: t('hero.allTypes'),
+      options: translateOptionNames(types, 'types', translateReference),
+      selectedId: searchState.typeId,
+      onSelect: searchState.onTypeChange,
+    },
+  ]
+  const openChoice = choices.find((choice) => choice.id === openChoiceId)
 
   return (
-    <form
-      onSubmit={searchState.onSubmit}
-      className="grid gap-1 rounded-panel border border-line bg-surface p-2 shadow-raised transition-shadow focus-within:border-primary focus-within:ring-4 focus-within:ring-primary-soft xl:-ml-6 xl:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)_minmax(0,1fr)_auto] xl:items-center xl:rounded-full xl:py-1.5 xl:pl-6 xl:pr-1.5"
-    >
-      <label className="flex items-center gap-2.5 px-4 xl:px-0">
-        <Search aria-hidden="true" className="size-4 shrink-0 text-navy" />
-        <span className="sr-only">{t('hero.searchPlaceholder')}</span>
-        <input
-          type="search"
-          value={searchState.search}
-          onChange={searchState.onSearchChange}
-          placeholder={t('hero.searchPlaceholder')}
-          className="h-12 w-full bg-transparent text-sm font-medium text-navy outline-none placeholder:font-normal placeholder:text-ink-soft"
+    <>
+      <form
+        onSubmit={searchState.onSubmit}
+        className="grid gap-1 rounded-panel border border-line bg-surface p-2 shadow-raised transition-shadow focus-within:border-primary focus-within:ring-4 focus-within:ring-primary-soft xl:-ml-6 xl:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)_minmax(0,1fr)_auto] xl:items-center xl:rounded-full xl:py-1.5 xl:pl-6 xl:pr-1.5"
+      >
+        <label className="flex items-center gap-2.5 px-4 xl:px-0">
+          <Search aria-hidden="true" className="size-4 shrink-0 text-navy" />
+          <span className="sr-only">{t('hero.searchPlaceholder')}</span>
+          <input
+            type="search"
+            value={searchState.search}
+            onChange={searchState.onSearchChange}
+            placeholder={t('hero.searchPlaceholder')}
+            className="h-12 w-full bg-transparent text-sm font-medium text-navy outline-none placeholder:font-normal placeholder:text-ink-soft"
+          />
+        </label>
+        {choices.map((choice) => (
+          <PillChoice
+            key={choice.id}
+            icon={choice.icon}
+            label={choice.label}
+            value={findSelectedName(choice)}
+            onOpen={() => setOpenChoiceId(choice.id)}
+          />
+        ))}
+        <Button type="submit" size="lg" className="group w-full xl:w-auto xl:rounded-full">
+          {t('hero.submit')}
+          <ArrowRight aria-hidden="true" className="size-4 transition-transform group-hover:translate-x-0.5" />
+        </Button>
+      </form>
+      {openChoice && (
+        <ChoiceDialog
+          icon={openChoice.icon}
+          title={openChoice.label}
+          description={openChoice.description}
+          anyLabel={openChoice.anyLabel}
+          options={openChoice.options}
+          selectedId={openChoice.selectedId}
+          onSelect={openChoice.onSelect}
+          onClose={() => setOpenChoiceId(null)}
         />
-      </label>
-      <label className={PILL_FIELD_CLASSES}>
-        <MapPin aria-hidden="true" className="size-4 shrink-0 text-ink-soft" />
-        <span className="sr-only">{t('hero.city')}</span>
-        <select value={searchState.cityId} onChange={searchState.onCityChange} className={PILL_SELECT_CLASSES}>
-          <option value="">{t('hero.allCities')}</option>
-          {cities.map((city) => (
-            <option key={city.id} value={city.id}>
-              {city.name}
-            </option>
-          ))}
-        </select>
-        <ChevronDown aria-hidden="true" className="size-4 shrink-0 text-ink-soft xl:hidden" />
-      </label>
-      <label className={PILL_FIELD_CLASSES}>
-        <GraduationCap aria-hidden="true" className="size-4 shrink-0 text-ink-soft" />
-        <span className="sr-only">{t('hero.type')}</span>
-        <select value={searchState.typeId} onChange={searchState.onTypeChange} className={PILL_SELECT_CLASSES}>
-          <option value="">{t('hero.allTypes')}</option>
-          {types.map((type) => (
-            <option key={type.id} value={type.id}>
-              {translateReference('types', type.name)}
-            </option>
-          ))}
-        </select>
-        <ChevronDown aria-hidden="true" className="size-4 shrink-0 text-ink-soft xl:hidden" />
-      </label>
-      <Button type="submit" size="lg" className="group w-full xl:w-auto xl:rounded-full">
-        {t('hero.submit')}
-        <ArrowRight aria-hidden="true" className="size-4 transition-transform group-hover:translate-x-0.5" />
-      </Button>
-    </form>
+      )}
+    </>
   )
 }
 
 // Chiffres clés sous la recherche : séparés par des filets, en chiffres serif.
+// Trois colonnes égales, centrées : alignés à gauche, ils laissaient la moitié
+// droite de la ligne vide.
 // Sur téléphone les libellés restent en minuscules et sans espacement : en
 // capitales espacées, « Établissements » ne tient pas à côté des deux autres.
 function KeyCounters({ figures }) {
@@ -101,9 +140,9 @@ function KeyCounters({ figures }) {
   ]
 
   return (
-    <dl className="mt-8 flex divide-x divide-line border-t border-line pt-6">
+    <dl className="mt-8 grid grid-cols-3 divide-x divide-line border-t border-line pt-6 text-center">
       {counters.map((counter) => (
-        <div key={counter.label} className="px-4 first:pl-0 sm:px-6">
+        <div key={counter.label} className="px-1 sm:px-6">
           <dd className="font-display text-3xl tabular-nums text-navy">{counter.value}</dd>
           <dt className="mt-1 text-xs font-semibold text-ink-soft sm:uppercase sm:tracking-eyebrow">
             {counter.label}
@@ -121,7 +160,7 @@ function HeroPhoto() {
   const [hasPhotoFailed, setHasPhotoFailed] = useState(false)
 
   return (
-    <div className="relative mx-auto w-full max-w-sm">
+    <div className="relative mx-auto w-full max-w-sm animate-photo-reveal">
       <span
         aria-hidden="true"
         className="absolute -inset-x-6 -top-6 bottom-0 rounded-t-full border border-b-0 border-line"
@@ -154,23 +193,30 @@ function Hero({ searchState, cities, types, advancedFilters, figures }) {
   return (
     <section id="search" className="scroll-mt-20 bg-surface">
       <Container className="grid grid-cols-1 items-center gap-12 py-12 sm:py-16 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,0.75fr)] lg:gap-20 lg:py-24">
-        <div className="animate-settle">
-          <Eyebrow>{t('hero.eyebrow')}</Eyebrow>
-          <h1 className="mt-5 text-balance font-display text-4xl leading-display tracking-tight text-navy sm:text-5xl xl:text-6xl">
+        {/* Chaque élément se pose à son tour, à 70 ms d'intervalle : l'œil
+            suit l'ordre de lecture, du titre jusqu'aux chiffres. */}
+        <div>
+          <div className="animate-settle">
+            <Eyebrow>{t('hero.eyebrow')}</Eyebrow>
+          </div>
+          <h1 className="mt-5 animate-settle text-balance [animation-delay:70ms] font-display text-4xl leading-display tracking-tight text-navy sm:text-5xl xl:text-6xl">
             <Trans t={t} i18nKey="hero.title" components={{ emphasis: <Emphasis /> }} />
           </h1>
-          <span aria-hidden="true" className="mt-6 block h-0.5 w-10 rounded-full bg-primary" />
-          <p className="mt-6 max-w-[52ch] text-pretty text-base text-ink sm:text-lg">
+          <span
+            aria-hidden="true"
+            className="mt-6 block h-0.5 w-10 animate-settle rounded-full bg-primary [animation-delay:140ms]"
+          />
+          <p className="mt-6 max-w-[52ch] animate-settle text-pretty text-base text-ink [animation-delay:140ms] sm:text-lg">
             {figures.schoolCount > 0
               ? t('hero.leadWithCount', { schoolCount: figures.schoolCount })
               : t('hero.lead')}
           </p>
 
-          <div className="mt-8">
+          <div className="mt-8 animate-settle [animation-delay:210ms]">
             <SearchBar searchState={searchState} cities={cities} types={types} />
           </div>
 
-          <div className="mt-4 flex flex-wrap items-center justify-between gap-x-6 gap-y-1">
+          <div className="mt-4 flex animate-settle flex-wrap items-center justify-between gap-x-6 gap-y-1 [animation-delay:280ms]">
             <button
               type="button"
               aria-expanded={areAdvancedFiltersOpen}
@@ -196,7 +242,7 @@ function Hero({ searchState, cities, types, advancedFilters, figures }) {
           {areAdvancedFiltersOpen && (
             <div
               id="advanced-filters"
-              className="mt-3 rounded-panel border border-line bg-paper p-4 sm:p-5"
+              className="mt-3 animate-menu-drop rounded-panel border border-line bg-linear-to-br from-primary-soft/60 via-paper to-paper p-4 shadow-soft sm:p-5"
             >
               <AdvancedFilters advancedFilters={advancedFilters} />
               {/* Les filtres s'appliquent dès qu'on les change : ce bouton le
@@ -209,7 +255,9 @@ function Hero({ searchState, cities, types, advancedFilters, figures }) {
             </div>
           )}
 
-          <KeyCounters figures={figures} />
+          <div className="animate-settle [animation-delay:350ms]">
+            <KeyCounters figures={figures} />
+          </div>
         </div>
 
         <div className="hidden lg:block">
