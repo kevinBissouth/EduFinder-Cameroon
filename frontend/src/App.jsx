@@ -7,7 +7,9 @@ import SavedSchoolsPage from './pages/SavedSchoolsPage'
 import SchoolProfilePage from './pages/SchoolProfilePage'
 import ToastProvider from './components/workspace/ToastProvider'
 import { useRoute } from './hooks/useRoute'
-import { HOME_PATH, LOGIN_PATH, MANAGER_PATH, SCHOOL_ADMIN_PATH, navigateTo, redirectTo } from './routes'
+import { HOME_PATH, navigateTo, redirectTo } from './routes'
+import { SessionContext } from './session/sessionContext'
+import { findRedirectPath, findWorkspacePath } from './utils/sessionRoutes'
 import { useScrollOnPageChange } from './hooks/useScrollOnPageChange'
 import { clearAuthToken, fetchAuthenticatedProfile } from './utils/auth'
 
@@ -30,18 +32,7 @@ function preloadLoginPageWhenIdle() {
 }
 const AdminHomePage = lazy(() => import('./pages/AdminHomePage'))
 
-const WORKSPACE_PAGES = ['manager', 'school-admin']
 const LEGAL_DOCUMENT_BY_PAGE = { 'legal-notice': 'notice', privacy: 'privacy' }
-
-// Où renvoyer un visiteur qui n'a pas sa place sur la page demandée, sinon
-// null. Tant que la session n'est pas vérifiée (profil indéfini), personne
-// n'est renvoyé : un compte connecté ne doit pas passer par la connexion.
-function findRedirectPath(page, profile) {
-  if (profile === undefined || !WORKSPACE_PAGES.includes(page)) return null
-  if (!profile) return LOGIN_PATH
-  const isMisplacedManager = page === 'school-admin' && profile.role !== 'super_admin'
-  return isMisplacedManager ? MANAGER_PATH : null
-}
 
 function App() {
   // Abonne la racine à la langue : au changement, tout l'arbre se redessine,
@@ -73,9 +64,11 @@ function App() {
       .finally(() => setAuthChecked(true))
   }, [])
 
+  // L'espace remplace la connexion dans l'historique : Précédent ramène alors
+  // au site public, pas au formulaire qu'on vient de remplir.
   function handleAuthenticated(authProfile) {
     setProfile(authProfile)
-    navigateTo(authProfile.role === 'super_admin' ? SCHOOL_ADMIN_PATH : MANAGER_PATH)
+    redirectTo(findWorkspacePath(authProfile))
   }
 
   function handleSignOut() {
@@ -87,55 +80,63 @@ function App() {
       })
   }
 
-  if (route.page === 'school-detail' && route.id) {
-    return <SchoolProfilePage schoolId={route.id} />
-  }
-
-  if (route.page === 'compare') {
-    return <ComparePage schoolIds={route.ids} />
-  }
-
-  if (route.page === 'saved') {
-    return <SavedSchoolsPage />
-  }
-
-  if (route.page in LEGAL_DOCUMENT_BY_PAGE) {
-    return <LegalPage documentKey={LEGAL_DOCUMENT_BY_PAGE[route.page]} />
-  }
-
-  if (route.page === 'login') {
-    return (
-      <Suspense fallback={null}>
-        <LoginPage onAuthenticated={handleAuthenticated} />
-      </Suspense>
-    )
-  }
-
-  if (route.page === 'manager' || route.page === 'school-admin') {
-    if (!authChecked) {
-      return null
+  function renderPage() {
+    if (route.page === 'school-detail' && route.id) {
+      return <SchoolProfilePage schoolId={route.id} />
     }
-    if (!profile) {
+
+    if (route.page === 'compare') {
+      return <ComparePage schoolIds={route.ids} />
+    }
+
+    if (route.page === 'saved') {
+      return <SavedSchoolsPage />
+    }
+
+    if (route.page in LEGAL_DOCUMENT_BY_PAGE) {
+      return <LegalPage documentKey={LEGAL_DOCUMENT_BY_PAGE[route.page]} />
+    }
+
+    if (route.page === 'login') {
+      // Tant que la session n'est pas vérifiée, ou pour un compte déjà connecté
+      // (qui va être renvoyé vers son espace), le formulaire ne s'affiche pas.
+      if (!authChecked || profile) return null
       return (
         <Suspense fallback={null}>
           <LoginPage onAuthenticated={handleAuthenticated} />
         </Suspense>
       )
     }
-    // L'espace super admin n'est accessible qu'au rôle super_admin ; tout
-    // autre compte authentifié est redirigé vers l'espace responsable.
-    const isAdminSpace = route.page === 'school-admin' && profile.role === 'super_admin'
-    const WorkspacePage = isAdminSpace ? AdminHomePage : ManagerHomePage
-    return (
-      <ToastProvider>
-        <Suspense fallback={null}>
-          <WorkspacePage profile={profile} onSignOut={handleSignOut} />
-        </Suspense>
-      </ToastProvider>
-    )
+
+    if (route.page === 'manager' || route.page === 'school-admin') {
+      if (!authChecked) {
+        return null
+      }
+      if (!profile) {
+        return (
+          <Suspense fallback={null}>
+            <LoginPage onAuthenticated={handleAuthenticated} />
+          </Suspense>
+        )
+      }
+      // L'espace super admin n'est accessible qu'au rôle super_admin ; tout
+      // autre compte authentifié est redirigé vers l'espace responsable.
+      const isAdminSpace = route.page === 'school-admin' && profile.role === 'super_admin'
+      const WorkspacePage = isAdminSpace ? AdminHomePage : ManagerHomePage
+      return (
+        <ToastProvider>
+          <Suspense fallback={null}>
+            <WorkspacePage profile={profile} onSignOut={handleSignOut} />
+          </Suspense>
+        </ToastProvider>
+      )
+    }
+
+    return <HomePage />
   }
 
-  return <HomePage />
+  const signedInProfile = authChecked ? profile : null
+  return <SessionContext.Provider value={signedInProfile}>{renderPage()}</SessionContext.Provider>
 }
 
 export default App

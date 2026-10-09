@@ -5,6 +5,8 @@ import { useTranslation } from 'react-i18next'
 import Button from './ui/Button'
 import Container from './ui/Container'
 import LanguageSwitch from './ui/LanguageSwitch'
+import { useSession } from '../hooks/useSession'
+import { findWorkspacePath } from '../utils/sessionRoutes'
 import { useReferenceLabel } from '../hooks/useReferenceLabel'
 import { useSchoolSelection } from '../hooks/useSchoolSelection'
 import { buildComparisonPath } from '../utils/comparison'
@@ -199,6 +201,20 @@ function TypeMenu({ types, activeTypeId, onSelectType }) {
   )
 }
 
+// L'entrée des établissements. Pour un compte déjà connecté, elle mène droit à
+// son espace et le dit : on ne lui repropose pas de se connecter.
+function SchoolSpaceButton({ className = '' }) {
+  const { t } = useTranslation()
+  const signedInProfile = useSession()
+  const spacePath = signedInProfile ? findWorkspacePath(signedInProfile) : LOGIN_PATH
+
+  return (
+    <Button as="a" href={spacePath} variant="accent" className={`rounded-full ${className}`}>
+      {signedInProfile ? t('header.mySpace') : t('header.forSchools')}
+    </Button>
+  )
+}
+
 function MobileMenu({ types, activeTypeId, onSelectType }) {
   const { t } = useTranslation()
 
@@ -234,9 +250,7 @@ function MobileMenu({ types, activeTypeId, onSelectType }) {
         <div className="mt-3 sm:hidden">
           <LanguageSwitch />
         </div>
-        <Button as="a" href={LOGIN_PATH} variant="accent" className="mt-3 w-full rounded-full">
-          {t('header.forSchools')}
-        </Button>
+        <SchoolSpaceButton className="mt-3 w-full" />
       </Container>
     </nav>
   )
@@ -314,9 +328,7 @@ function Header({ activeTypeId, onNavigateToType, types = [], featuredTypeIds = 
             <Search aria-hidden="true" className="size-4" />
           </a>
           <div className="hidden lg:block">
-            <Button as="a" href={LOGIN_PATH} variant="accent" className="whitespace-nowrap rounded-full">
-              {t('header.forSchools')}
-            </Button>
+            <SchoolSpaceButton className="whitespace-nowrap" />
           </div>
           <button
             type="button"
