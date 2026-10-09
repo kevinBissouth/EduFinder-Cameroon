@@ -67,6 +67,7 @@ class ReferenceLabelsSerializer(serializers.Serializer):
 class PlatformStatsSerializer(serializers.Serializer):
     institutions = serializers.IntegerField()
     cities = serializers.IntegerField()
+    regions = serializers.IntegerField()
     fee_plans = serializers.IntegerField()
     exam_results = serializers.IntegerField()
 
@@ -114,8 +115,10 @@ class MediaSerializer(serializers.Serializer):
     caption = serializers.CharField()
 
 
-# Carte de résultat de recherche. min_tuition, best_pass_rate et cover_url sont
-# des annotations calculées par la requête de recherche.
+# Carte de résultat de recherche. min_tuition, best_pass_rate, cover_url et
+# is_profile_complete sont des annotations calculées par la requête de
+# recherche. Le drapeau interne « recommended » ne sort pas : la plateforme
+# n'affiche que des faits vérifiables.
 class InstitutionSummarySerializer(serializers.Serializer):
     uuid = serializers.CharField()
     name = serializers.CharField()
@@ -125,7 +128,7 @@ class InstitutionSummarySerializer(serializers.Serializer):
     linguistic_section = serializers.CharField(source="linguistic_section.label")
     phone = serializers.CharField()
     website = serializers.CharField()
-    recommended = serializers.BooleanField()
+    is_profile_complete = serializers.BooleanField()
     min_tuition = serializers.DecimalField(max_digits=12, decimal_places=2)
     best_pass_rate = serializers.DecimalField(max_digits=5, decimal_places=2)
     cover_url = serializers.CharField()

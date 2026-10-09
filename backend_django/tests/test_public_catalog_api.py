@@ -30,6 +30,7 @@ def test_stats_without_data_returns_zeros(client):
     assert response.json() == {
         "institutions": 0,
         "cities": 0,
+        "regions": 0,
         "fee_plans": 0,
         "exam_results": 0,
     }
@@ -48,6 +49,7 @@ def test_stats_count_only_published_data(client, create_establishment, hidden_st
     assert response.json() == {
         "institutions": 1,
         "cities": 1,
+        "regions": 1,
         "fee_plans": 1,
         "exam_results": 1,
     }
@@ -64,6 +66,19 @@ def test_stats_count_each_city_once(client, create_establishment, city):
 
     assert response.json()["institutions"] == 3
     assert response.json()["cities"] == 2
+
+
+@pytest.mark.django_db
+def test_stats_count_only_regions_holding_a_published_school(
+    client, create_establishment, city
+):
+    Region.objects.create(name="Empty region")
+    other_region = Region.objects.create(name="Centre")
+    other_city = City.objects.create(name="Yaoundé", region=other_region)
+    create_establishment(name="First school")
+    create_establishment(name="Second school", city=other_city)
+
+    assert client.get("/stats").json()["regions"] == 2
 
 
 # --- GET /filters-meta --------------------------------------------------------
