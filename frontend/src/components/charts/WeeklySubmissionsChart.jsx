@@ -50,6 +50,9 @@ function WeeklySubmissionsChart({ submissions }) {
           value: weeks.reduce((sum, week) => sum + week[series.dataKey], 0),
         }))}
       />
+      {/* Les tuiles du tableau de bord comptent tout l'historique : sans cette
+          précision, leurs nombres sembleraient contredire ceux-ci. */}
+      <p className="mt-2 text-xs text-ink-soft">{t('charts.periodTotals', { count: WEEK_COUNT })}</p>
     </>
   )
 }

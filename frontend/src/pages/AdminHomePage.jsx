@@ -17,11 +17,22 @@ import { readApiErrorMessage } from '../utils/apiError'
 import { authedRequest } from '../utils/auth'
 import { findFirstName } from '../utils/format'
 import '../i18n/privateTexts'
+import { useDocumentTitle } from '../hooks/useDocumentTitle'
 
 const NAV_ITEMS = [
-  { id: 'overview', labelKey: 'nav.dashboard', icon: LayoutDashboard },
+  {
+    id: 'overview',
+    labelKey: 'nav.dashboard',
+    shortLabelKey: 'manager:nav.home',
+    icon: LayoutDashboard,
+  },
   { id: 'submissions', labelKey: 'nav.submissions', icon: ClipboardList },
-  { id: 'establishments', labelKey: 'nav.schools', icon: Building2 },
+  {
+    id: 'establishments',
+    labelKey: 'nav.schools',
+    shortLabelKey: 'manager:nav.schools',
+    icon: Building2,
+  },
   { id: 'account', labelKey: 'nav.account', icon: Settings },
 ]
 const DEFAULT_SUBMISSION_FILTER = 'pending'
@@ -42,6 +53,7 @@ async function loadAdminData() {
 
 function AdminHomePage({ profile, onSignOut }) {
   const { t } = useTranslation('admin')
+  useDocumentTitle()
   const [activeView, setActiveView] = useState('overview')
   const [submissionFilter, setSubmissionFilter] = useState(DEFAULT_SUBMISSION_FILTER)
   const [adminData, setAdminData] = useState(EMPTY_ADMIN_DATA)
@@ -186,7 +198,13 @@ function AdminHomePage({ profile, onSignOut }) {
   }
 
   // Le menu ne porte que des clés : ses libellés suivent la langue affichée.
-  const navItems = NAV_ITEMS.map((navItem) => ({ ...navItem, label: t(navItem.labelKey) }))
+  // Le libellé court sert dans le rail et la barre d'onglets, trop étroits
+  // pour « Tableau de bord » ou « Établissements ».
+  const navItems = NAV_ITEMS.map((navItem) => ({
+    ...navItem,
+    label: t(navItem.labelKey),
+    shortLabel: navItem.shortLabelKey ? t(navItem.shortLabelKey) : undefined,
+  }))
 
   return (
     <WorkspaceShell

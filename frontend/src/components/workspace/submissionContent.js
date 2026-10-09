@@ -15,7 +15,14 @@ const REFERENCE_FIELDS = {
 const PHOTO_FIELDS = new Set(['cover_photo', 'director_photo'])
 const FILE_LIST_FIELDS = new Set(['videos', 'media_additions', 'media_removals'])
 
+const MEDIA_ADDITIONS_KEY = 'media_additions'
+const IMAGE_MEDIA_TYPE = 'image'
+
 const translate = (key, options) => i18next.t(`workspace:content.${key}`, options)
+
+function translateLabel(key) {
+  return translate(key, { defaultValue: toSentenceCase(key.replaceAll('_', ' ')) })
+}
 
 // Le nom figure déjà dans le titre de la soumission.
 const HIDDEN_KEYS = new Set(['name'])
@@ -60,6 +67,13 @@ function isEmptyValue(value) {
   return value === null || value === '' || (Array.isArray(value) && value.length === 0)
 }
 
+// Images qu'une entrée apporte, pour que le validateur voie ce qu'il valide.
+function listImageUrls(key, value) {
+  if (PHOTO_FIELDS.has(key)) return [value]
+  if (key !== MEDIA_ADDITIONS_KEY) return []
+  return value.filter((mediaItem) => mediaItem.type === IMAGE_MEDIA_TYPE).map((mediaItem) => mediaItem.url)
+}
+
 function describeEntry(key, value, meta, translateReference) {
   if (key in REFERENCE_FIELDS) {
     const { metaKey, referenceKind } = REFERENCE_FIELDS[key]
@@ -77,8 +91,7 @@ function describeEntry(key, value, meta, translateReference) {
   }
   // Une clé que je ne connais pas reste affichée : rien de ce qui a été soumis
   // ne doit disparaître de l'écran.
-  const label = translate(key, { defaultValue: toSentenceCase(key.replaceAll('_', ' ')) })
-  return { label, text: typeof value === 'object' ? JSON.stringify(value) : String(value) }
+  return { label: translateLabel(key), text: typeof value === 'object' ? JSON.stringify(value) : String(value) }
 }
 
 // Transforme le contenu brut d'une soumission en lignes lisibles : chaque
@@ -86,5 +99,23 @@ function describeEntry(key, value, meta, translateReference) {
 export function describeSubmissionContent(content, meta, translateReference) {
   return Object.entries(content ?? {})
     .filter(([key, value]) => !HIDDEN_KEYS.has(key) && !isEmptyValue(value))
-    .map(([key, value]) => ({ key, ...describeEntry(key, value, meta, translateReference) }))
+    .map(([key, value]) => ({
+      key,
+      imageUrls: listImageUrls(key, value),
+      ...describeEntry(key, value, meta, translateReference),
+    }))
+}
+
+function listFilledKeys(content) {
+  return Object.entries(content ?? {})
+    .filter(([, value]) => !isEmptyValue(value))
+    .map(([key]) => key)
+}
+
+// Les rubriques qu'une soumission touche, pour distinguer deux cartes sans
+// les ouvrir. La liste du super administrateur les reçoit toutes prêtes
+// (changed_fields) ; celle du responsable les déduit du contenu.
+export function listChangedSections(submission) {
+  const changedKeys = submission.changed_fields ?? listFilledKeys(submission.content)
+  return changedKeys.filter((key) => !HIDDEN_KEYS.has(key)).map(translateLabel)
 }

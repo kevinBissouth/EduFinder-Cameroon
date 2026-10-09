@@ -29,6 +29,7 @@ import { useModificationProposal } from '../../hooks/useModificationProposal'
 import { typeSupportsExamResults, typeSupportsPrograms } from '../../utils/establishmentType'
 import { toExternalUrl } from '../school-profile/helpers'
 import { useReferenceLabel } from '../../hooks/useReferenceLabel'
+import SuspensionNotice from './SuspensionNotice'
 
 const GALLERY_NARROW_GRID = 'grid-cols-2 sm:grid-cols-3 xl:grid-cols-2'
 const GALLERY_WIDE_GRID = 'grid-cols-2 sm:grid-cols-3 xl:grid-cols-5'
@@ -109,6 +110,7 @@ function SchoolDetailContent({
 
   return (
     <div className="space-y-6">
+      <SuspensionNotice detail={detail} />
       <SchoolDetailHero detail={detail} onEditSchool={onEditSchool} />
 
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">

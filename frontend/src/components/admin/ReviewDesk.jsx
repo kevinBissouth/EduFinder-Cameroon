@@ -47,7 +47,7 @@ function EmptyQueue() {
       <CircleCheck aria-hidden="true" className="size-10 shrink-0 text-accent" />
       <div>
         <h2 className="font-display text-3xl leading-display">{t('review.nothingTitle')}</h2>
-        <p className="mt-1 text-sm text-on-navy-soft text-pretty">
+        <p className="mt-1 text-sm text-white text-pretty">
           {t('review.nothingText')}
         </p>
       </div>

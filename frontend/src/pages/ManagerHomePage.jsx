@@ -30,6 +30,7 @@ import { readApiErrorMessage } from '../utils/apiError'
 import { findFirstName } from '../utils/format'
 import { authedRequest } from '../utils/auth'
 import '../i18n/privateTexts'
+import { useDocumentTitle } from '../hooks/useDocumentTitle'
 
 const NAV_ITEMS = [
   { id: 'overview', labelKey: 'nav.dashboard', shortLabelKey: 'nav.home', icon: LayoutDashboard },
@@ -44,6 +45,7 @@ const NAV_ITEMS = [
 // Vues atteintes par une action et non par la barre latérale.
 const ACTION_VIEWS = ['school-detail', 'form-creation', 'form-modification']
 const DEFAULT_ROLE = 'manager'
+const PUBLISHED_STATUS = 'published'
 
 // Vues qui portent sur l'établissement sélectionné : elles seules affichent
 // le sélecteur d'établissement.
@@ -67,6 +69,7 @@ function findViewTitle(viewId, navItems, t) {
 
 function ManagerHomePage({ profile, onSignOut }) {
   const { t } = useTranslation('manager')
+  useDocumentTitle()
   const managerData = useManagerData()
   const [activeView, setActiveView] = useState('overview')
   const [formState, setFormState] = useState(null)
@@ -98,12 +101,17 @@ function ManagerHomePage({ profile, onSignOut }) {
     }
   }, [selectedUuid])
 
-  // Par défaut, on pilote le premier établissement géré (cas le plus courant :
-  // un responsable = une école). Le sélecteur apparaît s'il en gère plusieurs.
+  // Par défaut, on pilote le premier établissement publié (cas le plus
+  // courant : un responsable = une école) : ouvrir l'espace sur une fiche
+  // suspendue ou en attente donnerait un tableau de bord vide. À défaut, le
+  // premier de la liste. Le sélecteur apparaît s'il en gère plusieurs.
   useEffect(() => {
-    if (!selectedUuid && managerData.establishments.length > 0) {
-      setSelectedUuid(managerData.establishments[0].establishment_uuid)
-    }
+    if (selectedUuid || managerData.establishments.length === 0) return
+    const defaultSchool =
+      managerData.establishments.find(
+        (school) => school.establishment_status === PUBLISHED_STATUS,
+      ) ?? managerData.establishments[0]
+    setSelectedUuid(defaultSchool.establishment_uuid)
   }, [selectedUuid, managerData.establishments])
 
   async function handleEditSchool(school) {
