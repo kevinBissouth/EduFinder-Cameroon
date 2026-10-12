@@ -50,6 +50,7 @@
     "schoolErrorTitle": "Cet établissement n'a pas pu être chargé",
     "awaitingReview": "Modifications en attente de validation",
     "school": "Établissement",
+    "schoolChoice": "Établissement affiché : {{school}}. Changer d'établissement",
     "suspended": "Cet établissement est suspendu : il n'apparaît plus sur le site public.",
     "suspensionReason": "Motif indiqué : {{reason}}"
   },

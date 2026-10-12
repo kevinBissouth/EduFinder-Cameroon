@@ -3,6 +3,7 @@ import { CircleAlert, CircleCheck, X } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 import { ToastContext } from './toastContext'
+import { createUniqueId } from '../../utils/uniqueId'
 
 const TOAST_DURATION_MS = 6000
 const TONE_PRESENTATION = {
@@ -45,7 +46,7 @@ function ToastProvider({ children }) {
 
   const showToast = useCallback(
     ({ tone, message }) => {
-      const toastId = crypto.randomUUID()
+      const toastId = createUniqueId()
       setToasts((currentToasts) => [...currentToasts, { id: toastId, tone, message }])
       setTimeout(() => dismissToast(toastId), TOAST_DURATION_MS)
     },

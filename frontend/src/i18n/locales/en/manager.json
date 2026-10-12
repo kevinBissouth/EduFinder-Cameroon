@@ -50,6 +50,7 @@
     "schoolErrorTitle": "This school could not be loaded",
     "awaitingReview": "Changes awaiting review",
     "school": "School",
+    "schoolChoice": "School shown: {{school}}. Change school",
     "suspended": "This school is suspended: it no longer appears on the public site.",
     "suspensionReason": "Reason given: {{reason}}"
   },

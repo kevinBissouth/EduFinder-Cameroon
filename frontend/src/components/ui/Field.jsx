@@ -1,5 +1,4 @@
 import { useId } from 'react'
-import { ChevronDown } from 'lucide-react'
 
 import { formatAmount } from '../../utils/format'
 
@@ -78,35 +77,6 @@ export function PhoneField({ onChange, ...fieldProps }) {
       inputMode="tel"
       onChange={(event) => onChange(keepPhoneCharacters(event.target.value))}
     />
-  )
-}
-
-export function SelectField({ label, placeholder, options, error, className = '', ...selectProps }) {
-  const { controlProps, errorMessage } = useFieldError(error)
-
-  return (
-    <label className={`flex w-full flex-col gap-1.5 ${className}`}>
-      <FieldLabel>{label}</FieldLabel>
-      <span className="relative">
-        <select
-          {...selectProps}
-          {...controlProps}
-          className={`${controlClasses(error)} appearance-none pr-9`}
-        >
-          <option value="">{placeholder}</option>
-          {options.map((option) => (
-            <option key={option.id} value={option.id}>
-              {option.name}
-            </option>
-          ))}
-        </select>
-        <ChevronDown
-          aria-hidden="true"
-          className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-ink-soft"
-        />
-      </span>
-      {errorMessage}
-    </label>
   )
 }
 

@@ -1,6 +1,8 @@
 // Brouillon d'une proposition : ce que le formulaire fait saisir, et sa
 // traduction en contenu envoyé à l'API.
 
+import { createUniqueId } from '../../../utils/uniqueId.js'
+
 const REFERENCE_FIELD_PREFIX = 'id_'
 export const REQUIRED_CLASSIFICATION_FIELDS = [
   'id_city',
@@ -34,7 +36,7 @@ export function buildInitialFields(school) {
 
 export function createFeeRow(fee) {
   return {
-    rowId: crypto.randomUUID(),
+    rowId: createUniqueId(),
     id_level: fee ? String(fee.id_level) : '',
     amount: fee ? String(Number(fee.amount)) : '',
     school_year: fee?.school_year ?? '',
@@ -44,7 +46,7 @@ export function createFeeRow(fee) {
 
 export function createExamResultRow(examResult) {
   return {
-    rowId: crypto.randomUUID(),
+    rowId: createUniqueId(),
     id_exam: examResult ? String(examResult.id_exam) : '',
     session: examResult?.session ?? '',
     pass_rate: examResult ? String(Number(examResult.pass_rate)) : '',

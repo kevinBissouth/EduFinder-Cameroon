@@ -24,12 +24,3 @@ export function translateOptionNames(options, referenceKind, translateReference)
     name: translateReference(referenceKind, option.name),
   }))
 }
-
-// Un niveau s'affiche « cycle — classe ». Le cycle se traduit ; la classe est
-// le nom officiel d'un système scolaire (« 6e », « Form 1 ») et reste tel quel.
-export function translateLevelOptions(levels, translateReference) {
-  return levels.map((level) => ({
-    ...level,
-    name: level.stage ? `${translateReference('stages', level.stage)} — ${level.label}` : level.name,
-  }))
-}

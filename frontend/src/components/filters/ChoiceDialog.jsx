@@ -8,7 +8,8 @@ const SINGLE_COLUMN_LIMIT = 5
 
 // Fenêtre de choix unique (section, secteur, région). Toucher une ligne
 // l'applique et referme la fenêtre : pas de bouton de validation à chercher.
-// La première ligne retire le critère.
+// Avec un anyLabel, la première ligne retire le critère ; sans lui (champ de
+// formulaire), la fenêtre ne liste que les choix.
 function ChoiceDialog({ icon, title, description, anyLabel, options, selectedId, onSelect, onClose }) {
   const choose = (optionId) => {
     onSelect(optionId)
@@ -23,13 +24,15 @@ function ChoiceDialog({ icon, title, description, anyLabel, options, selectedId,
         aria-label={title}
         className={`grid gap-2 ${hasManyOptions ? 'sm:grid-cols-2' : ''}`}
       >
-        <OptionRow
-          role="radio"
-          name={anyLabel}
-          isSelected={!selectedId}
-          onSelect={() => choose(ANY_OPTION_ID)}
-          className={hasManyOptions ? 'sm:col-span-2' : ''}
-        />
+        {anyLabel && (
+          <OptionRow
+            role="radio"
+            name={anyLabel}
+            isSelected={!selectedId}
+            onSelect={() => choose(ANY_OPTION_ID)}
+            className={hasManyOptions ? 'sm:col-span-2' : ''}
+          />
+        )}
         {options.map((option) => (
           <OptionRow
             key={option.id}

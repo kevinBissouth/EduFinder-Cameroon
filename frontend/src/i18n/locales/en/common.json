@@ -39,5 +39,6 @@
   },
   "documentTitle": "EduFinder Cameroon: compare schools before you enrol",
   "pageDocumentTitle": "{{page}} | EduFinder Cameroon",
-  "close": "Close"
+  "close": "Close",
+  "clearChoice": "Clear the choice: {{field}}"
 }

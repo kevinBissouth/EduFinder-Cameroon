@@ -1,17 +1,15 @@
+import { Landmark, Languages, MapPin, School } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
-import { PhoneField, SelectField, TextAreaField, TextField } from '../../ui/Field'
+import ChoiceField from '../../ui/ChoiceField'
+import { PhoneField, TextAreaField, TextField } from '../../ui/Field'
 import Notice from '../../workspace/Notice'
 import ToggleChipGroup from '../../workspace/ToggleChipGroup'
 import { toChipOptions, toggleValue } from '../../workspace/toggleChips'
 import { PhotoUpload, VideoUploads } from './FileUploads'
 import { FIELD_MAX_LENGTHS, rowErrorPath } from './proposalValidation'
 import { ExamResultRowsEditor, FeeRowsEditor } from './RowEditors'
-import {
-  translateLevelOptions,
-  translateOptionNames,
-  useReferenceLabel,
-} from '../../../hooks/useReferenceLabel'
+import { translateOptionNames, useReferenceLabel } from '../../../hooks/useReferenceLabel'
 import { SUPPORTED_LANGUAGES } from '../../../i18n/languages'
 
 const BIOGRAPHY_ROWS = 4
@@ -93,12 +91,13 @@ export function GeneralStep({ form }) {
         value={fields.description}
         onChange={(event) => form.setField('description', event.target.value)}
       />
-      <SelectField
+      <ChoiceField
+        icon={Languages}
         label={t('form.fields.contentLanguage')}
         placeholder={t('form.fields.contentLanguagePlaceholder')}
         options={CONTENT_LANGUAGE_OPTIONS}
         value={fields.content_language}
-        onChange={(event) => form.setField('content_language', event.target.value)}
+        onChange={(languageCode) => form.setField('content_language', languageCode)}
       />
       <p className="-mt-2 text-sm text-ink-soft">{t('form.fields.contentLanguageHint')}</p>
       {translationLabels && (
@@ -118,20 +117,28 @@ export function ClassificationStep({ form }) {
   const translateReference = useReferenceLabel()
   const { fields } = form.draft
   const requiredSuffix = form.isCreation ? t('form.required') : ''
-  const referenceSelects = [
-    { fieldName: 'id_city', label: t('form.fields.city'), options: form.meta.cities ?? [] },
+  const referenceChoices = [
+    {
+      fieldName: 'id_city',
+      icon: MapPin,
+      label: t('form.fields.city'),
+      options: form.meta.cities ?? [],
+    },
     {
       fieldName: 'id_type',
+      icon: School,
       label: t('form.fields.schoolType'),
       options: translateOptionNames(form.meta.types ?? [], 'types', translateReference),
     },
     {
       fieldName: 'id_sector',
+      icon: Landmark,
       label: t('form.fields.sector'),
       options: translateOptionNames(form.meta.sectors ?? [], 'sectors', translateReference),
     },
     {
       fieldName: 'id_linguistic_section',
+      icon: Languages,
       label: t('form.fields.section'),
       options: translateOptionNames(form.meta.languages ?? [], 'sections', translateReference),
     },
@@ -140,15 +147,16 @@ export function ClassificationStep({ form }) {
   return (
     <>
       <div className="grid gap-4 sm:grid-cols-2">
-        {referenceSelects.map((referenceSelect) => (
-          <SelectField
-            key={referenceSelect.fieldName}
-            label={`${referenceSelect.label}${requiredSuffix}`}
+        {referenceChoices.map((referenceChoice) => (
+          <ChoiceField
+            key={referenceChoice.fieldName}
+            icon={referenceChoice.icon}
+            label={`${referenceChoice.label}${requiredSuffix}`}
             placeholder={t('form.choose')}
-            options={referenceSelect.options}
-            error={form.fieldError(referenceSelect.fieldName)}
-            value={fields[referenceSelect.fieldName]}
-            onChange={(event) => form.setField(referenceSelect.fieldName, event.target.value)}
+            options={referenceChoice.options}
+            error={form.fieldError(referenceChoice.fieldName)}
+            value={fields[referenceChoice.fieldName]}
+            onChange={(referenceId) => form.setField(referenceChoice.fieldName, referenceId)}
           />
         ))}
       </div>
@@ -187,12 +195,10 @@ export function ProgrammesStep({ form }) {
 }
 
 export function FeesStep({ form }) {
-  const translateReference = useReferenceLabel()
-
   return (
     <FeeRowsEditor
       feeRows={form.draft.feeRows}
-      levels={translateLevelOptions(form.meta.levels ?? [], translateReference)}
+      levels={form.meta.levels ?? []}
       offeredLevelIds={form.offeredChoices.offeredLevelIds}
       paymentMethods={form.meta.payment_methods ?? []}
       errorFor={(rowId, fieldName) => form.fieldError(rowErrorPath('feeRows', rowId, fieldName))}

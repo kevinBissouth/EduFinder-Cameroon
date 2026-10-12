@@ -1,13 +1,15 @@
-import { Plus, Trash2 } from 'lucide-react'
+import { ClipboardCheck, GraduationCap, Plus, Trash2 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 import Button from '../../ui/Button'
-import { AmountField, SelectField, TextField } from '../../ui/Field'
+import ChoiceField from '../../ui/ChoiceField'
+import { AmountField, TextField } from '../../ui/Field'
 import ToggleChipGroup from '../../workspace/ToggleChipGroup'
 import { toggleValue } from '../../workspace/toggleChips'
 import { listRowOptions } from './offeredChoices'
 import { createExamResultRow, createFeeRow, removeRow, replaceRow } from './proposalDraft'
 import { useReferenceLabel } from '../../../hooks/useReferenceLabel'
+import { labelLevelOptions } from '../../../utils/levelLabels'
 
 const SEPTEMBER_MONTH_INDEX = 8
 const MAX_PASS_RATE = 100
@@ -43,9 +45,12 @@ function RowFrame({ removeLabel, onRemove, children }) {
   )
 }
 
-// Sur téléphone, la liste déroulante prend la largeur et les deux champs
-// courts se partagent la ligne suivante.
-const ROW_GRID_CLASSES = 'grid grid-cols-2 gap-3 sm:grid-cols-3'
+// Sur téléphone, la tuile de choix prend la largeur et les deux champs courts
+// se partagent la ligne suivante. Au-delà, la tuile reçoit la plus grande
+// part : son texte (« Choisir un examen ») doit tenir sur une ligne, alors
+// qu'un montant ou une année n'ont besoin que de quelques caractères.
+const ROW_GRID_CLASSES =
+  'grid grid-cols-2 gap-3 sm:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)_minmax(0,1fr)]'
 const WIDE_FIELD_CLASSES = 'col-span-2 sm:col-span-1'
 
 function AddRowButton({ label, onAdd }) {
@@ -68,6 +73,11 @@ export function FeeRowsEditor({
   const { t } = useTranslation('manager')
   const translateReference = useReferenceLabel()
   const changeRow = (rowId, changes) => onChange(replaceRow(feeRows, rowId, changes))
+  const translateStage = (stage) => translateReference('stages', stage)
+  // Les homonymes se cherchent parmi les classes proposées sur la ligne, pas
+  // dans toute la nomenclature : le cycle n'apparaît que s'il sert vraiment.
+  const listLevelOptions = (selectedLevelId) =>
+    labelLevelOptions(listRowOptions(levels, offeredLevelIds, selectedLevelId), translateStage)
 
   return (
     <>
@@ -79,14 +89,15 @@ export function FeeRowsEditor({
             onRemove={() => onChange(removeRow(feeRows, feeRow.rowId))}
           >
             <div className={ROW_GRID_CLASSES}>
-              <SelectField
+              <ChoiceField
                 className={WIDE_FIELD_CLASSES}
+                icon={GraduationCap}
                 label={t('form.rows.level')}
                 placeholder={t('form.rows.chooseLevel')}
-                options={listRowOptions(levels, offeredLevelIds, feeRow.id_level)}
+                options={listLevelOptions(feeRow.id_level)}
                 error={errorFor(feeRow.rowId, 'id_level')}
                 value={feeRow.id_level}
-                onChange={(event) => changeRow(feeRow.rowId, { id_level: event.target.value })}
+                onChange={(levelId) => changeRow(feeRow.rowId, { id_level: levelId })}
               />
               <AmountField
                 label={t('form.rows.yearlyAmount')}
@@ -142,14 +153,15 @@ export function ExamResultRowsEditor({ examResultRows, exams, offeredExamIds, er
             onRemove={() => onChange(removeRow(examResultRows, examResultRow.rowId))}
           >
             <div className={ROW_GRID_CLASSES}>
-              <SelectField
+              <ChoiceField
                 className={WIDE_FIELD_CLASSES}
+                icon={ClipboardCheck}
                 label={t('form.rows.exam')}
                 placeholder={t('form.rows.chooseExam')}
                 options={listRowOptions(exams, offeredExamIds, examResultRow.id_exam)}
                 error={errorFor(examResultRow.rowId, 'id_exam')}
                 value={examResultRow.id_exam}
-                onChange={(event) => changeRow(examResultRow.rowId, { id_exam: event.target.value })}
+                onChange={(examId) => changeRow(examResultRow.rowId, { id_exam: examId })}
               />
               <TextField
                 label={t('form.rows.session')}
