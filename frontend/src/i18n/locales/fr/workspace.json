@@ -15,6 +15,7 @@
   "retry": "Réessayer",
   "blockError": "Ce bloc n'a pas pu être chargé.",
   "genericError": "Une erreur est survenue. Vérifiez votre saisie, puis réessayez.",
+  "invalidFields": "Ces champs ont été refusés : {{fields}}. Corrigez-les, puis réessayez.",
   "sentForReview": "Envoyé pour validation. La page publique changera dès qu'un super administrateur l'aura approuvé.",
   "account": {
     "open": "Ouvrir votre compte",
@@ -63,6 +64,7 @@
     "view": "Voir"
   },
   "content": {
+    "name": "Nom de l'établissement",
     "phone": "Téléphone",
     "contact_email": "E-mail",
     "website": "Site web",

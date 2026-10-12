@@ -1,10 +1,11 @@
 import { useTranslation } from 'react-i18next'
 
-import { SelectField, TextAreaField, TextField } from '../../ui/Field'
+import { PhoneField, SelectField, TextAreaField, TextField } from '../../ui/Field'
 import Notice from '../../workspace/Notice'
 import ToggleChipGroup from '../../workspace/ToggleChipGroup'
 import { toChipOptions, toggleValue } from '../../workspace/toggleChips'
 import { PhotoUpload, VideoUploads } from './FileUploads'
+import { FIELD_MAX_LENGTHS, rowErrorPath } from './proposalValidation'
 import { ExamResultRowsEditor, FeeRowsEditor } from './RowEditors'
 import {
   translateLevelOptions,
@@ -58,24 +59,31 @@ export function GeneralStep({ form }) {
       <TextField
         label={`${t('form.fields.schoolName')}${requiredSuffix}`}
         placeholder={t('form.fields.schoolNamePlaceholder')}
+        maxLength={FIELD_MAX_LENGTHS.name}
+        error={form.fieldError('name')}
         value={fields.name}
         onChange={(event) => form.setField('name', event.target.value)}
       />
-      <TextField
+      <PhoneField
         label={t('detail.phone')}
-        type="tel"
         placeholder="+237 6XX XX XX XX"
+        maxLength={FIELD_MAX_LENGTHS.phone}
+        error={form.fieldError('phone')}
         value={fields.phone}
-        onChange={(event) => form.setField('phone', event.target.value)}
+        onChange={(phone) => form.setField('phone', phone)}
       />
       <TextField
         label={t('detail.email')}
         type="email"
+        maxLength={FIELD_MAX_LENGTHS.contact_email}
+        error={form.fieldError('contact_email')}
         value={fields.contact_email}
         onChange={(event) => form.setField('contact_email', event.target.value)}
       />
       <TextField
         label={t('detail.website')}
+        maxLength={FIELD_MAX_LENGTHS.website}
+        error={form.fieldError('website')}
         value={fields.website}
         onChange={(event) => form.setField('website', event.target.value)}
       />
@@ -138,6 +146,7 @@ export function ClassificationStep({ form }) {
             label={`${referenceSelect.label}${requiredSuffix}`}
             placeholder={t('form.choose')}
             options={referenceSelect.options}
+            error={form.fieldError(referenceSelect.fieldName)}
             value={fields[referenceSelect.fieldName]}
             onChange={(event) => form.setField(referenceSelect.fieldName, event.target.value)}
           />
@@ -146,6 +155,7 @@ export function ClassificationStep({ form }) {
       <TextField
         label={t('detail.address')}
         placeholder={t('form.fields.addressPlaceholder')}
+        maxLength={FIELD_MAX_LENGTHS.address}
         value={fields.address}
         onChange={(event) => form.setField('address', event.target.value)}
       />
@@ -183,7 +193,9 @@ export function FeesStep({ form }) {
     <FeeRowsEditor
       feeRows={form.draft.feeRows}
       levels={translateLevelOptions(form.meta.levels ?? [], translateReference)}
+      offeredLevelIds={form.offeredChoices.offeredLevelIds}
       paymentMethods={form.meta.payment_methods ?? []}
+      errorFor={(rowId, fieldName) => form.fieldError(rowErrorPath('feeRows', rowId, fieldName))}
       onChange={(feeRows) => form.setList('feeRows', 'fees', feeRows)}
     />
   )
@@ -217,6 +229,10 @@ export function ResultsStep({ form }) {
     <ExamResultRowsEditor
       examResultRows={form.draft.examResultRows}
       exams={translateOptionNames(form.meta.exams ?? [], 'exams', translateReference)}
+      offeredExamIds={form.offeredChoices.offeredExamIds}
+      errorFor={(rowId, fieldName) =>
+        form.fieldError(rowErrorPath('examResultRows', rowId, fieldName))
+      }
       onChange={(examResultRows) => form.setList('examResultRows', 'exam_results', examResultRows)}
     />
   )
@@ -232,18 +248,21 @@ export function LeadershipStep({ form }) {
       <TextField
         label={t('form.fields.directorName')}
         placeholder={t('form.fields.directorNamePlaceholder')}
+        maxLength={FIELD_MAX_LENGTHS.director_name}
         value={fields.director_name}
         onChange={(event) => form.setField('director_name', event.target.value)}
       />
       <TextField
         label={t('form.fields.directorTitle')}
         placeholder={t('form.fields.directorTitlePlaceholder')}
+        maxLength={FIELD_MAX_LENGTHS.director_title}
         value={fields.director_title}
         onChange={(event) => form.setField('director_title', event.target.value)}
       />
       {translationLabels && (
         <TextField
           label={translationLabels.describe(t('form.fields.directorTitle'))}
+          maxLength={FIELD_MAX_LENGTHS.director_title_translation}
           value={fields.director_title_translation}
           onChange={(event) => form.setField('director_title_translation', event.target.value)}
         />

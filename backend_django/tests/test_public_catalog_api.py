@@ -117,11 +117,30 @@ def test_filters_meta_exposes_references_as_id_and_name(client, establishment):
 # université : la règle vient du même tableau que les contrôles de cohérence.
 @pytest.mark.django_db
 def test_filters_meta_tells_which_types_sit_each_exam(client):
-    exam_allowed_types = client.get("/filters-meta").json()["exam_allowed_types"]
+    coherence_rules = client.get("/filters-meta").json()["coherence_rules"]
+    exam_allowed_types = coherence_rules["exam_allowed_types"]
 
     assert exam_allowed_types["CEP"] == ["Primary"]
     assert exam_allowed_types["BTS"] == ["Higher institute"]
     assert exam_allowed_types["BEPC"] == ["Secondary general", "Secondary technical"]
+
+
+# Le formulaire du responsable filtre ses listes avec ces règles : une école
+# primaire voit la maternelle, jamais le collège, et chaque section son système.
+@pytest.mark.django_db
+def test_filters_meta_tells_which_stages_fit_each_type_and_section(client):
+    coherence_rules = client.get("/filters-meta").json()["coherence_rules"]
+
+    assert coherence_rules["stage_allowed_types"]["Maternelle"] == ["Nursery", "Primary"]
+    assert coherence_rules["stage_allowed_types"]["Collège"] == [
+        "Secondary general",
+        "Secondary technical",
+    ]
+    assert coherence_rules["stage_families"]["Primaire"] == "francophone"
+    assert coherence_rules["stage_families"]["Primary"] == "anglophone"
+    assert "Higher" not in coherence_rules["stage_families"]
+    assert coherence_rules["exam_families"]["GCE O-Level"] == "anglophone"
+    assert coherence_rules["section_families"]["Bilingual"] == ["anglophone", "francophone"]
 
 
 @pytest.mark.django_db

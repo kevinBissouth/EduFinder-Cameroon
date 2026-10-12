@@ -5,6 +5,7 @@ import Button from '../../ui/Button'
 import { AmountField, SelectField, TextField } from '../../ui/Field'
 import ToggleChipGroup from '../../workspace/ToggleChipGroup'
 import { toggleValue } from '../../workspace/toggleChips'
+import { listRowOptions } from './offeredChoices'
 import { createExamResultRow, createFeeRow, removeRow, replaceRow } from './proposalDraft'
 import { useReferenceLabel } from '../../../hooks/useReferenceLabel'
 
@@ -56,7 +57,14 @@ function AddRowButton({ label, onAdd }) {
   )
 }
 
-export function FeeRowsEditor({ feeRows, levels, paymentMethods, onChange }) {
+export function FeeRowsEditor({
+  feeRows,
+  levels,
+  offeredLevelIds,
+  paymentMethods,
+  errorFor,
+  onChange,
+}) {
   const { t } = useTranslation('manager')
   const translateReference = useReferenceLabel()
   const changeRow = (rowId, changes) => onChange(replaceRow(feeRows, rowId, changes))
@@ -75,18 +83,21 @@ export function FeeRowsEditor({ feeRows, levels, paymentMethods, onChange }) {
                 className={WIDE_FIELD_CLASSES}
                 label={t('form.rows.level')}
                 placeholder={t('form.rows.chooseLevel')}
-                options={levels}
+                options={listRowOptions(levels, offeredLevelIds, feeRow.id_level)}
+                error={errorFor(feeRow.rowId, 'id_level')}
                 value={feeRow.id_level}
                 onChange={(event) => changeRow(feeRow.rowId, { id_level: event.target.value })}
               />
               <AmountField
                 label={t('form.rows.yearlyAmount')}
+                error={errorFor(feeRow.rowId, 'amount')}
                 value={feeRow.amount}
                 onChange={(amount) => changeRow(feeRow.rowId, { amount })}
               />
               <TextField
                 label={t('form.rows.schoolYear')}
                 placeholder={findCurrentSchoolYear()}
+                error={errorFor(feeRow.rowId, 'school_year')}
                 value={feeRow.school_year}
                 onChange={(event) => changeRow(feeRow.rowId, { school_year: event.target.value })}
               />
@@ -117,7 +128,7 @@ export function FeeRowsEditor({ feeRows, levels, paymentMethods, onChange }) {
   )
 }
 
-export function ExamResultRowsEditor({ examResultRows, exams, onChange }) {
+export function ExamResultRowsEditor({ examResultRows, exams, offeredExamIds, errorFor, onChange }) {
   const { t } = useTranslation('manager')
   const changeRow = (rowId, changes) => onChange(replaceRow(examResultRows, rowId, changes))
 
@@ -135,13 +146,15 @@ export function ExamResultRowsEditor({ examResultRows, exams, onChange }) {
                 className={WIDE_FIELD_CLASSES}
                 label={t('form.rows.exam')}
                 placeholder={t('form.rows.chooseExam')}
-                options={exams}
+                options={listRowOptions(exams, offeredExamIds, examResultRow.id_exam)}
+                error={errorFor(examResultRow.rowId, 'id_exam')}
                 value={examResultRow.id_exam}
                 onChange={(event) => changeRow(examResultRow.rowId, { id_exam: event.target.value })}
               />
               <TextField
                 label={t('form.rows.session')}
                 placeholder={String(new Date().getFullYear())}
+                error={errorFor(examResultRow.rowId, 'session')}
                 value={examResultRow.session}
                 onChange={(event) => changeRow(examResultRow.rowId, { session: event.target.value })}
               />
@@ -151,6 +164,7 @@ export function ExamResultRowsEditor({ examResultRows, exams, onChange }) {
                 min="0"
                 max={MAX_PASS_RATE}
                 step="any"
+                error={errorFor(examResultRow.rowId, 'pass_rate')}
                 value={examResultRow.pass_rate}
                 onChange={(event) =>
                   changeRow(examResultRow.rowId, { pass_rate: event.target.value })

@@ -13,6 +13,7 @@ from edufinder.models import (
     StudyLevel,
     Submission,
     SubmissionStatus,
+    SchoolFee,
     SubmissionType,
     User,
     UserEstablishment,
@@ -36,7 +37,7 @@ class References:
 
 @pytest.fixture(name="references")
 def references_fixture() -> References:
-    stage = Stage.objects.create(label="Primary")
+    stage = Stage.objects.create(label="Primaire")
     return References(
         primary_type=EstablishmentType.objects.create(label="Primary"),
         francophone_section=LinguisticSection.objects.create(label="Francophone"),
@@ -284,9 +285,29 @@ def test_creation_accepts_ordinary_websites(
 
 @pytest.mark.django_db
 @pytest.mark.parametrize(
+    "phone", ["+237 6 90 11 22 33", "690 112 233", "+237690112233", "690112233"]
+)
+def test_creation_stores_a_cameroonian_phone_without_spaces(
+    client, log_in_as, manager, creation_payload, phone
+):
+    log_in_as(manager)
+
+    response = post_json(client, CREATION_URL, {**creation_payload, "phone": phone})
+
+    assert response.status_code == 201
+    submission = Submission.objects.get(uuid=response.json()["submission_uuid"])
+    assert submission.content["phone"] in {"+237690112233", "690112233"}
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
     ("overridden_fields", "rejected_field"),
     [
         ({"name": "A"}, "name"),
+        ({"phone": "69O112233"}, "phone"),
+        ({"phone": "6571713726"}, "phone"),
+        ({"phone": "+33690112233"}, "phone"),
+        ({"phone": "6901122"}, "phone"),
         ({"name": None}, "name"),
         ({"latitude": 91}, "latitude"),
         ({"longitude": -181}, "longitude"),
@@ -402,6 +423,87 @@ def test_creation_rejects_an_exam_that_contradicts_the_linguistic_section(
 # --- Modification -------------------------------------------------------------
 
 
+def build_fee(study_level: StudyLevel) -> dict:
+    return {"id_level": study_level.pk, "amount": "70000", "school_year": "2026-2027"}
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    ("stage_label", "level_label", "expected_reason"),
+    [
+        ("Collège", "4e", "'Collège' is reserved for the types:"),
+        ("Primary", "Class 4", "'Primary' belongs to the anglophone system"),
+    ],
+)
+def test_creation_rejects_a_fee_for_a_class_the_school_cannot_teach(
+    client, log_in_as, manager, creation_payload, stage_label, level_label, expected_reason
+):
+    # L'école proposée est une primaire francophone.
+    log_in_as(manager)
+    study_level = StudyLevel.objects.create(
+        label=level_label, stage=Stage.objects.create(label=stage_label)
+    )
+    creation_payload["fees"] = [build_fee(study_level)]
+
+    response = post_json(client, CREATION_URL, creation_payload)
+
+    assert response.status_code == 422
+    assert response.json()["detail"].startswith(f"Incoherent fee: {expected_reason}")
+    assert not Establishment.objects.filter(name="New Hope Academy").exists()
+
+
+@pytest.mark.django_db
+def test_creation_lets_a_primary_school_publish_its_nursery_fees(
+    client, log_in_as, manager, creation_payload
+):
+    log_in_as(manager)
+    nursery_level = StudyLevel.objects.create(
+        label="Petite Section", stage=Stage.objects.create(label="Maternelle")
+    )
+    creation_payload["fees"].append(build_fee(nursery_level))
+
+    response = post_json(client, CREATION_URL, creation_payload)
+
+    assert response.status_code == 201
+
+
+@pytest.mark.django_db
+def test_modification_rejects_a_new_class_but_keeps_published_ones_editable(
+    client, log_in_as, manager, managed_establishment, references
+):
+    # Un complexe typé « secondaire général » publie déjà les frais de son
+    # CM2 : il peut encore les mettre à jour, mais pas ajouter une autre
+    # classe du primaire.
+    log_in_as(manager)
+    secondary_type = EstablishmentType.objects.create(label="Secondary general")
+    managed_establishment.type = secondary_type
+    managed_establishment.save(update_fields=["type"])
+    SchoolFee.objects.create(
+        establishment=managed_establishment,
+        level=references.study_level,
+        amount="60000",
+        school_year="2025-2026",
+    )
+    other_primary_level = StudyLevel.objects.create(
+        label="CM1", stage=references.study_level.stage
+    )
+
+    accepted_response = post_json(
+        client,
+        modification_url(managed_establishment),
+        {"fees": [build_fee(references.study_level)]},
+    )
+    rejected_response = post_json(
+        client,
+        modification_url(managed_establishment),
+        {"fees": [build_fee(other_primary_level)]},
+    )
+
+    assert accepted_response.status_code == 201
+    assert rejected_response.status_code == 422
+    assert "Incoherent fee" in rejected_response.json()["detail"]
+
+
 @pytest.mark.django_db
 def test_modification_is_stored_without_touching_the_establishment(
     client, log_in_as, manager, managed_establishment
@@ -471,6 +573,9 @@ def test_manager_can_propose_changes_to_the_same_element_at_will(
     client, log_in_as, manager, managed_establishment, references
 ):
     log_in_as(manager)
+    # Les frais proposés sont ceux d'un CM2 : l'école doit être une primaire.
+    managed_establishment.type = references.primary_type
+    managed_establishment.save(update_fields=["type"])
     url = modification_url(managed_establishment)
 
     def propose_fee(amount: str):

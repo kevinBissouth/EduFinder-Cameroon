@@ -273,6 +273,22 @@
     "translationTarget": {
       "en": "English",
       "fr": "French"
+    },
+    "errors": {
+      "stepHasErrors": "Correct the fields marked in red to continue.",
+      "required": "This field is required.",
+      "nameTooShort": "The name must be at least 2 characters long.",
+      "invalidPhone": "Enter a Cameroonian number of 9 digits, for example +237 6 90 11 22 33.",
+      "invalidEmail": "Enter a valid e-mail address, for example contact@school.cm.",
+      "invalidWebsite": "Enter a web address without spaces, for example https://school.cm.",
+      "amountPositive": "Enter an amount greater than 0.",
+      "schoolYearFormat": "Write the school year as 2026-2027.",
+      "sessionFormat": "Write the session year in 4 digits, for example 2026.",
+      "passRateRange": "Enter a rate between 0 and 100.",
+      "duplicateFee": "This class already has a line for this school year.",
+      "duplicateResult": "This exam already has a line for this session.",
+      "levelNotOffered": "This class does not match the school's type or language section.",
+      "examNotOffered": "This exam does not match the school's type or language section."
     }
   }
 }
