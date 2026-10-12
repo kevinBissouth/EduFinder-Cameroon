@@ -57,7 +57,7 @@ function SchoolGallery({
 
   return (
     <>
-      {media.length === 0 && <p className="mb-5 text-sm text-ink-soft">No photo or video yet.</p>}
+      {media.length === 0 && <p className="mb-5 text-sm text-ink-soft">{t('gallery.empty')}</p>}
       <OverflowList
         items={images}
         collapsedCount={PHOTOS_SHOWN_WHEN_COLLAPSED}

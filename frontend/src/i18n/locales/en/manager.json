@@ -77,6 +77,7 @@
     "openDetailsSuffix": ", open school details"
   },
   "exams": {
+    "passRate": "Pass rate",
     "rateLabel": "{{exam}} pass rate for {{session}} (%)",
     "editRate": "Edit the {{exam}} {{session}} pass rate",
     "sessionsRecorded_one": "session recorded",
@@ -131,6 +132,7 @@
     "notProvided": "Not provided"
   },
   "gallery": {
+    "empty": "No photo or video yet.",
     "confirmRemoval": "Ask for this file to be removed from the public page? A super administrator reviews the request.",
     "photos": "Photos",
     "photoAlt": "Photo of {{school}}",

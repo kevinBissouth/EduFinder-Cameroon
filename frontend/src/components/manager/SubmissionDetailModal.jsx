@@ -12,7 +12,11 @@ function SubmissionDetailModal({ submission, meta, onClose }) {
   const { t } = useTranslation('manager')
   const headerExtra = (
     <p className="mt-2 flex flex-wrap items-center gap-2 text-sm text-ink-soft">
-      <span className="capitalize">{submission.submission_type}</span>
+      <span className="capitalize">
+        {t(`workspace:submissionType.${submission.submission_type}`, {
+          defaultValue: submission.submission_type,
+        })}
+      </span>
       <span>{t('submissions.submittedOn', { date: formatShortDate(submission.submitted_at) })}</span>
       <StatusBadge status={submission.submission_status} />
     </p>
@@ -31,7 +35,7 @@ function SubmissionDetailModal({ submission, meta, onClose }) {
     >
       {submission.rejection_reason && (
         <Notice tone="danger" className="mb-5">
-          Rejected: {submission.rejection_reason}
+          {t('workspace:submission.reason', { reason: submission.rejection_reason })}
         </Notice>
       )}
       <SubmissionContent content={submission.content} meta={meta} />
