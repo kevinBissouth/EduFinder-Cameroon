@@ -1,6 +1,7 @@
 // Brouillon d'une proposition : ce que le formulaire fait saisir, et sa
 // traduction en contenu envoyé à l'API.
 
+import { expandFeeGroups, listChangedFees } from './feeGroups.js'
 import { createUniqueId } from '../../../utils/uniqueId.js'
 
 const REFERENCE_FIELD_PREFIX = 'id_'
@@ -31,16 +32,6 @@ export function buildInitialFields(school) {
     description_translation: detail?.description_translation ?? '',
     director_title_translation: detail?.director_title_translation ?? '',
     director_bio_translation: detail?.director_bio_translation ?? '',
-  }
-}
-
-export function createFeeRow(fee) {
-  return {
-    rowId: createUniqueId(),
-    id_level: fee ? String(fee.id_level) : '',
-    amount: fee ? String(Number(fee.amount)) : '',
-    school_year: fee?.school_year ?? '',
-    payment_methods: fee?.payment_methods ?? [],
   }
 }
 
@@ -78,18 +69,17 @@ function buildFieldsContent(fields) {
   )
 }
 
-// Une ligne incomplète n'est pas envoyée : elle serait refusée par l'API.
-function listCompleteFees(feeRows) {
-  return feeRows
-    .filter((feeRow) => feeRow.id_level && feeRow.amount && feeRow.school_year.trim())
-    .map((feeRow) => ({
-      id_level: Number(feeRow.id_level),
-      amount: feeRow.amount,
-      school_year: feeRow.school_year.trim(),
-      payment_methods: feeRow.payment_methods,
-    }))
+// Les frais des années ouvertes, une ligne par classe. Les années passées ne
+// se modifient pas ici ; en modification je n'envoie que ce qui diffère de la
+// fiche publiée, une ligne identique n'ayant rien à faire valider.
+function listFeesToSend(draft, schoolRecord) {
+  const openFeeGroups = draft.feeGroups.filter((feeGroup) =>
+    schoolRecord.openSchoolYears.includes(feeGroup.school_year),
+  )
+  return listChangedFees(expandFeeGroups(openFeeGroups), schoolRecord.publishedFees)
 }
 
+// Une ligne incomplète n'est pas envoyée : elle serait refusée par l'API.
 function listCompleteExamResults(examResultRows) {
   return examResultRows
     .filter((row) => row.id_exam && row.session.trim() && row.pass_rate !== '')
@@ -103,10 +93,12 @@ function listCompleteExamResults(examResultRows) {
 // En création, une liste vide n'a rien à dire : je ne l'envoie pas. En
 // modification, je n'envoie que les listes que le responsable a touchées :
 // une liste absente laisse la fiche telle quelle, alors qu'une liste de
-// services ou de programmes envoyée vide les retire tous.
-export function buildProposalContent(draft, isCreation) {
+// services ou de programmes envoyée vide les retire tous. Les frais font
+// exception : ils partent dès qu'une ligne diffère de la fiche.
+// schoolRecord = { publishedFees, openSchoolYears }.
+export function buildProposalContent(draft, isCreation, schoolRecord) {
+  const fees = listFeesToSend(draft, schoolRecord)
   const lists = {
-    fees: listCompleteFees(draft.feeRows),
     exam_results: listCompleteExamResults(draft.examResultRows),
     services: [...draft.serviceNames].sort(),
     program_ids: draft.programIds,
@@ -120,6 +112,7 @@ export function buildProposalContent(draft, isCreation) {
 
   return {
     ...buildFieldsContent(draft.fields),
+    ...(fees.length > 0 ? { fees } : {}),
     ...Object.fromEntries(sentLists),
     ...Object.fromEntries(sentPhotos),
   }

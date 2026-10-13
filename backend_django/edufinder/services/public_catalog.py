@@ -22,6 +22,7 @@ from edufinder.models import (
 )
 
 from edufinder.services.data_rules import describe_coherence_rules
+from edufinder.services.school_nomenclature import sort_by_school_path
 
 FEATURED_TYPE_COUNT = 4
 
@@ -51,7 +52,7 @@ def collect_filters_meta() -> dict:
         "cities": City.objects.order_by("id_city"),
         "types": EstablishmentType.objects.order_by("id_type"),
         "languages": LinguisticSection.objects.order_by("id_linguistic_section"),
-        "levels": StudyLevel.objects.select_related("stage").order_by("stage", "label"),
+        "levels": sort_by_school_path(StudyLevel.objects.select_related("stage")),
         "programs": Program.objects.order_by("name"),
         "payment_methods": PaymentMethod.objects.order_by("label").values_list(
             "label", flat=True

@@ -200,6 +200,7 @@
     "back": "Retour",
     "required": " (obligatoire)",
     "choose": "Choisir…",
+    "cleanedAfterProfileChange": "Votre choix a changé : les classes, examens et filières qui ne correspondent plus à l'établissement ont été retirés.",
     "uploading": "Envoi du fichier…",
     "steps": {
       "general": {
@@ -216,7 +217,7 @@
       },
       "fees": {
         "title": "Frais",
-        "lead": "Un montant annuel par niveau et par année scolaire. Les frais que vous n'indiquez pas restent tels quels."
+        "lead": "Écrivez un montant, puis cochez toutes les classes qui le paient. Les frais que vous ne touchez pas restent tels quels."
       },
       "services": {
         "title": "Services",
@@ -258,12 +259,8 @@
       "translationOf": "{{field}} en {{language}} (facultatif)"
     },
     "rows": {
-      "removeFee": "Retirer ces frais",
-      "level": "Niveau",
-      "chooseLevel": "Choisir un niveau",
       "yearlyAmount": "Montant annuel (FCFA)",
       "schoolYear": "Année scolaire",
-      "addFee": "Ajouter des frais",
       "removeResult": "Retirer ce résultat",
       "exam": "Examen",
       "chooseExam": "Choisir un examen",
@@ -292,13 +289,27 @@
       "invalidEmail": "Saisissez une adresse e-mail valide, par exemple contact@ecole.cm.",
       "invalidWebsite": "Saisissez une adresse web sans espace, par exemple https://ecole.cm.",
       "amountPositive": "Saisissez un montant supérieur à 0.",
-      "schoolYearFormat": "Écrivez l'année scolaire sous la forme 2026-2027.",
       "sessionFormat": "Écrivez l'année de la session en 4 chiffres, par exemple 2026.",
       "passRateRange": "Saisissez un taux entre 0 et 100.",
-      "duplicateFee": "Cette classe a déjà une ligne pour cette année scolaire.",
       "duplicateResult": "Cet examen a déjà une ligne pour cette session.",
       "levelNotOffered": "Cette classe ne correspond pas au type ou à la section de l'établissement.",
-      "examNotOffered": "Cet examen ne correspond pas au type ou à la section de l'établissement."
+      "examNotOffered": "Cet examen ne correspond pas au type ou à la section de l'établissement.",
+      "classesRequired": "Cochez au moins une classe pour ce montant."
+    },
+    "feeGroups": {
+      "classes": "Classes",
+      "chooseClasses": "Choisir les classes",
+      "classesHint": "Cochez toutes les classes qui paient ce montant. Une classe qui a déjà un montant cette année n'est plus proposée.",
+      "allClassesTaken": "Toutes les classes ont déjà un montant pour cette année.",
+      "add": "Ajouter un montant",
+      "remove": "Retirer ce montant",
+      "copy": "Reprendre les frais de {{year}}",
+      "copyHint": "Aucun montant saisi pour {{year}}. Vous pouvez repartir de ceux de {{previousYear}}, puis les ajuster.",
+      "title": "Montant {{number}}",
+      "classCount_one": "{{count}} classe",
+      "classCount_many": "{{count}} classes",
+      "classCount_other": "{{count}} classes",
+      "selectedClasses": "Classes cochées"
     }
   }
 }

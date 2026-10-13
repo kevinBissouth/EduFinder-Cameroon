@@ -191,6 +191,7 @@
     "back": "Back",
     "required": " (required)",
     "choose": "Choose…",
+    "cleanedAfterProfileChange": "Your choice changed: the classes, exams and programmes that no longer fit the school were removed.",
     "uploading": "Uploading the file…",
     "steps": {
       "general": {
@@ -207,7 +208,7 @@
       },
       "fees": {
         "title": "Fees",
-        "lead": "One yearly amount per level and school year. Fees you do not list stay as they are."
+        "lead": "Write an amount, then tick every class that pays it. The fees you do not touch stay as they are."
       },
       "services": {
         "title": "Services",
@@ -249,12 +250,8 @@
       "translationOf": "{{field}} in {{language}} (optional)"
     },
     "rows": {
-      "removeFee": "Remove this fee",
-      "level": "Level",
-      "chooseLevel": "Choose a level",
       "yearlyAmount": "Yearly amount (FCFA)",
       "schoolYear": "School year",
-      "addFee": "Add a fee",
       "removeResult": "Remove this result",
       "exam": "Exam",
       "chooseExam": "Choose an exam",
@@ -283,13 +280,27 @@
       "invalidEmail": "Enter a valid e-mail address, for example contact@school.cm.",
       "invalidWebsite": "Enter a web address without spaces, for example https://school.cm.",
       "amountPositive": "Enter an amount greater than 0.",
-      "schoolYearFormat": "Write the school year as 2026-2027.",
       "sessionFormat": "Write the session year in 4 digits, for example 2026.",
       "passRateRange": "Enter a rate between 0 and 100.",
-      "duplicateFee": "This class already has a line for this school year.",
       "duplicateResult": "This exam already has a line for this session.",
       "levelNotOffered": "This class does not match the school's type or language section.",
-      "examNotOffered": "This exam does not match the school's type or language section."
+      "examNotOffered": "This exam does not match the school's type or language section.",
+      "classesRequired": "Tick at least one class for this amount."
+    },
+    "feeGroups": {
+      "classes": "Classes",
+      "chooseClasses": "Choose the classes",
+      "classesHint": "Tick every class that pays this amount. A class that already has an amount this year is no longer offered.",
+      "allClassesTaken": "Every class already has an amount for this year.",
+      "add": "Add an amount",
+      "remove": "Remove this amount",
+      "copy": "Start from the fees of {{year}}",
+      "copyHint": "No amount entered for {{year}}. You can start from those of {{previousYear}}, then adjust them.",
+      "title": "Amount {{number}}",
+      "classCount_one": "{{count}} class",
+      "classCount_many": "{{count}} classes",
+      "classCount_other": "{{count}} classes",
+      "selectedClasses": "Ticked classes"
     }
   }
 }

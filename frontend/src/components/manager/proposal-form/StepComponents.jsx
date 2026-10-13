@@ -8,7 +8,8 @@ import ToggleChipGroup from '../../workspace/ToggleChipGroup'
 import { toChipOptions, toggleValue } from '../../workspace/toggleChips'
 import { PhotoUpload, VideoUploads } from './FileUploads'
 import { FIELD_MAX_LENGTHS, rowErrorPath } from './proposalValidation'
-import { ExamResultRowsEditor, FeeRowsEditor } from './RowEditors'
+import FeeGroupsEditor from './FeeGroupsEditor'
+import { ExamResultRowsEditor } from './RowEditors'
 import { translateOptionNames, useReferenceLabel } from '../../../hooks/useReferenceLabel'
 import { SUPPORTED_LANGUAGES } from '../../../i18n/languages'
 
@@ -156,7 +157,9 @@ export function ClassificationStep({ form }) {
             options={referenceChoice.options}
             error={form.fieldError(referenceChoice.fieldName)}
             value={fields[referenceChoice.fieldName]}
-            onChange={(referenceId) => form.setField(referenceChoice.fieldName, referenceId)}
+            onChange={(referenceId) =>
+              form.setSchoolProfileField(referenceChoice.fieldName, referenceId)
+            }
           />
         ))}
       </div>
@@ -196,13 +199,18 @@ export function ProgrammesStep({ form }) {
 
 export function FeesStep({ form }) {
   return (
-    <FeeRowsEditor
-      feeRows={form.draft.feeRows}
+    <FeeGroupsEditor
+      feeGroups={form.draft.feeGroups}
+      feeYear={form.draft.feeYear || form.openSchoolYears[0] || ''}
+      openSchoolYears={form.openSchoolYears}
       levels={form.meta.levels ?? []}
       offeredLevelIds={form.offeredChoices.offeredLevelIds}
       paymentMethods={form.meta.payment_methods ?? []}
-      errorFor={(rowId, fieldName) => form.fieldError(rowErrorPath('feeRows', rowId, fieldName))}
-      onChange={(feeRows) => form.setList('feeRows', 'fees', feeRows)}
+      errorFor={(groupId, fieldName) =>
+        form.fieldError(rowErrorPath('feeGroups', groupId, fieldName))
+      }
+      onChangeGroups={(feeGroups) => form.setValue('feeGroups', feeGroups)}
+      onChangeYear={(feeYear) => form.setValue('feeYear', feeYear)}
     />
   )
 }
