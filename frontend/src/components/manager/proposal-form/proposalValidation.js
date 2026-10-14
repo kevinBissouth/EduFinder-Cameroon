@@ -23,8 +23,6 @@ export const FIELD_MAX_LENGTHS = {
   website: 255,
   address: 255,
   director_name: 120,
-  director_title: 80,
-  director_title_translation: 80,
 }
 
 export function rowErrorPath(listName, rowId, fieldName) {

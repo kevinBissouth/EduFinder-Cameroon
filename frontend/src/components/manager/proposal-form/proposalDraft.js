@@ -12,7 +12,9 @@ export const REQUIRED_CLASSIFICATION_FIELDS = [
   'id_linguistic_section',
 ]
 
-export function buildInitialFields(school) {
+// headTitlesByType vient des règles du serveur : une fiche sans titre part
+// avec celui de son type (« Proviseur » pour un lycée).
+export function buildInitialFields(school, headTitlesByType = {}) {
   const detail = school?.detail
   return {
     name: school?.name ?? '',
@@ -26,7 +28,7 @@ export function buildInitialFields(school) {
     address: detail?.address ?? '',
     description: detail?.description ?? '',
     director_name: detail?.director_name ?? '',
-    director_title: detail?.director_title ?? '',
+    director_title: detail?.director_title || headTitlesByType[detail?.type]?.[0] || '',
     director_bio: detail?.director_bio ?? '',
     content_language: detail?.content_language ?? '',
     description_translation: detail?.description_translation ?? '',

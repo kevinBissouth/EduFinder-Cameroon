@@ -22,6 +22,7 @@ from edufinder.models import (
 )
 
 from edufinder.services.data_rules import describe_coherence_rules
+from edufinder.services.head_titles import collect_head_title_labels
 from edufinder.services.school_nomenclature import sort_by_school_path
 
 FEATURED_TYPE_COUNT = 4
@@ -80,10 +81,15 @@ TRANSLATED_REFERENCES = (
 )
 
 
+# Les titres de chef d'établissement ne sont pas une table : ils viennent des
+# règles, mais se traduisent comme les autres listes.
 def collect_reference_labels() -> dict:
     return {
-        reference_kind: _map_labels_by_key(reference_model, key_column)
-        for reference_kind, reference_model, key_column in TRANSLATED_REFERENCES
+        **{
+            reference_kind: _map_labels_by_key(reference_model, key_column)
+            for reference_kind, reference_model, key_column in TRANSLATED_REFERENCES
+        },
+        "head_titles": collect_head_title_labels(),
     }
 
 

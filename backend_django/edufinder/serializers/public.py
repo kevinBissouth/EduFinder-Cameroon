@@ -44,6 +44,9 @@ class CoherenceRulesSerializer(serializers.Serializer):
     )
     section_free_exam_types = serializers.ListField(child=serializers.CharField())
     open_school_years = serializers.ListField(child=serializers.CharField())
+    head_titles = serializers.DictField(
+        child=serializers.ListField(child=serializers.CharField())
+    )
 
 
 class FiltersMetaSerializer(serializers.Serializer):
@@ -79,6 +82,7 @@ class ReferenceLabelsSerializer(serializers.Serializer):
     stages = serializers.DictField(child=TranslatedLabelSerializer())
     programs = serializers.DictField(child=TranslatedLabelSerializer())
     payment_methods = serializers.DictField(child=TranslatedLabelSerializer())
+    head_titles = serializers.DictField(child=TranslatedLabelSerializer())
 
 
 class PlatformStatsSerializer(serializers.Serializer):

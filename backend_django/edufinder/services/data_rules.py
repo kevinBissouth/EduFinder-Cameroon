@@ -1,6 +1,7 @@
 """Règles de cohérence des données saisies pour un établissement."""
 from django.db.models import Q, QuerySet
 
+from edufinder.services.head_titles import describe_head_titles
 from edufinder.services.school_calendar import list_open_school_years
 
 TECHNICAL_TYPE_LABEL = "Secondary technical"
@@ -188,4 +189,5 @@ def describe_coherence_rules() -> dict:
         "section_families": _sorted_lists(ALLOWED_LANGUAGE_FAMILIES_BY_SECTION),
         "section_free_exam_types": sorted(SECTION_FREE_EXAM_TYPE_LABELS),
         "open_school_years": list_open_school_years(),
+        "head_titles": describe_head_titles(),
     }

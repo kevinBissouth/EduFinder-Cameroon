@@ -280,9 +280,14 @@ def test_reference_labels_fall_back_to_the_key_when_untranslated(client):
     }
 
 
+# Les titres de chef d'établissement viennent des règles, pas d'une table :
+# ils sont donc présents même sur une base vide.
 @pytest.mark.django_db
 def test_reference_labels_list_every_translated_kind_even_when_empty(client):
-    assert client.get("/reference-labels").json() == {
+    reference_labels = client.get("/reference-labels").json()
+
+    head_titles = reference_labels.pop("head_titles")
+    assert reference_labels == {
         "regions": {},
         "types": {},
         "sections": {},
@@ -292,6 +297,20 @@ def test_reference_labels_list_every_translated_kind_even_when_empty(client):
         "programs": {},
         "payment_methods": {},
     }
+    assert head_titles["Proviseur"] == {"fr": "Proviseur", "en": "Principal"}
+    assert head_titles["Headmistress"] == {"fr": "Directrice", "en": "Headmistress"}
+    assert head_titles["Dean"] == {"fr": "Doyen", "en": "Dean"}
+
+
+# Le premier titre d'un type est celui que le formulaire pré-remplit.
+@pytest.mark.django_db
+def test_filters_meta_lists_the_head_titles_of_each_type(client):
+    head_titles = client.get("/filters-meta").json()["coherence_rules"]["head_titles"]
+
+    assert head_titles["Primary"] == ["Headmaster", "Headmistress"]
+    assert head_titles["Secondary general"] == ["Proviseur", "Principal", "Principale"]
+    assert head_titles["Secondary technical"] == ["Proviseur"]
+    assert head_titles["University"] == ["Rector", "Dean"]
 
 
 @pytest.mark.django_db
