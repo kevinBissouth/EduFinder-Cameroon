@@ -8,7 +8,7 @@ import ExamsDialog from './filters/ExamsDialog'
 import FilterButton from './filters/FilterButton'
 import ServicesDialog from './filters/ServicesDialog'
 import { translateOptionNames, useReferenceLabel } from '../hooks/useReferenceLabel'
-import { listExamsForType } from '../utils/examRules'
+import { listExamsForSchool } from '../utils/coherenceRules'
 import { describeBudget } from './filters/budgetLabels'
 import { findSelectedName } from './filters/choiceLabels'
 import { formatPercent } from '../utils/format'
@@ -76,7 +76,9 @@ function AdvancedFilters({ advancedFilters }) {
   const translators = { t, translateReference }
   const choiceFilters = listChoiceFilters(advancedFilters, translators)
   const openChoiceFilter = choiceFilters.find((choiceFilter) => choiceFilter.id === openFilterId)
-  const offeredExams = listExamsForType(meta.exams, meta.exam_allowed_types, selectedTypeName)
+  const offeredExams = listExamsForSchool(meta.exams, meta.coherence_rules, {
+    typeName: selectedTypeName,
+  })
 
   return (
     <>

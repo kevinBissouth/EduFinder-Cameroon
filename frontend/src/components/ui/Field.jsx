@@ -1,19 +1,44 @@
-import { ChevronDown } from 'lucide-react'
+import { useId } from 'react'
 
 import { formatAmount } from '../../utils/format'
+import { fieldLayoutClasses } from './fieldLayout'
 
-export const CONTROL_CLASSES =
-  'h-11 w-full rounded-control border border-line bg-surface px-3 text-sm font-medium text-navy transition-colors placeholder:font-normal placeholder:text-ink-soft hover:border-primary'
+const CONTROL_BASE_CLASSES =
+  'h-11 w-full rounded-control border bg-surface px-3 text-sm font-medium text-navy transition-colors placeholder:font-normal placeholder:text-ink-soft'
+const CONTROL_STATE_CLASSES = {
+  valid: 'border-line hover:border-primary',
+  invalid: 'border-danger',
+}
+
+function controlClasses(error) {
+  return `${CONTROL_BASE_CLASSES} ${error ? CONTROL_STATE_CLASSES.invalid : CONTROL_STATE_CLASSES.valid}`
+}
+
+// Le message est relié au champ (aria-describedby) : un lecteur d'écran le lit
+// en même temps que le libellé, pas seulement la couleur rouge.
+function useFieldError(error) {
+  const errorId = useId()
+  const controlProps = error ? { 'aria-invalid': true, 'aria-describedby': errorId } : {}
+  const errorMessage = error && (
+    <span id={errorId} className="text-sm font-medium text-danger-deep">
+      {error}
+    </span>
+  )
+  return { controlProps, errorMessage }
+}
 
 function FieldLabel({ children }) {
   return <span className="text-sm font-semibold text-navy">{children}</span>
 }
 
-export function TextField({ label, className = '', ...inputProps }) {
+export function TextField({ label, error, isGridAligned = false, className = '', ...inputProps }) {
+  const { controlProps, errorMessage } = useFieldError(error)
+
   return (
-    <label className={`flex w-full flex-col gap-1.5 ${className}`}>
+    <label className={`w-full ${fieldLayoutClasses(isGridAligned)} ${className}`}>
       <FieldLabel>{label}</FieldLabel>
-      <input {...inputProps} className={CONTROL_CLASSES} />
+      <input {...inputProps} {...controlProps} className={controlClasses(error)} />
+      {errorMessage}
     </label>
   )
 }
@@ -37,33 +62,33 @@ export function AmountField({ value, onChange, ...fieldProps }) {
   )
 }
 
-export function SelectField({ label, placeholder, options, className = '', ...selectProps }) {
+const PHONE_FORBIDDEN_CHARACTERS = /[^\d +]/g
+const PLUS_AFTER_FIRST_CHARACTER = /(?!^)\+/g
+
+// Numéro de téléphone : les lettres ne s'affichent même pas. Je garde les
+// chiffres, les espaces, et un « + » seulement en tête (l'indicatif).
+export function PhoneField({ onChange, ...fieldProps }) {
+  const keepPhoneCharacters = (typedText) =>
+    typedText.replace(PHONE_FORBIDDEN_CHARACTERS, '').replace(PLUS_AFTER_FIRST_CHARACTER, '')
+
   return (
-    <label className={`flex w-full flex-col gap-1.5 ${className}`}>
-      <FieldLabel>{label}</FieldLabel>
-      <span className="relative">
-        <select {...selectProps} className={`${CONTROL_CLASSES} appearance-none pr-9`}>
-          <option value="">{placeholder}</option>
-          {options.map((option) => (
-            <option key={option.id} value={option.id}>
-              {option.name}
-            </option>
-          ))}
-        </select>
-        <ChevronDown
-          aria-hidden="true"
-          className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-ink-soft"
-        />
-      </span>
-    </label>
+    <TextField
+      {...fieldProps}
+      type="tel"
+      inputMode="tel"
+      onChange={(event) => onChange(keepPhoneCharacters(event.target.value))}
+    />
   )
 }
 
-export function TextAreaField({ label, className = '', ...textAreaProps }) {
+export function TextAreaField({ label, error, className = '', ...textAreaProps }) {
+  const { controlProps, errorMessage } = useFieldError(error)
+
   return (
     <label className={`flex w-full flex-col gap-1.5 ${className}`}>
       <FieldLabel>{label}</FieldLabel>
-      <textarea {...textAreaProps} className={`${CONTROL_CLASSES} h-auto py-2.5`} />
+      <textarea {...textAreaProps} {...controlProps} className={`${controlClasses(error)} h-auto py-2.5`} />
+      {errorMessage}
     </label>
   )
 }

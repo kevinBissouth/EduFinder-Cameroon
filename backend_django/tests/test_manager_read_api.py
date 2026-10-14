@@ -240,6 +240,24 @@ def test_detail_adds_the_private_fields_to_the_public_profile(
     assert detail["suspension_reason"] is None
 
 
+# L'assistant de modification part de la fiche : il lui faut les identifiants
+# des valeurs de référence, la fiche publique n'en donnant que les noms.
+@pytest.mark.django_db
+def test_detail_gives_the_reference_ids_the_proposal_form_starts_from(
+    client, log_in_as, create_establishment, manager
+):
+    establishment = create_establishment()
+    UserEstablishment.objects.create(user=manager, establishment=establishment)
+    log_in_as(manager)
+
+    detail = client.get(f"/my/establishments/{establishment.uuid}").json()
+
+    assert detail["id_city"] == establishment.city_id
+    assert detail["id_type"] == establishment.type_id
+    assert detail["id_sector"] == establishment.sector_id
+    assert detail["id_linguistic_section"] == establishment.linguistic_section_id
+
+
 # Le responsable lit sur sa fiche pourquoi elle a quitté le site public ; une
 # fois réactivée, l'ancien motif ne s'affiche plus.
 @pytest.mark.django_db

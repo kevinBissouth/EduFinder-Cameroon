@@ -30,6 +30,26 @@ class StudyLevelReferenceSerializer(serializers.Serializer):
         return f"{study_level.stage.label} — {study_level.label}"
 
 
+class CoherenceRulesSerializer(serializers.Serializer):
+    exam_allowed_types = serializers.DictField(
+        child=serializers.ListField(child=serializers.CharField())
+    )
+    stage_allowed_types = serializers.DictField(
+        child=serializers.ListField(child=serializers.CharField())
+    )
+    exam_families = serializers.DictField(child=serializers.CharField())
+    stage_families = serializers.DictField(child=serializers.CharField())
+    section_families = serializers.DictField(
+        child=serializers.ListField(child=serializers.CharField())
+    )
+    section_free_exam_types = serializers.ListField(child=serializers.CharField())
+    open_school_years = serializers.ListField(child=serializers.CharField())
+    latest_exam_session = serializers.CharField()
+    head_titles = serializers.DictField(
+        child=serializers.ListField(child=serializers.CharField())
+    )
+
+
 class FiltersMetaSerializer(serializers.Serializer):
     regions = NamedReferenceSerializer(many=True)
     sectors = LabelledReferenceSerializer(many=True)
@@ -44,9 +64,7 @@ class FiltersMetaSerializer(serializers.Serializer):
     # choisir, côté gestionnaire, les plans rattachés au frais d'une classe.
     payment_methods = serializers.ListField(child=serializers.CharField())
     featured_type_ids = serializers.ListField(child=serializers.IntegerField())
-    exam_allowed_types = serializers.DictField(
-        child=serializers.ListField(child=serializers.CharField())
-    )
+    coherence_rules = CoherenceRulesSerializer()
 
 
 class TranslatedLabelSerializer(serializers.Serializer):
@@ -65,6 +83,7 @@ class ReferenceLabelsSerializer(serializers.Serializer):
     stages = serializers.DictField(child=TranslatedLabelSerializer())
     programs = serializers.DictField(child=TranslatedLabelSerializer())
     payment_methods = serializers.DictField(child=TranslatedLabelSerializer())
+    head_titles = serializers.DictField(child=TranslatedLabelSerializer())
 
 
 class PlatformStatsSerializer(serializers.Serializer):

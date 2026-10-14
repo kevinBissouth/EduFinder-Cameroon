@@ -40,5 +40,8 @@
   },
   "documentTitle": "EduFinder Cameroon : comparez les établissements avant d'inscrire",
   "pageDocumentTitle": "{{page}} | EduFinder Cameroon",
-  "close": "Fermer"
+  "close": "Fermer",
+  "clearChoice": "Effacer le choix : {{field}}",
+  "done": "Terminé",
+  "choiceCount": "{{field}} · {{count}}"
 }

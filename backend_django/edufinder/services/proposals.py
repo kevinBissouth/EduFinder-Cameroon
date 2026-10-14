@@ -9,11 +9,12 @@ un élément déjà visé par une soumission en attente : aucune n'est bloquée,
 c'est le super administrateur qui arbitre en les décidant une par une.
 """
 from collections.abc import Iterable
+from dataclasses import dataclass
 from decimal import Decimal
 from typing import Any
 
 from django.db import transaction
-from django.db.models import Model
+from django.db.models import Model, QuerySet
 
 from edufinder.models import (
     City,
@@ -21,10 +22,12 @@ from edufinder.models import (
     EstablishmentStatus,
     EstablishmentType,
     Exam,
+    ExamResult,
     LinguisticSection,
     Media,
     PaymentMethod,
     Program,
+    SchoolFee,
     Sector,
     StudyLevel,
     Submission,
@@ -35,8 +38,13 @@ from edufinder.models import (
 )
 from edufinder.services.data_rules import (
     get_exam_section_violation,
+    get_exam_session_violation,
     get_exam_type_violation,
+    get_school_year_violation,
+    get_stage_section_violation,
+    get_stage_type_violation,
 )
+from edufinder.services.head_titles import get_head_title_violation
 from edufinder.services.media_files import StoredFile
 from edufinder.services.notifications import notify_submission_received
 
@@ -53,7 +61,19 @@ class IncoherentExamResultError(ProposalError):
     pass
 
 
+class IncoherentFeeError(ProposalError):
+    pass
+
+
+class IncoherentHeadTitleError(ProposalError):
+    pass
+
+
 class EmptyModificationError(ProposalError):
+    pass
+
+
+class UnknownRowRemovalError(ProposalError):
     pass
 
 
@@ -62,6 +82,49 @@ class EmptyModificationError(ProposalError):
 MEDIA_ADDITIONS_KEY = "media_additions"
 MEDIA_REMOVALS_KEY = "media_removals"
 DIRECTOR_PHOTO_KEY = "director_photo"
+
+
+# Les lignes qu'une modification peut demander de retirer : un frais ou un
+# résultat publié. Le contenu les désigne par leur clé naturelle (classe et
+# année, examen et session), qui correspond à deux colonnes du modèle.
+@dataclass(frozen=True)
+class RemovableRows:
+    content_key: str
+    model: type[Model]
+    content_fields: tuple[str, str]
+    model_fields: tuple[str, str]
+    row_name: str
+
+    def identify(self, removal: dict[str, Any]) -> tuple:
+        return tuple(removal[content_field] for content_field in self.content_fields)
+
+    def find_active_rows(self, establishment: Establishment) -> QuerySet:
+        return self.model.objects.active().filter(establishment=establishment)
+
+    def active_rows_matching(
+        self, establishment: Establishment, removal: dict[str, Any]
+    ) -> QuerySet:
+        return self.find_active_rows(establishment).filter(
+            **dict(zip(self.model_fields, self.identify(removal)))
+        )
+
+
+REMOVABLE_ROWS = (
+    RemovableRows(
+        "fee_removals",
+        SchoolFee,
+        ("id_level", "school_year"),
+        ("level_id", "school_year"),
+        "fee",
+    ),
+    RemovableRows(
+        "exam_result_removals",
+        ExamResult,
+        ("id_exam", "session"),
+        ("exam_id", "session"),
+        "exam result",
+    ),
+)
 
 _SINGLE_REFERENCE_MODELS = {
     "id_city": City,
@@ -74,13 +137,17 @@ _SINGLE_REFERENCE_MODELS = {
 @transaction.atomic
 def create_creation_proposal(user: User, content: dict[str, Any]) -> Submission:
     ensure_references_exist(content)
-    _ensure_exam_results_coherent(
-        content["exam_results"],
-        type_label=EstablishmentType.objects.get(pk=content["id_type"]).label,
-        section_label=LinguisticSection.objects.get(
+    school_labels = {
+        "type_label": EstablishmentType.objects.get(pk=content["id_type"]).label,
+        "section_label": LinguisticSection.objects.get(
             pk=content["id_linguistic_section"]
         ).label,
-    )
+    }
+    _ensure_exam_results_coherent(content["exam_results"], **school_labels)
+    _ensure_exam_sessions_held(content["exam_results"])
+    _ensure_fees_coherent(content["fees"], **school_labels)
+    _ensure_fees_in_open_school_years(content["fees"])
+    _ensure_head_title_coherent(content["director_title"], school_labels["type_label"])
     # La fiche naît en attente, donc invisible du public, avec le strict
     # minimum : le reste du contenu ne sera appliqué qu'à l'approbation.
     establishment = Establishment.objects.create(
@@ -102,7 +169,9 @@ def create_modification_proposal(
     if not changed_fields:
         raise EmptyModificationError("No changes provided")
     ensure_references_exist(changed_fields)
-    _ensure_modified_exam_results_coherent(establishment, changed_fields)
+    _ensure_removals_target_active_rows(establishment, changed_fields)
+    _ensure_modification_coherent(establishment, changed_fields)
+    _ensure_modified_head_title_coherent(establishment, changed_fields)
     return _open_submission(
         user, establishment, SubmissionType.MODIFICATION, changed_fields
     )
@@ -238,7 +307,7 @@ def _missing_payment_methods(fees: list[dict[str, Any]]) -> list[str]:
     ]
 
 
-# --- Cohérence des résultats d'examen -----------------------------------------
+# --- Cohérence avec le type et la section ------------------------------------
 
 
 # Je refuse toute proposition dont un résultat d'examen contredirait le type
@@ -256,30 +325,153 @@ def _ensure_exam_results_coherent(
         exam_label = exam_labels[exam_result["id_exam"]]
         violation = get_exam_type_violation(
             exam_label, type_label
-        ) or get_exam_section_violation(exam_label, section_label)
+        ) or get_exam_section_violation(exam_label, section_label, type_label)
         if violation is not None:
             raise IncoherentExamResultError(f"Incoherent exam result: {violation}")
 
 
-def _ensure_modified_exam_results_coherent(
+def _ensure_exam_sessions_held(exam_results: list[dict[str, Any]]) -> None:
+    for exam_result in exam_results:
+        violation = get_exam_session_violation(exam_result["session"])
+        if violation is not None:
+            raise IncoherentExamResultError(f"Incoherent exam result: {violation}")
+
+
+# Même garde-fou pour les frais : pas de 4e dans une école primaire, pas de
+# CM1 dans une école anglophone. C'est le cycle de la classe qui porte la règle.
+def _ensure_fees_coherent(
+    fees: list[dict[str, Any]], *, type_label: str, section_label: str
+) -> None:
+    stage_labels = dict(
+        StudyLevel.objects.filter(
+            pk__in={fee["id_level"] for fee in fees}
+        ).values_list("pk", "stage__label")
+    )
+    for fee in fees:
+        stage_label = stage_labels[fee["id_level"]]
+        violation = get_stage_type_violation(
+            stage_label, type_label
+        ) or get_stage_section_violation(stage_label, section_label)
+        if violation is not None:
+            raise IncoherentFeeError(f"Incoherent fee: {violation}")
+
+
+# Une année scolaire passée ne reçoit plus de nouveaux frais : un responsable
+# publie l'année en cours et prépare la suivante, le reste est de l'historique.
+def _ensure_fees_in_open_school_years(fees: list[dict[str, Any]]) -> None:
+    for fee in fees:
+        violation = get_school_year_violation(fee["school_year"])
+        if violation is not None:
+            raise IncoherentFeeError(f"Incoherent fee: {violation}")
+
+
+# Corriger le montant d'une ligne déjà publiée reste permis, même pour une
+# année passée : seules les lignes nouvelles pour l'établissement sont
+# soumises au calendrier.
+def _fees_on_new_lines(
+    establishment: Establishment, fees: list[dict[str, Any]]
+) -> list[dict[str, Any]]:
+    published_lines = set(
+        SchoolFee.objects.active().filter(establishment=establishment).values_list(
+            "level_id", "school_year"
+        )
+    )
+    return [
+        fee for fee in fees if (fee["id_level"], fee["school_year"]) not in published_lines
+    ]
+
+
+def _ensure_modification_coherent(
     establishment: Establishment, changed_fields: dict[str, Any]
 ) -> None:
-    exam_results = changed_fields.get("exam_results")
-    if not exam_results:
+    exam_results = changed_fields.get("exam_results") or []
+    fees = changed_fields.get("fees") or []
+    if not exam_results and not fees:
         return
+    _ensure_fees_in_open_school_years(_fees_on_new_lines(establishment, fees))
+    _ensure_exam_sessions_held(exam_results)
     # Si la proposition change aussi le type ou la section, c'est la nouvelle
     # valeur qui compte : c'est elle que l'approbation appliquera.
-    _ensure_exam_results_coherent(
-        exam_results,
-        type_label=_resolve_label(
+    school_labels = {
+        "type_label": _resolve_label(
             EstablishmentType, changed_fields.get("id_type"), establishment.type
         ),
-        section_label=_resolve_label(
+        "section_label": _resolve_label(
             LinguisticSection,
             changed_fields.get("id_linguistic_section"),
             establishment.linguistic_section,
         ),
+    }
+    _ensure_exam_results_coherent(exam_results, **school_labels)
+    _ensure_fees_coherent(_fees_on_new_levels(establishment, fees), **school_labels)
+
+
+# La règle des cycles est arrivée après les données : une classe déjà publiée
+# sur la fiche reste modifiable même si elle la contredit (un complexe scolaire
+# typé « secondaire » qui affiche son primaire). Seules les classes nouvelles
+# pour l'établissement sont contrôlées.
+def _fees_on_new_levels(
+    establishment: Establishment, fees: list[dict[str, Any]]
+) -> list[dict[str, Any]]:
+    published_level_ids = set(
+        SchoolFee.objects.active().filter(establishment=establishment).values_list(
+            "level_id", flat=True
+        )
     )
+    return [fee for fee in fees if fee["id_level"] not in published_level_ids]
+
+
+# Un retrait vise une ligne encore affichée sur la fiche : sinon le super admin
+# validerait un retrait qui ne retire rien.
+def _ensure_removals_target_active_rows(
+    establishment: Establishment, changed_fields: dict[str, Any]
+) -> None:
+    for removable_rows in REMOVABLE_ROWS:
+        removals = changed_fields.get(removable_rows.content_key, [])
+        _ensure_rows_active(removable_rows, establishment, removals)
+
+
+def _ensure_rows_active(
+    removable_rows: RemovableRows,
+    establishment: Establishment,
+    removals: list[dict[str, Any]],
+) -> None:
+    active_lines = set(
+        removable_rows.find_active_rows(establishment).values_list(
+            *removable_rows.model_fields
+        )
+    )
+    for removal in removals:
+        line = removable_rows.identify(removal)
+        if line not in active_lines:
+            raise UnknownRowRemovalError(
+                f"Unknown {removable_rows.row_name} to remove: {line}"
+            )
+
+
+# Le titre du chef d'établissement se choisit parmi ceux du type d'école : un
+# titre libre rendrait les fiches impossibles à comparer d'un coup d'œil.
+def _ensure_head_title_coherent(head_title: str | None, type_label: str) -> None:
+    if not head_title:
+        return
+    violation = get_head_title_violation(head_title, type_label)
+    if violation is not None:
+        raise IncoherentHeadTitleError(f"Incoherent head title: {violation}")
+
+
+# Un titre déjà publié reste accepté tel quel, même hors liste (« Founding
+# Director ») : la liste est arrivée après les fiches, et l'assistant renvoie
+# le titre actuel avec le reste.
+def _ensure_modified_head_title_coherent(
+    establishment: Establishment, changed_fields: dict[str, Any]
+) -> None:
+    head_title = changed_fields.get("director_title")
+    if head_title == establishment.director_title:
+        return
+    type_label = _resolve_label(
+        EstablishmentType, changed_fields.get("id_type"), establishment.type
+    )
+    _ensure_head_title_coherent(head_title, type_label)
 
 
 def _resolve_label(

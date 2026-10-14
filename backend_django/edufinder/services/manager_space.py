@@ -1,6 +1,6 @@
 """Espace responsable : établissements confiés, soumissions et comparaison
 avec les établissements publiés du même type."""
-from django.db.models import Avg, Count, Exists, Max, OuterRef, QuerySet
+from django.db.models import Avg, Count, Exists, Max, OuterRef, Q, QuerySet
 
 from edufinder.models import (
     Establishment,
@@ -36,7 +36,12 @@ def list_managed_establishments(user: User) -> QuerySet:
     ).select_related("city", "type", "sector")
     return (
         with_cover_url(with_pending_submission_flag(managed_establishments))
-        .annotate(latest_fee_school_year=Max("fees__school_year"))
+        # Une jointure ne passe pas par active() : j'écarte les frais retirés ici.
+        .annotate(
+            latest_fee_school_year=Max(
+                "fees__school_year", filter=Q(fees__deleted_at__isnull=True)
+            )
+        )
         .order_by("name")
     )
 

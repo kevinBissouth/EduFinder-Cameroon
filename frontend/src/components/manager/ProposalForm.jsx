@@ -4,11 +4,16 @@ import { useTranslation } from 'react-i18next'
 
 import Button from '../ui/Button'
 import Notice from '../workspace/Notice'
-import { buildProposalContent, REQUIRED_CLASSIFICATION_FIELDS } from './proposal-form/proposalDraft'
+import { cleanDraftForSchoolProfile } from './proposal-form/draftCleanup'
+import { findOfferedChoices } from './proposal-form/offeredChoices'
+import { buildProposalContent, buildPublishedRecord } from './proposal-form/proposalDraft'
+import { validateStep } from './proposal-form/proposalValidation'
 import { STEPS } from './proposal-form/steps'
 import { useFileUpload } from './proposal-form/useFileUpload'
 import { useProposalDraft } from './proposal-form/useProposalDraft'
+import { useToast } from '../workspace/toastContext'
 import { typeSupportsPrograms } from '../../utils/establishmentType'
+import { pickHeadTitleForType } from '../../utils/headTitle'
 
 const PERCENT = 100
 const ICON_TONE_CLASSES = {
@@ -18,26 +23,22 @@ const ICON_TONE_CLASSES = {
   violet: 'bg-violet-soft text-violet-deep',
 }
 
-// En création, ces deux étapes portent les champs obligatoires : on n'avance
-// pas tant qu'ils sont vides. En modification rien n'est obligatoire, seul ce
-// qui est rempli ou retouché est envoyé.
-const STEP_VALIDATORS = {
-  general: (fields) => fields.name.trim() !== '',
-  classification: (fields) =>
-    REQUIRED_CLASSIFICATION_FIELDS.every((fieldName) => fields[fieldName] !== ''),
-}
-
-function findSelectedTypeName(types = [], typeId, currentTypeName = '') {
-  return types.find((type) => String(type.id) === typeId)?.name ?? currentTypeName
-}
-
-function listVisibleSteps(isCreation, typeName) {
-  return STEPS.filter((step) => {
+// Une étape sans rien à y saisir pour ce type d'établissement disparaît : pas
+// de résultats d'examens pour une maternelle. Elle reste tant qu'elle contient
+// des lignes, pour qu'un résultat saisi avant un changement de type ne parte
+// pas sans avoir été revu.
+function listVisibleSteps(isCreation, offeredChoices, draft) {
+  const stepVisibility = {
     // Les médias d'une fiche existante se gèrent depuis sa page de détail.
-    if (step.id === 'media') return isCreation
-    if (step.id === 'programmes') return typeSupportsPrograms(typeName)
-    return true
-  })
+    media: isCreation,
+    programmes: typeSupportsPrograms(offeredChoices.typeName),
+    results: offeredChoices.offeredExamIds.size > 0 || draft.examResultRows.length > 0,
+  }
+  return STEPS.filter((step) => stepVisibility[step.id] ?? true)
+}
+
+function unionOf(firstIds, secondIds) {
+  return new Set([...firstIds, ...secondIds])
 }
 
 // Bandeau du formulaire : ce qu'on propose, et où on en est.
@@ -141,30 +142,106 @@ function ProposalForm({ mode, meta, school = null, submitting, serverError, onSu
   const { t } = useTranslation('manager')
   const isCreation = mode === 'creation'
   const [currentStepIndex, setCurrentStepIndex] = useState(0)
-  const { draft, setField, setValue, setList } = useProposalDraft(school, meta.programs ?? [])
+  // Les erreurs ne s'affichent qu'après un essai d'avancer : rouge partout dès
+  // l'ouverture, le formulaire accuserait le responsable avant qu'il ait saisi.
+  const [hasTriedStep, setHasTriedStep] = useState(false)
+  const [hasTriedSending, setHasTriedSending] = useState(false)
+  const { draft, setField, setValue, replaceDraft } = useProposalDraft(school, meta)
   const upload = useFileUpload()
+  const showToast = useToast()
 
-  const typeName = findSelectedTypeName(meta.types, draft.fields.id_type, school?.detail?.type)
-  const visibleSteps = listVisibleSteps(isCreation, typeName)
+  const offeredChoices = findOfferedChoices(meta, school, draft.fields)
+  const visibleSteps = listVisibleSteps(isCreation, offeredChoices, draft)
   const currentStep = visibleSteps[currentStepIndex]
   const isFirstStep = currentStepIndex === 0
   const isLastStep = currentStepIndex === visibleSteps.length - 1
-  const isStepValid = !isCreation || (STEP_VALIDATORS[currentStep.id]?.(draft.fields) ?? true)
-  const form = { draft, meta, isCreation, upload, setField, setValue, setList }
+  const openSchoolYears = meta.coherence_rules?.open_school_years ?? []
+  const publishedRecord = buildPublishedRecord(school, meta.programs)
+  const stepErrors = validateStep(currentStep.id, draft, {
+    isCreation,
+    openSchoolYears,
+    publishedFields: publishedRecord.fields,
+    allowedLevelIds: unionOf(offeredChoices.offeredLevelIds, offeredChoices.publishedLevelIds),
+    allowedExamIds: unionOf(offeredChoices.offeredExamIds, offeredChoices.publishedExamIds),
+  })
+  const hasStepErrors = Object.keys(stepErrors).length > 0
+  const isBusy = submitting || upload.isUploading
+  const fieldError = (fieldPath) =>
+    hasTriedStep && stepErrors[fieldPath] ? t(`form.errors.${stepErrors[fieldPath]}`) : undefined
+  // Le type et la section commandent la suite du formulaire : en changer
+  // retire les classes, les examens et les filières qui ne conviennent plus,
+  // et je le dis, pour que rien ne disparaisse en silence. Le titre du chef
+  // d'établissement suit le type lui aussi.
+  const setSchoolProfileField = (fieldName, fieldValue) => {
+    const changedFields = { ...draft.fields, [fieldName]: fieldValue }
+    const nextChoices = findOfferedChoices(meta, school, changedFields)
+    const headTitlesByType = meta.coherence_rules?.head_titles ?? {}
+    const nextFields = {
+      ...changedFields,
+      director_title: pickHeadTitleForType(
+        draft.fields.director_title,
+        headTitlesByType[offeredChoices.typeName],
+        headTitlesByType[nextChoices.typeName],
+      ),
+    }
+    const cleanup = cleanDraftForSchoolProfile(
+      { ...draft, fields: nextFields },
+      {
+        levelIds: unionOf(nextChoices.offeredLevelIds, nextChoices.publishedLevelIds),
+        examIds: unionOf(nextChoices.offeredExamIds, nextChoices.publishedExamIds),
+        supportsPrograms: typeSupportsPrograms(nextChoices.typeName),
+      },
+    )
+    replaceDraft(cleanup.draft)
+    if (cleanup.hasRemovedSomething) {
+      showToast({ tone: 'success', message: t('form.cleanedAfterProfileChange') })
+    }
+  }
+
+  const form = {
+    draft,
+    meta,
+    isCreation,
+    upload,
+    offeredChoices,
+    openSchoolYears,
+    setField,
+    setSchoolProfileField,
+    setValue,
+    fieldError,
+  }
+
+  const goToStep = (stepIndex) => {
+    setHasTriedStep(false)
+    setCurrentStepIndex(stepIndex)
+  }
+
+  // Ce qui part est ce qui diffère de la fiche publiée : une modification sans
+  // changement n'a rien à faire valider, je le dis avant l'envoi.
+  const proposalContent = buildProposalContent(draft, { ...publishedRecord, openSchoolYears })
+  const hasNothingToSend = !isCreation && Object.keys(proposalContent).length === 0
 
   const handleSubmit = (event) => {
     event.preventDefault()
     // La touche Entrée soumet le formulaire même quand le bouton est désactivé.
-    if (!isStepValid || submitting || upload.isUploading) return
-    if (!isLastStep) {
-      setCurrentStepIndex(currentStepIndex + 1)
+    if (isBusy) return
+    if (hasStepErrors) {
+      setHasTriedStep(true)
       return
     }
-    onSubmit(buildProposalContent(draft, isCreation))
+    if (!isLastStep) {
+      goToStep(currentStepIndex + 1)
+      return
+    }
+    setHasTriedSending(true)
+    if (hasNothingToSend) return
+    onSubmit(proposalContent)
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    // noValidate : sans lui, le navigateur affiche ses propres bulles, dans sa
+    // langue à lui, avant mes messages.
+    <form noValidate onSubmit={handleSubmit} className="space-y-6">
       <FormHero
         title={isCreation ? t('form.newSchool') : school.name}
         description={
@@ -180,7 +257,7 @@ function ProposalForm({ mode, meta, school = null, submitting, serverError, onSu
         <StepList
           steps={visibleSteps}
           currentStepIndex={currentStepIndex}
-          onSelectStep={setCurrentStepIndex}
+          onSelectStep={goToStep}
         />
 
         <section className="min-w-0 rounded-panel border border-line bg-surface p-5 shadow-soft sm:p-8">
@@ -188,6 +265,16 @@ function ProposalForm({ mode, meta, school = null, submitting, serverError, onSu
           <div className="mt-6 space-y-4">
             <currentStep.Component form={form} />
           </div>
+
+          {hasTriedStep && hasStepErrors && (
+            <Notice tone="danger" className="mt-6">
+              {t('form.errors.stepHasErrors')}
+            </Notice>
+          )}
+
+          {hasTriedSending && hasNothingToSend && (
+            <Notice className="mt-6">{t('form.nothingToSend')}</Notice>
+          )}
 
           {serverError && (
             <Notice tone="danger" className="mt-6">
@@ -199,7 +286,7 @@ function ProposalForm({ mode, meta, school = null, submitting, serverError, onSu
             <Button
               variant="secondary"
               className="w-full sm:w-auto"
-              onClick={isFirstStep ? onClose : () => setCurrentStepIndex(currentStepIndex - 1)}
+              onClick={isFirstStep ? onClose : () => goToStep(currentStepIndex - 1)}
             >
               <ArrowLeft aria-hidden="true" className="size-4" />
               {isFirstStep ? t('actions.cancel') : t('form.back')}
@@ -207,7 +294,7 @@ function ProposalForm({ mode, meta, school = null, submitting, serverError, onSu
             <Button
               type="submit"
               className="w-full sm:w-auto"
-              disabled={!isStepValid || submitting || upload.isUploading}
+              disabled={isBusy}
             >
               {isLastStep ? (
                 <>

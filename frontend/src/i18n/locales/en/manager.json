@@ -50,6 +50,7 @@
     "schoolErrorTitle": "This school could not be loaded",
     "awaitingReview": "Changes awaiting review",
     "school": "School",
+    "schoolChoice": "School shown: {{school}}. Change school",
     "suspended": "This school is suspended: it no longer appears on the public site.",
     "suspensionReason": "Reason given: {{reason}}"
   },
@@ -77,6 +78,7 @@
     "openDetailsSuffix": ", open school details"
   },
   "exams": {
+    "passRate": "Pass rate",
     "rateLabel": "{{exam}} pass rate for {{session}} (%)",
     "editRate": "Edit the {{exam}} {{session}} pass rate",
     "sessionsRecorded_one": "session recorded",
@@ -131,6 +133,7 @@
     "notProvided": "Not provided"
   },
   "gallery": {
+    "empty": "No photo or video yet.",
     "confirmRemoval": "Ask for this file to be removed from the public page? A super administrator reviews the request.",
     "photos": "Photos",
     "photoAlt": "Photo of {{school}}",
@@ -184,12 +187,13 @@
     "step": "Step {{current}} of {{total}}",
     "newSchool": "A new school",
     "creationLead": "A super administrator reviews the proposal before the school becomes public.",
-    "modificationLead": "Fill in only what you want to change. Everything else on the page stays as it is.",
+    "modificationLead": "The form starts from your current page: change only what is different, only those changes will be sent.",
     "sending": "Sending…",
     "next": "Next",
     "back": "Back",
     "required": " (required)",
     "choose": "Choose…",
+    "cleanedAfterProfileChange": "Your choice changed: the classes, exams and programmes that no longer fit the school were removed.",
     "uploading": "Uploading the file…",
     "steps": {
       "general": {
@@ -206,7 +210,7 @@
       },
       "fees": {
         "title": "Fees",
-        "lead": "One yearly amount per level and school year. Fees you do not list stay as they are."
+        "lead": "Write an amount, then tick every class that pays it. The fees you do not touch stay as they are."
       },
       "services": {
         "title": "Services",
@@ -238,7 +242,6 @@
       "directorName": "Name",
       "directorNamePlaceholder": "Dr. Marie Ngono",
       "directorTitle": "Title",
-      "directorTitlePlaceholder": "Principal",
       "biography": "Biography",
       "portrait": "Portrait",
       "coverPhoto": "Cover photo",
@@ -248,18 +251,13 @@
       "translationOf": "{{field}} in {{language}} (optional)"
     },
     "rows": {
-      "removeFee": "Remove this fee",
-      "level": "Level",
-      "chooseLevel": "Choose a level",
       "yearlyAmount": "Yearly amount (FCFA)",
       "schoolYear": "School year",
-      "addFee": "Add a fee",
       "removeResult": "Remove this result",
       "exam": "Exam",
       "chooseExam": "Choose an exam",
       "session": "Session",
-      "passRate": "Pass rate (%)",
-      "addResult": "Add a result"
+      "passRate": "Pass rate (%)"
     },
     "files": {
       "preview": "{{title}} preview",
@@ -273,6 +271,53 @@
     "translationTarget": {
       "en": "English",
       "fr": "French"
-    }
+    },
+    "errors": {
+      "stepHasErrors": "Correct the fields marked in red to continue.",
+      "required": "This field is required.",
+      "nameTooShort": "The name must be at least 2 characters long.",
+      "invalidPhone": "Enter a Cameroonian number of 9 digits, for example +237 6 90 11 22 33.",
+      "invalidEmail": "Enter a valid e-mail address, for example contact@school.cm.",
+      "invalidWebsite": "Enter a web address without spaces, for example https://school.cm.",
+      "amountPositive": "Enter an amount greater than 0.",
+      "sessionFormat": "Write the session year in 4 digits, for example 2026.",
+      "passRateRange": "Enter a rate between 0 and 100.",
+      "duplicateResult": "This exam already has a line for this session.",
+      "levelNotOffered": "This class does not match the school's type or language section.",
+      "examNotOffered": "This exam does not match the school's type or language section.",
+      "classesRequired": "Tick at least one class for this amount."
+    },
+    "feeGroups": {
+      "classes": "Classes",
+      "chooseClasses": "Choose the classes",
+      "classesHint": "Tick every class that pays this amount. A class that already has an amount this year is no longer offered.",
+      "allClassesTaken": "Every class already has an amount for this year.",
+      "add": "Add an amount",
+      "remove": "Remove this amount",
+      "copy": "Start from the fees of {{year}}",
+      "copyHint": "No amount entered for {{year}}. You can start from those of {{previousYear}}, then adjust them.",
+      "title": "Amount {{number}}",
+      "classCount_one": "{{count}} class",
+      "classCount_many": "{{count}} classes",
+      "classCount_other": "{{count}} classes",
+      "selectedClasses": "Ticked classes",
+      "confirmRemoval": "This amount is published on your page. Removing it sends a removal request to the super administrator: it stays visible until approved. Continue?"
+    },
+    "examSessions": {
+      "sessionOption_one": "{{session}} · {{count}} result",
+      "sessionOption_many": "{{session}} · {{count}} results",
+      "sessionOption_other": "{{session}} · {{count}} results",
+      "emptySessionOption": "{{session}} · no result",
+      "prefillHint": "No result for the {{session}} session. Add the exams of {{previousSession}}, then enter their rates.",
+      "prefill": "Add the exams of {{previousSession}}",
+      "prefillHintWithoutHistory": "No result for the {{session}} session. Add the exams the school sits, then enter their rates.",
+      "prefillWithoutHistory": "Add the exams",
+      "blankRateHint": "An exam left without a rate is not sent: leave empty the one the school did not sit.",
+      "otherSessionErrors": "Other sessions have results to correct.",
+      "showSession": "Show the {{session}} session",
+      "addExam": "Add an exam",
+      "confirmRemoval": "This result is published on your page. Removing it sends a removal request to the super administrator: it stays visible until approved. Continue?"
+    },
+    "nothingToSend": "Nothing to send: the profile is the same as the published one."
   }
 }

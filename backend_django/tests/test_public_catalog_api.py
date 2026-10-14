@@ -117,11 +117,71 @@ def test_filters_meta_exposes_references_as_id_and_name(client, establishment):
 # université : la règle vient du même tableau que les contrôles de cohérence.
 @pytest.mark.django_db
 def test_filters_meta_tells_which_types_sit_each_exam(client):
-    exam_allowed_types = client.get("/filters-meta").json()["exam_allowed_types"]
+    coherence_rules = client.get("/filters-meta").json()["coherence_rules"]
+    exam_allowed_types = coherence_rules["exam_allowed_types"]
 
     assert exam_allowed_types["CEP"] == ["Primary"]
     assert exam_allowed_types["BTS"] == ["Higher institute"]
-    assert exam_allowed_types["BEPC"] == ["Secondary general", "Secondary technical"]
+    assert exam_allowed_types["BEPC"] == ["Secondary general"]
+    # Le GCE est l'examen du général : le technique présente le CAP.
+    assert exam_allowed_types["GCE O-Level"] == ["Secondary general"]
+    assert exam_allowed_types["CAP"] == ["Secondary technical"]
+
+
+# Le formulaire du responsable filtre ses listes avec ces règles : une école
+# primaire voit la maternelle, jamais le collège, et chaque section son système.
+@pytest.mark.django_db
+def test_filters_meta_tells_which_stages_fit_each_type_and_section(client):
+    coherence_rules = client.get("/filters-meta").json()["coherence_rules"]
+
+    assert coherence_rules["stage_allowed_types"]["Maternelle"] == ["Nursery", "Primary"]
+    assert coherence_rules["stage_allowed_types"]["Collège"] == ["Secondary general"]
+    assert coherence_rules["stage_allowed_types"]["Technical lower secondary"] == [
+        "Secondary technical"
+    ]
+    # Les cycles techniques sont communs aux deux systèmes, et les examens
+    # d'une école technique ne dépendent pas de sa section.
+    assert "Technical lower secondary" not in coherence_rules["stage_families"]
+    assert coherence_rules["section_free_exam_types"] == ["Secondary technical"]
+    # Le formulaire ne propose que ces années : le jour de référence des tests
+    # est en octobre 2025.
+    assert coherence_rules["open_school_years"] == ["2025-2026", "2026-2027"]
+    assert coherence_rules["latest_exam_session"] == "2025"
+    assert coherence_rules["stage_families"]["Primaire"] == "francophone"
+    assert coherence_rules["stage_families"]["Primary"] == "anglophone"
+    assert "Higher" not in coherence_rules["stage_families"]
+    assert coherence_rules["exam_families"]["GCE O-Level"] == "anglophone"
+    assert coherence_rules["section_families"]["Bilingual"] == ["anglophone", "francophone"]
+
+
+# Une liste où l'on choisit des classes suit le parcours de l'élève, pas
+# l'alphabet : la SIL avant le CP, la seconde avant la première.
+@pytest.mark.django_db
+def test_filters_meta_lists_classes_in_school_order(client):
+    technical_stage = Stage.objects.create(label="Technical upper secondary")
+    primary_stage = Stage.objects.create(label="Primaire")
+    unknown_stage = Stage.objects.create(label="Atelier")
+    for stage, level_labels in (
+        (technical_stage, ["Terminale", "1ère", "2nde"]),
+        (primary_stage, ["CP", "Classe pilote", "SIL"]),
+        (unknown_stage, ["Niveau B", "Niveau A"]),
+    ):
+        for level_label in level_labels:
+            StudyLevel.objects.create(stage=stage, label=level_label)
+
+    levels = client.get("/filters-meta").json()["levels"]
+
+    assert [(level["stage"], level["label"]) for level in levels] == [
+        ("Primaire", "SIL"),
+        ("Primaire", "CP"),
+        ("Primaire", "Classe pilote"),
+        ("Technical upper secondary", "2nde"),
+        ("Technical upper secondary", "1ère"),
+        ("Technical upper secondary", "Terminale"),
+        ("Atelier", "Niveau A"),
+        ("Atelier", "Niveau B"),
+    ]
+
 
 
 @pytest.mark.django_db
@@ -221,9 +281,14 @@ def test_reference_labels_fall_back_to_the_key_when_untranslated(client):
     }
 
 
+# Les titres de chef d'établissement viennent des règles, pas d'une table :
+# ils sont donc présents même sur une base vide.
 @pytest.mark.django_db
 def test_reference_labels_list_every_translated_kind_even_when_empty(client):
-    assert client.get("/reference-labels").json() == {
+    reference_labels = client.get("/reference-labels").json()
+
+    head_titles = reference_labels.pop("head_titles")
+    assert reference_labels == {
         "regions": {},
         "types": {},
         "sections": {},
@@ -233,6 +298,20 @@ def test_reference_labels_list_every_translated_kind_even_when_empty(client):
         "programs": {},
         "payment_methods": {},
     }
+    assert head_titles["Proviseur"] == {"fr": "Proviseur", "en": "Principal"}
+    assert head_titles["Headmistress"] == {"fr": "Directrice", "en": "Headmistress"}
+    assert head_titles["Dean"] == {"fr": "Doyen", "en": "Dean"}
+
+
+# Le premier titre d'un type est celui que le formulaire pré-remplit.
+@pytest.mark.django_db
+def test_filters_meta_lists_the_head_titles_of_each_type(client):
+    head_titles = client.get("/filters-meta").json()["coherence_rules"]["head_titles"]
+
+    assert head_titles["Primary"] == ["Headmaster", "Headmistress"]
+    assert head_titles["Secondary general"] == ["Proviseur", "Principal", "Principale"]
+    assert head_titles["Secondary technical"] == ["Proviseur"]
+    assert head_titles["University"] == ["Rector", "Dean"]
 
 
 @pytest.mark.django_db

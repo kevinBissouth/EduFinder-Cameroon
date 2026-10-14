@@ -1,4 +1,5 @@
 from collections.abc import Callable
+from datetime import date
 
 import pytest
 from django.core.cache import cache
@@ -15,7 +16,12 @@ from edufinder.models import (
     User,
     UserRole,
 )
+from edufinder.services import school_calendar
 from edufinder.services.security import create_access_token
+
+# Jour de référence des tests : en octobre 2025, les années scolaires ouvertes
+# sont 2025-2026 et 2026-2027, celles que les jeux de données utilisent.
+TEST_TODAY = date(2025, 10, 1)
 
 
 # Le cache vit dans la mémoire du processus : sans cette remise à zéro, un
@@ -23,6 +29,13 @@ from edufinder.services.security import create_access_token
 @pytest.fixture(autouse=True)
 def clear_cache_between_tests():
     cache.clear()
+
+
+# Les frais ne s'acceptent que pour l'année scolaire en cours et la suivante :
+# sans date fixée, les tests changeraient de résultat à chaque rentrée.
+@pytest.fixture(autouse=True)
+def fixed_school_calendar(monkeypatch):
+    monkeypatch.setattr(school_calendar, "read_today", lambda: TEST_TODAY)
 
 
 # Le vrai dossier média contient les images de démonstration : chaque test

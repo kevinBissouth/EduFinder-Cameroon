@@ -15,6 +15,7 @@
   "retry": "Try again",
   "blockError": "This block could not be loaded.",
   "genericError": "Something went wrong. Check what you entered, then try again.",
+  "invalidFields": "These fields were refused: {{fields}}. Correct them, then try again.",
   "sentForReview": "Sent for review. The public page changes once a super administrator approves it.",
   "account": {
     "open": "Open your account",
@@ -50,6 +51,10 @@
     "rejected": "rejected",
     "suspended": "suspended"
   },
+  "languageNames": {
+    "en": "English",
+    "fr": "French"
+  },
   "submissionType": {
     "creation": "creation",
     "modification": "modification"
@@ -62,6 +67,7 @@
     "view": "View"
   },
   "content": {
+    "name": "School name",
     "phone": "Phone",
     "contact_email": "Email",
     "website": "Website",
@@ -93,7 +99,9 @@
     "content_language": "Language of the texts",
     "description_translation": "Description, other language",
     "director_title_translation": "Head of school title, other language",
-    "director_bio_translation": "Head of school biography, other language"
+    "director_bio_translation": "Head of school biography, other language",
+    "fee_removals": "Fees to remove",
+    "exam_result_removals": "Results to remove"
   },
   "charts": {
     "visits": "Visits",

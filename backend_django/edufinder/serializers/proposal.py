@@ -29,6 +29,11 @@ _UPLOADED_VIDEO_URL_PATTERN = r"^/media/[A-Za-z0-9_-]+\.(mp4|webm)\Z"
 _SCHOOL_YEAR_PATTERN = r"^\d{4}-\d{4}\Z"
 _EXAM_SESSION_PATTERN = r"^\d{4}\Z"
 
+# Numéro camerounais : neuf chiffres, précédés ou non de l'indicatif.
+_CAMEROON_PHONE_PATTERN = re.compile(r"^(\+237)?\d{9}\Z")
+_SPACE_PATTERN = re.compile(r" ")
+PHONE_INPUT_MAX_LENGTH = 20
+
 _URL_SCHEME_PATTERN = re.compile(r"^([a-zA-Z][a-zA-Z0-9+.-]*):")
 _WHITESPACE_OR_CONTROL_PATTERN = re.compile(r"[\s\x00-\x1f\x7f]")
 SAFE_WEBSITE_SCHEMES = {"http", "https"}
@@ -44,6 +49,19 @@ def validate_public_website(website: str) -> None:
     matched_scheme = _URL_SCHEME_PATTERN.match(website)
     if matched_scheme and matched_scheme[1].lower() not in SAFE_WEBSITE_SCHEMES:
         raise serializers.ValidationError("Website must be an http or https address.")
+
+
+# Le responsable peut aérer son numéro avec des espaces : je les retire avant
+# de vérifier, et c'est la forme compacte qui est gardée (« +237690112233 »),
+# la même pour toutes les fiches et directement utilisable dans un lien tel:.
+class CameroonPhoneField(serializers.CharField):
+    def to_internal_value(self, data: Any) -> str:
+        compact_phone = _SPACE_PATTERN.sub("", super().to_internal_value(data))
+        if not _CAMEROON_PHONE_PATTERN.match(compact_phone):
+            raise serializers.ValidationError(
+                "Phone must be a Cameroonian number: 9 digits, with or without +237."
+            )
+        return compact_phone
 
 
 def uploaded_image_url_field() -> serializers.RegexField:
@@ -92,6 +110,38 @@ class ExamResultInputSerializer(serializers.Serializer):
     )
 
 
+# Une ligne à retirer se désigne par sa clé naturelle, comme à l'ajout : la
+# fiche publique ne donne pas les identifiants des lignes.
+class FeeRemovalSerializer(serializers.Serializer):
+    id_level = serializers.IntegerField()
+    school_year = serializers.RegexField(_SCHOOL_YEAR_PATTERN)
+
+
+class ExamResultRemovalSerializer(serializers.Serializer):
+    id_exam = serializers.IntegerField()
+    session = serializers.RegexField(_EXAM_SESSION_PATTERN)
+
+
+def _identify_fee_line(fee: dict) -> tuple:
+    return (fee["id_level"], fee["school_year"])
+
+
+def _identify_exam_result_line(exam_result: dict) -> tuple:
+    return (exam_result["id_exam"], exam_result["session"])
+
+
+def _ensure_not_changed_and_removed(
+    changed_lines: list[dict], removed_lines: list[dict], identify, line_name: str
+) -> None:
+    removed_identities = {identify(removed_line) for removed_line in removed_lines}
+    for changed_line in changed_lines:
+        if identify(changed_line) in removed_identities:
+            raise serializers.ValidationError(
+                f"A {line_name} cannot be both changed and removed: "
+                f"{identify(changed_line)}"
+            )
+
+
 # Tous les champs sont facultatifs ici : c'est la forme d'une modification, où
 # seul ce qui est envoyé change. La création redéclare ses champs obligatoires.
 class EstablishmentContentSerializer(serializers.Serializer):
@@ -102,7 +152,9 @@ class EstablishmentContentSerializer(serializers.Serializer):
     id_type = serializers.IntegerField(required=False, allow_null=True)
     id_sector = serializers.IntegerField(required=False, allow_null=True)
     id_linguistic_section = serializers.IntegerField(required=False, allow_null=True)
-    phone = serializers.CharField(required=False, allow_null=True, max_length=20)
+    phone = CameroonPhoneField(
+        required=False, allow_null=True, max_length=PHONE_INPUT_MAX_LENGTH
+    )
     # Coordonnées géographiques : nécessaires à la carte du profil (aucune
     # géolocalisation automatique côté serveur, le responsable les saisit).
     latitude = serializers.FloatField(
@@ -160,16 +212,14 @@ class EstablishmentContentSerializer(serializers.Serializer):
 
     def validate_fees(self, fees: list[dict] | None) -> list[dict] | None:
         ensure_no_duplicates(
-            fees or [],
-            lambda fee: (fee["id_level"], fee["school_year"]),
-            "fee (id_level, school_year)",
+            fees or [], _identify_fee_line, "fee (id_level, school_year)"
         )
         return fees
 
     def validate_exam_results(self, exam_results: list[dict] | None) -> list[dict] | None:
         ensure_no_duplicates(
             exam_results or [],
-            lambda exam_result: (exam_result["id_exam"], exam_result["session"]),
+            _identify_exam_result_line,
             "exam result (id_exam, session)",
         )
         return exam_results
@@ -185,10 +235,51 @@ class EstablishmentContentSerializer(serializers.Serializer):
 
 
 class ModificationProposalSerializer(EstablishmentContentSerializer):
+    # Seule une modification retire des lignes : une création n'en a pas encore.
+    fee_removals = FeeRemovalSerializer(
+        many=True, required=False, allow_null=True, max_length=MAX_FEES
+    )
+    exam_result_removals = ExamResultRemovalSerializer(
+        many=True, required=False, allow_null=True, max_length=MAX_EXAM_RESULTS
+    )
+
+    def validate_fee_removals(
+        self, fee_removals: list[dict] | None
+    ) -> list[dict] | None:
+        ensure_no_duplicates(
+            fee_removals or [],
+            _identify_fee_line,
+            "fee removal (id_level, school_year)",
+        )
+        return fee_removals
+
+    def validate_exam_result_removals(
+        self, exam_result_removals: list[dict] | None
+    ) -> list[dict] | None:
+        ensure_no_duplicates(
+            exam_result_removals or [],
+            _identify_exam_result_line,
+            "exam result removal (id_exam, session)",
+        )
+        return exam_result_removals
+
     # Une valeur nulle signifie « pas de changement » : je ne garde que ce qui
     # est réellement modifié, y compris dans les frais.
     def validate(self, content: dict) -> dict:
-        return _without_null_values(content)
+        changed_content = _without_null_values(content)
+        _ensure_not_changed_and_removed(
+            changed_content.get("fees", []),
+            changed_content.get("fee_removals", []),
+            _identify_fee_line,
+            "fee",
+        )
+        _ensure_not_changed_and_removed(
+            changed_content.get("exam_results", []),
+            changed_content.get("exam_result_removals", []),
+            _identify_exam_result_line,
+            "exam result",
+        )
+        return changed_content
 
 
 class CreationProposalSerializer(EstablishmentContentSerializer):
