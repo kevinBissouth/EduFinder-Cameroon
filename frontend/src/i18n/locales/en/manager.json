@@ -255,8 +255,7 @@
       "exam": "Exam",
       "chooseExam": "Choose an exam",
       "session": "Session",
-      "passRate": "Pass rate (%)",
-      "addResult": "Add a result"
+      "passRate": "Pass rate (%)"
     },
     "files": {
       "preview": "{{title}} preview",
@@ -300,6 +299,20 @@
       "classCount_many": "{{count}} classes",
       "classCount_other": "{{count}} classes",
       "selectedClasses": "Ticked classes"
+    },
+    "examSessions": {
+      "sessionOption_one": "{{session}} · {{count}} result",
+      "sessionOption_many": "{{session}} · {{count}} results",
+      "sessionOption_other": "{{session}} · {{count}} results",
+      "emptySessionOption": "{{session}} · no result",
+      "prefillHint": "No result for the {{session}} session. Add the exams of {{previousSession}}, then enter their rates.",
+      "prefill": "Add the exams of {{previousSession}}",
+      "prefillHintWithoutHistory": "No result for the {{session}} session. Add the exams the school sits, then enter their rates.",
+      "prefillWithoutHistory": "Add the exams",
+      "blankRateHint": "An exam left without a rate is not sent: leave empty the one the school did not sit.",
+      "otherSessionErrors": "Other sessions have results to correct.",
+      "showSession": "Show the {{session}} session",
+      "addExam": "Add an exam"
     }
   }
 }

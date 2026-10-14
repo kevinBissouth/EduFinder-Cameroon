@@ -264,8 +264,7 @@
       "exam": "Examen",
       "chooseExam": "Choisir un examen",
       "session": "Session",
-      "passRate": "Taux de réussite (%)",
-      "addResult": "Ajouter un résultat"
+      "passRate": "Taux de réussite (%)"
     },
     "files": {
       "preview": "Aperçu : {{title}}",
@@ -309,6 +308,20 @@
       "classCount_many": "{{count}} classes",
       "classCount_other": "{{count}} classes",
       "selectedClasses": "Classes cochées"
+    },
+    "examSessions": {
+      "sessionOption_one": "{{session}} · {{count}} résultat",
+      "sessionOption_many": "{{session}} · {{count}} résultats",
+      "sessionOption_other": "{{session}} · {{count}} résultats",
+      "emptySessionOption": "{{session}} · aucun résultat",
+      "prefillHint": "Aucun résultat pour la session {{session}}. Ajoutez les examens de {{previousSession}}, puis saisissez leurs taux.",
+      "prefill": "Ajouter les examens de {{previousSession}}",
+      "prefillHintWithoutHistory": "Aucun résultat pour la session {{session}}. Ajoutez les examens que présente l'établissement, puis saisissez leurs taux.",
+      "prefillWithoutHistory": "Ajouter les examens",
+      "blankRateHint": "Un examen laissé sans taux n'est pas envoyé : laissez vide celui que l'établissement n'a pas présenté.",
+      "otherSessionErrors": "D'autres sessions ont des résultats à corriger.",
+      "showSession": "Voir la session {{session}}",
+      "addExam": "Ajouter un examen"
     }
   }
 }

@@ -9,7 +9,7 @@ import { toChipOptions, toggleValue } from '../../workspace/toggleChips'
 import { PhotoUpload, VideoUploads } from './FileUploads'
 import { FIELD_MAX_LENGTHS, rowErrorPath } from './proposalValidation'
 import FeeGroupsEditor from './FeeGroupsEditor'
-import { ExamResultRowsEditor } from './RowEditors'
+import { ExamResultsEditor } from './RowEditors'
 import { translateOptionNames, useReferenceLabel } from '../../../hooks/useReferenceLabel'
 import { SUPPORTED_LANGUAGES } from '../../../i18n/languages'
 
@@ -240,14 +240,19 @@ export function ResultsStep({ form }) {
   const translateReference = useReferenceLabel()
 
   return (
-    <ExamResultRowsEditor
+    <ExamResultsEditor
       examResultRows={form.draft.examResultRows}
+      session={form.draft.examSession}
+      latestSession={form.meta.coherence_rules?.latest_exam_session ?? ''}
       exams={translateOptionNames(form.meta.exams ?? [], 'exams', translateReference)}
       offeredExamIds={form.offeredChoices.offeredExamIds}
       errorFor={(rowId, fieldName) =>
         form.fieldError(rowErrorPath('examResultRows', rowId, fieldName))
       }
-      onChange={(examResultRows) => form.setList('examResultRows', 'exam_results', examResultRows)}
+      onChangeRows={(examResultRows) =>
+        form.setList('examResultRows', 'exam_results', examResultRows)
+      }
+      onChangeSession={(examSession) => form.setValue('examSession', examSession)}
     />
   )
 }

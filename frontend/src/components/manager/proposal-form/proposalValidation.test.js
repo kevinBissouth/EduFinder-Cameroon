@@ -136,6 +136,39 @@ test('an exam result needs a four-digit session and a rate between 0 and 100', (
   })
 })
 
+// Une session s'ouvre avec une ligne par examen : celui que l'école n'a pas
+// présenté cette année reste sans taux, sans bloquer l'étape.
+test('an exam result without a rate is left out, not an error', () => {
+  const draft = buildDraft({
+    examResultRows: [examResultRow('not-sat', { id_exam: '2', session: '2026', pass_rate: '' })],
+  })
+  assert.deepEqual(validateStep('results', draft, buildContext(false)), {})
+})
+
+test('a rate without an exam is an error', () => {
+  const draft = buildDraft({
+    examResultRows: [examResultRow('no-exam', { session: '2026', pass_rate: '70' })],
+  })
+  assert.deepEqual(validateStep('results', draft, buildContext(false)), {
+    [rowErrorPath('examResultRows', 'no-exam', 'id_exam')]: 'required',
+  })
+})
+
+// La session se choisit pour toute la liste : le doublon se signale sous
+// l'examen, le seul champ de la ligne qui peut le corriger.
+test('the same exam twice in a session is reported on the second exam', () => {
+  const draft = buildDraft({
+    examResultRows: [
+      examResultRow('first', { id_exam: '2', session: '2026', pass_rate: '70' }),
+      examResultRow('second', { id_exam: '2', session: '2026', pass_rate: '75' }),
+      examResultRow('other-session', { id_exam: '2', session: '2025', pass_rate: '60' }),
+    ],
+  })
+  assert.deepEqual(validateStep('results', draft, buildContext(false)), {
+    [rowErrorPath('examResultRows', 'second', 'id_exam')]: 'duplicateResult',
+  })
+})
+
 test('a class or an exam the school cannot offer is reported', () => {
   const draft = buildDraft({
     feeGroups: [feeGroup('fee', { amount: '70000', levelIds: ['3', '9'] })],

@@ -14,7 +14,10 @@ export function useProposalDraft(school, meta) {
     // choisit à l'étape Frais ; vide, c'est la première année ouverte.
     feeGroups: groupFees(detail?.fees ?? []),
     feeYear: '',
+    // Toutes les sessions publiées ; celle affichée se choisit à l'étape
+    // Résultats, vide c'est la plus récente.
     examResultRows: (detail?.exam_results ?? []).map(createExamResultRow),
+    examSession: '',
     serviceNames: (detail?.services ?? []).map((service) => service.name),
     programIds: findProgramIds(detail?.programs ?? [], programs),
     coverPhotoUrl: '',
