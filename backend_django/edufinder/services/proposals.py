@@ -36,6 +36,7 @@ from edufinder.models import (
 )
 from edufinder.services.data_rules import (
     get_exam_section_violation,
+    get_exam_session_violation,
     get_exam_type_violation,
     get_school_year_violation,
     get_stage_section_violation,
@@ -94,6 +95,7 @@ def create_creation_proposal(user: User, content: dict[str, Any]) -> Submission:
         ).label,
     }
     _ensure_exam_results_coherent(content["exam_results"], **school_labels)
+    _ensure_exam_sessions_held(content["exam_results"])
     _ensure_fees_coherent(content["fees"], **school_labels)
     _ensure_fees_in_open_school_years(content["fees"])
     _ensure_head_title_coherent(content["director_title"], school_labels["type_label"])
@@ -278,6 +280,13 @@ def _ensure_exam_results_coherent(
             raise IncoherentExamResultError(f"Incoherent exam result: {violation}")
 
 
+def _ensure_exam_sessions_held(exam_results: list[dict[str, Any]]) -> None:
+    for exam_result in exam_results:
+        violation = get_exam_session_violation(exam_result["session"])
+        if violation is not None:
+            raise IncoherentExamResultError(f"Incoherent exam result: {violation}")
+
+
 # Même garde-fou pour les frais : pas de 4e dans une école primaire, pas de
 # CM1 dans une école anglophone. C'est le cycle de la classe qui porte la règle.
 def _ensure_fees_coherent(
@@ -330,6 +339,7 @@ def _ensure_modification_coherent(
     if not exam_results and not fees:
         return
     _ensure_fees_in_open_school_years(_fees_on_new_lines(establishment, fees))
+    _ensure_exam_sessions_held(exam_results)
     # Si la proposition change aussi le type ou la section, c'est la nouvelle
     # valeur qui compte : c'est elle que l'approbation appliquera.
     school_labels = {

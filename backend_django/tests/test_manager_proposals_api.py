@@ -404,6 +404,43 @@ def test_creation_rejects_an_exam_that_contradicts_the_type(
     assert not Establishment.objects.filter(name="New Hope Academy").exists()
 
 
+# Le jour de référence des tests est en octobre 2025 : la session 2026 n'a pas
+# encore eu lieu, son taux de réussite ne peut pas exister.
+FUTURE_SESSION_ERROR = (
+    "Incoherent exam result: session '2026' has not taken place yet (latest: 2025)"
+)
+
+
+@pytest.mark.django_db
+def test_creation_rejects_a_result_for_a_future_session(
+    client, log_in_as, manager, creation_payload
+):
+    log_in_as(manager)
+    creation_payload["exam_results"][0]["session"] = "2026"
+
+    response = post_json(client, CREATION_URL, creation_payload)
+
+    assert response.status_code == 422
+    assert response.json() == {"detail": FUTURE_SESSION_ERROR}
+    assert Submission.objects.count() == 0
+
+
+@pytest.mark.django_db
+def test_modification_rejects_a_result_for_a_future_session(
+    client, log_in_as, manager, managed_establishment, references
+):
+    log_in_as(manager)
+    future_result = {"id_exam": references.cep_exam.pk, "session": "2026", "pass_rate": "80"}
+
+    response = post_json(
+        client, modification_url(managed_establishment), {"exam_results": [future_result]}
+    )
+
+    assert response.status_code == 422
+    assert response.json() == {"detail": FUTURE_SESSION_ERROR}
+    assert Submission.objects.count() == 0
+
+
 @pytest.mark.django_db
 def test_creation_rejects_an_exam_that_contradicts_the_linguistic_section(
     client, log_in_as, manager, creation_payload
@@ -655,7 +692,7 @@ def build_secondary_payload(creation_payload: dict, **overridden_fields) -> dict
 
 def build_exam_result(exam_label: str) -> dict:
     exam = Exam.objects.create(label=exam_label)
-    return {"id_exam": exam.pk, "session": "2026", "pass_rate": "75"}
+    return {"id_exam": exam.pk, "session": "2025", "pass_rate": "75"}
 
 
 @pytest.mark.django_db

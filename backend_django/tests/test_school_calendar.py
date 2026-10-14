@@ -4,7 +4,11 @@ from datetime import date
 import pytest
 
 from edufinder.services import school_calendar
-from edufinder.services.school_calendar import find_school_year, list_open_school_years
+from edufinder.services.school_calendar import (
+    find_latest_exam_session,
+    find_school_year,
+    list_open_school_years,
+)
 
 
 @pytest.mark.parametrize(
@@ -25,3 +29,11 @@ def test_the_open_years_are_the_current_one_and_the_next(monkeypatch):
     monkeypatch.setattr(school_calendar, "read_today", lambda: date(2026, 10, 13))
 
     assert list_open_school_years() == ["2026-2027", "2027-2028"]
+
+
+# Les examens officiels se passent en fin d'année scolaire : la session la plus
+# récente est celle de l'année civile en cours, jamais une session à venir.
+def test_the_latest_exam_session_is_the_current_calendar_year(monkeypatch):
+    monkeypatch.setattr(school_calendar, "read_today", lambda: date(2027, 1, 15))
+
+    assert find_latest_exam_session() == "2027"
