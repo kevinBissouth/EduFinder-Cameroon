@@ -194,7 +194,7 @@
     "step": "Étape {{current}} sur {{total}}",
     "newSchool": "Un nouvel établissement",
     "creationLead": "Un super administrateur examine la proposition avant que l'établissement devienne public.",
-    "modificationLead": "Remplissez seulement ce que vous voulez changer. Tout le reste de la page reste tel quel.",
+    "modificationLead": "Le formulaire reprend votre page actuelle : modifiez seulement ce qui change, seuls ces changements seront envoyés.",
     "sending": "Envoi…",
     "next": "Suivant",
     "back": "Retour",
@@ -322,6 +322,7 @@
       "otherSessionErrors": "D'autres sessions ont des résultats à corriger.",
       "showSession": "Voir la session {{session}}",
       "addExam": "Ajouter un examen"
-    }
+    },
+    "nothingToSend": "Aucune modification à envoyer : la fiche est identique à celle publiée."
   }
 }

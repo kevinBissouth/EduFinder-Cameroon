@@ -28,6 +28,11 @@ PRIVATE_FIELD_NAMES = {
     "created_at",
     "updated_at",
     "user_establishments",
+    # Réservés à l'assistant du responsable : le site public lit les noms.
+    "id_city",
+    "id_type",
+    "id_sector",
+    "id_linguistic_section",
 }
 
 
