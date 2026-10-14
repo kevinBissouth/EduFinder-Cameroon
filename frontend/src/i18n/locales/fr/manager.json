@@ -331,6 +331,13 @@
       "addExam": "Ajouter un examen",
       "confirmRemoval": "Ce résultat est publié sur votre page. Le retirer envoie une demande de retrait au super administrateur : il reste affiché jusqu'à sa validation. Continuer ?"
     },
-    "nothingToSend": "Aucune modification à envoyer : la fiche est identique à celle publiée."
+    "nothingToSend": "Aucune modification à envoyer : la fiche est identique à celle publiée.",
+    "confirmLeave": "Vos modifications n'ont pas été envoyées. Les abandonner ?",
+    "savedDraft": {
+      "restored": "Votre saisie précédente a été reprise là où vous l'aviez laissée.",
+      "startOver": "Repartir de la page publiée",
+      "clear": "Tout effacer",
+      "outdated": "Votre page a changé depuis votre dernière saisie : le formulaire repart de la version publiée."
+    }
   }
 }

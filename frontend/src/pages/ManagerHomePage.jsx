@@ -11,6 +11,7 @@ import {
 } from 'lucide-react'
 
 import ProposalForm from '../components/manager/ProposalForm'
+import { findDraftKey, forgetDraft } from '../components/manager/proposal-form/draftStorage'
 import SubmissionsList from '../components/manager/SubmissionsList'
 import ManagerDashboard from '../components/manager/ManagerDashboard'
 import ManagerFeesView from '../components/manager/ManagerFeesView'
@@ -74,6 +75,7 @@ function ManagerHomePage({ profile, onSignOut }) {
   const managerData = useManagerData()
   const [activeView, setActiveView] = useState('overview')
   const [formState, setFormState] = useState(null)
+  const [isFormDirty, setIsFormDirty] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [serverError, setServerError] = useState('')
   const [preparing, setPreparing] = useState(false)
@@ -156,10 +158,29 @@ function ManagerHomePage({ profile, onSignOut }) {
     setActiveView('school-detail')
   }
 
+  // Le formulaire se ferme après un envoi réussi ou un abandon confirmé : dans
+  // les deux cas, son brouillon de l'onglet n'a plus de raison d'être.
   function closeForm() {
+    if (formState) forgetDraft(findDraftKey(formState.school))
     setFormState(null)
+    setIsFormDirty(false)
     setServerError('')
     setActiveView('overview')
+  }
+
+  // Quitter le formulaire (menu, notification, compte, déconnexion, « Annuler »)
+  // ferait perdre une saisie non envoyée : je demande d'abord.
+  function confirmLeavingForm() {
+    if (!formState) return true
+    if (isFormDirty && !window.confirm(t('form.confirmLeave'))) return false
+    closeForm()
+    return true
+  }
+
+  function leavingFormFirst(action) {
+    return (...actionArguments) => {
+      if (confirmLeavingForm()) action(...actionArguments)
+    }
   }
 
   async function handleFormSubmit(payload) {
@@ -327,7 +348,8 @@ function ManagerHomePage({ profile, onSignOut }) {
         submitting={submitting}
         serverError={serverError}
         onSubmit={handleFormSubmit}
-        onClose={closeForm}
+        onClose={confirmLeavingForm}
+        onDirtyChange={setIsFormDirty}
       />
     )
   }
@@ -355,7 +377,7 @@ function ManagerHomePage({ profile, onSignOut }) {
     <WorkspaceShell
       navItems={navItems}
       activeView={activeView}
-      onSelectView={setActiveView}
+      onSelectView={leavingFormFirst(setActiveView)}
       title={
         isOverview
           ? t('page.hello', { name: findFirstName(profile.name) })
@@ -369,9 +391,9 @@ function ManagerHomePage({ profile, onSignOut }) {
       }
       profile={profile}
       roleLabel={roleLabel}
-      onSignOut={onSignOut}
-      onOpenNotification={openNotification}
-      onOpenAccount={() => setActiveView('settings')}
+      onSignOut={leavingFormFirst(onSignOut)}
+      onOpenNotification={leavingFormFirst(openNotification)}
+      onOpenAccount={leavingFormFirst(() => setActiveView('settings'))}
     >
       {/* Sur téléphone, la fiche détaillée commence par sa photo, collée à la
           barre du haut : le sélecteur n'y apparaît pas. On change

@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
-import { ArrowLeft, ArrowRight, Check, Send } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Check, RotateCcw, Send } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 import Button from '../ui/Button'
 import Notice from '../workspace/Notice'
 import { cleanDraftForSchoolProfile } from './proposal-form/draftCleanup'
+import { findDraftKey, forgetDraft, readSavedDraft, saveDraft } from './proposal-form/draftStorage'
 import { findOfferedChoices } from './proposal-form/offeredChoices'
 import { buildProposalContent, buildPublishedRecord } from './proposal-form/proposalDraft'
 import { validateStep } from './proposal-form/proposalValidation'
@@ -136,13 +137,61 @@ function StepHeader({ step }) {
   )
 }
 
+// Avis affiché à l'ouverture quand une saisie de l'onglet a été reprise, ou
+// écartée parce que la fiche a changé depuis.
+function SavedDraftNotice({ savedDraftOnOpen, isCreation, onStartOver }) {
+  const { t } = useTranslation('manager')
+
+  if (savedDraftOnOpen.isOutdated) {
+    return <Notice className="mb-6">{t('form.savedDraft.outdated')}</Notice>
+  }
+  return (
+    <Notice className="mb-6">
+      {t('form.savedDraft.restored')}
+      <Button variant="secondary" onClick={onStartOver} className="mt-3 w-full sm:w-auto">
+        <RotateCcw aria-hidden="true" className="size-4" />
+        {isCreation ? t('form.savedDraft.clear') : t('form.savedDraft.startOver')}
+      </Button>
+    </Notice>
+  )
+}
+
 // Formulaire pas à pas d'une proposition : création d'un établissement ou
 // modification d'une fiche existante. Rien n'est écrit sur la fiche ici, le
-// contenu part en validation.
-function ProposalForm({ mode, meta, school = null, submitting, serverError, onSubmit, onClose }) {
+// contenu part en validation. onDirtyChange dit à la page s'il y a une saisie
+// à ne pas perdre en la quittant.
+function ProposalForm({
+  mode,
+  meta,
+  school = null,
+  submitting,
+  serverError,
+  onSubmit,
+  onClose,
+  onDirtyChange,
+}) {
   const { t } = useTranslation('manager')
   const isCreation = mode === 'creation'
-  const [currentStepIndex, setCurrentStepIndex] = useState(0)
+  const draftKey = findDraftKey(school)
+  const [savedDraftOnOpen] = useState(() =>
+    readSavedDraft(draftKey, school?.detail?.updated_at ?? null),
+  )
+  const [isSavedDraftNoticeShown, setIsSavedDraftNoticeShown] = useState(
+    savedDraftOnOpen.savedDraft !== null || savedDraftOnOpen.isOutdated,
+  )
+  const { draft, setField, setValue, replaceDraft, resetDraft } = useProposalDraft(
+    school,
+    meta,
+    savedDraftOnOpen.savedDraft?.draft,
+  )
+  // La saisie reprise rouvre l'étape où le responsable s'était arrêté, bornée
+  // aux étapes que son brouillon affiche.
+  const [currentStepIndex, setCurrentStepIndex] = useState(() =>
+    Math.min(
+      savedDraftOnOpen.savedDraft?.stepIndex ?? 0,
+      listVisibleSteps(isCreation, findOfferedChoices(meta, school, draft.fields), draft).length - 1,
+    ),
+  )
   // Les erreurs ne s'affichent qu'après un essai d'avancer : rouge partout dès
   // l'ouverture, le formulaire accuserait le responsable avant qu'il ait saisi.
   const [hasTriedStep, setHasTriedStep] = useState(false)
@@ -150,7 +199,6 @@ function ProposalForm({ mode, meta, school = null, submitting, serverError, onSu
   // première erreur une fois qu'elle est affichée.
   const [errorRevealCount, setErrorRevealCount] = useState(0)
   const stepSectionRef = useRef(null)
-  const { draft, setField, setValue, replaceDraft } = useProposalDraft(school, meta)
   const upload = useFileUpload()
   const showToast = useToast()
 
@@ -206,6 +254,9 @@ function ProposalForm({ mode, meta, school = null, submitting, serverError, onSu
   // changement n'a rien à faire valider, l'étape de relecture le dit.
   const proposalContent = buildProposalContent(draft, { ...publishedRecord, openSchoolYears })
   const hasNothingToSend = !isCreation && Object.keys(proposalContent).length === 0
+  // Une saisie est à protéger dès qu'elle partirait : un formulaire ouvert puis
+  // laissé tel quel ne demande ni sauvegarde ni confirmation.
+  const isDirty = Object.keys(proposalContent).length > 0
 
   const form = {
     draft,
@@ -226,12 +277,45 @@ function ProposalForm({ mode, meta, school = null, submitting, serverError, onSu
     if (errorRevealCount > 0) revealFirstError(stepSectionRef.current)
   }, [errorRevealCount])
 
+  useEffect(() => {
+    if (!isDirty) {
+      forgetDraft(draftKey)
+      return
+    }
+    saveDraft(draftKey, {
+      profileVersion: school?.detail?.updated_at ?? null,
+      stepIndex: currentStepIndex,
+      draft,
+    })
+  }, [draft, currentStepIndex, isDirty, draftKey, school])
+
+  useEffect(() => {
+    onDirtyChange?.(isDirty)
+  }, [isDirty, onDirtyChange])
+
+  // Fermer ou recharger l'onglet : le navigateur demande confirmation. Sur
+  // téléphone il ne le fait pas toujours, d'où la sauvegarde ci-dessus.
+  useEffect(() => {
+    if (!isDirty) return undefined
+    const warnBeforeLeaving = (event) => event.preventDefault()
+    window.addEventListener('beforeunload', warnBeforeLeaving)
+    return () => window.removeEventListener('beforeunload', warnBeforeLeaving)
+  }, [isDirty])
+
   // La carte de l'étape reste la même d'une étape à l'autre : je ramène son
   // haut à l'écran, la suivante se lit depuis son titre.
+  // L'avis de saisie reprise ne sert qu'à l'ouverture : il part à l'étape suivante.
   const goToStep = (stepIndex) => {
     setHasTriedStep(false)
+    setIsSavedDraftNoticeShown(false)
     setCurrentStepIndex(stepIndex)
     stepSectionRef.current?.scrollIntoView({ block: 'start' })
+  }
+
+  const startOver = () => {
+    resetDraft()
+    forgetDraft(draftKey)
+    goToStep(0)
   }
 
   const handleSubmit = (event) => {
@@ -277,6 +361,13 @@ function ProposalForm({ mode, meta, school = null, submitting, serverError, onSu
           ref={stepSectionRef}
           className="min-w-0 scroll-mt-28 rounded-panel border border-line bg-surface p-5 shadow-soft sm:p-8"
         >
+          {isSavedDraftNoticeShown && (
+            <SavedDraftNotice
+              savedDraftOnOpen={savedDraftOnOpen}
+              isCreation={isCreation}
+              onStartOver={startOver}
+            />
+          )}
           <StepHeader step={currentStep} />
           <div className="mt-6 space-y-4">
             <currentStep.Component form={form} />

@@ -322,6 +322,13 @@
       "addExam": "Add an exam",
       "confirmRemoval": "This result is published on your page. Removing it sends a removal request to the super administrator: it stays visible until approved. Continue?"
     },
-    "nothingToSend": "Nothing to send: the profile is the same as the published one."
+    "nothingToSend": "Nothing to send: the profile is the same as the published one.",
+    "confirmLeave": "Your changes have not been sent. Discard them?",
+    "savedDraft": {
+      "restored": "Your previous input was restored where you left it.",
+      "startOver": "Start again from the published page",
+      "clear": "Clear everything",
+      "outdated": "Your page changed since your last input: the form starts again from the published version."
+    }
   }
 }
