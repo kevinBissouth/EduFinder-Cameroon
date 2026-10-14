@@ -13,6 +13,10 @@ const REFERENCE_FIELDS = {
   id_linguistic_section: { metaKey: 'languages', referenceKind: 'sections' },
 }
 
+// Champs dont la valeur est la clé d'une liste de référence : j'affiche son
+// libellé dans la langue du site. Une valeur hors liste s'affiche telle quelle.
+const REFERENCE_KEY_FIELDS = { director_title: 'head_titles' }
+
 const PHOTO_FIELDS = new Set(['cover_photo', 'director_photo'])
 const FILE_LIST_FIELDS = new Set(['videos', 'media_additions', 'media_removals'])
 
@@ -85,6 +89,9 @@ function describeEntry(key, value, meta, translateReference) {
     }
   }
   if (key === CONTENT_LANGUAGE_KEY) return { label: translate(key), text: findLanguage(value).name }
+  if (key in REFERENCE_KEY_FIELDS) {
+    return { label: translate(key), text: translateReference(REFERENCE_KEY_FIELDS[key], value) }
+  }
   if (PHOTO_FIELDS.has(key)) return { label: translate(key), text: translate('newPhoto') }
   if (FILE_LIST_FIELDS.has(key)) {
     return { label: translate(key), text: translate('fileCount', { count: value.length }) }

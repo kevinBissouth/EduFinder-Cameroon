@@ -1,6 +1,7 @@
 import { useId } from 'react'
 
 import { formatAmount } from '../../utils/format'
+import { fieldLayoutClasses } from './fieldLayout'
 
 const CONTROL_BASE_CLASSES =
   'h-11 w-full rounded-control border bg-surface px-3 text-sm font-medium text-navy transition-colors placeholder:font-normal placeholder:text-ink-soft'
@@ -30,11 +31,11 @@ function FieldLabel({ children }) {
   return <span className="text-sm font-semibold text-navy">{children}</span>
 }
 
-export function TextField({ label, error, className = '', ...inputProps }) {
+export function TextField({ label, error, isGridAligned = false, className = '', ...inputProps }) {
   const { controlProps, errorMessage } = useFieldError(error)
 
   return (
-    <label className={`flex w-full flex-col gap-1.5 ${className}`}>
+    <label className={`w-full ${fieldLayoutClasses(isGridAligned)} ${className}`}>
       <FieldLabel>{label}</FieldLabel>
       <input {...inputProps} {...controlProps} className={controlClasses(error)} />
       {errorMessage}

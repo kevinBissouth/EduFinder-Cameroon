@@ -1,4 +1,4 @@
-import { Landmark, Languages, MapPin, School } from 'lucide-react'
+import { BadgeCheck, Landmark, Languages, MapPin, School } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 import ChoiceField from '../../ui/ChoiceField'
@@ -256,6 +256,18 @@ export function LeadershipStep({ form }) {
   const { t } = useTranslation('manager')
   const { fields } = form.draft
   const translationLabels = useTranslationLabels(fields.content_language)
+  const translateReference = useReferenceLabel()
+  // Les titres du type de l'établissement, déjà traduits par la liste de
+  // référence. Un titre libre d'une ancienne fiche reste proposé tant qu'il
+  // est celui de la fiche.
+  const typeHeadTitles =
+    form.meta.coherence_rules?.head_titles?.[form.offeredChoices.typeName] ?? []
+  const headTitleOptions = [...new Set([...typeHeadTitles, fields.director_title])]
+    .filter(Boolean)
+    .map((headTitle) => ({
+      id: headTitle,
+      name: translateReference('head_titles', headTitle),
+    }))
 
   return (
     <>
@@ -266,21 +278,14 @@ export function LeadershipStep({ form }) {
         value={fields.director_name}
         onChange={(event) => form.setField('director_name', event.target.value)}
       />
-      <TextField
+      <ChoiceField
+        icon={BadgeCheck}
         label={t('form.fields.directorTitle')}
-        placeholder={t('form.fields.directorTitlePlaceholder')}
-        maxLength={FIELD_MAX_LENGTHS.director_title}
+        placeholder={t('form.choose')}
+        options={headTitleOptions}
         value={fields.director_title}
-        onChange={(event) => form.setField('director_title', event.target.value)}
+        onChange={(headTitle) => form.setField('director_title', headTitle)}
       />
-      {translationLabels && (
-        <TextField
-          label={translationLabels.describe(t('form.fields.directorTitle'))}
-          maxLength={FIELD_MAX_LENGTHS.director_title_translation}
-          value={fields.director_title_translation}
-          onChange={(event) => form.setField('director_title_translation', event.target.value)}
-        />
-      )}
       <TextAreaField
         label={t('form.fields.biography')}
         rows={BIOGRAPHY_ROWS}

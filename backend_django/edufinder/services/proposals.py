@@ -41,6 +41,7 @@ from edufinder.services.data_rules import (
     get_stage_section_violation,
     get_stage_type_violation,
 )
+from edufinder.services.head_titles import get_head_title_violation
 from edufinder.services.media_files import StoredFile
 from edufinder.services.notifications import notify_submission_received
 
@@ -58,6 +59,10 @@ class IncoherentExamResultError(ProposalError):
 
 
 class IncoherentFeeError(ProposalError):
+    pass
+
+
+class IncoherentHeadTitleError(ProposalError):
     pass
 
 
@@ -91,6 +96,7 @@ def create_creation_proposal(user: User, content: dict[str, Any]) -> Submission:
     _ensure_exam_results_coherent(content["exam_results"], **school_labels)
     _ensure_fees_coherent(content["fees"], **school_labels)
     _ensure_fees_in_open_school_years(content["fees"])
+    _ensure_head_title_coherent(content["director_title"], school_labels["type_label"])
     # La fiche naît en attente, donc invisible du public, avec le strict
     # minimum : le reste du contenu ne sera appliqué qu'à l'approbation.
     establishment = Establishment.objects.create(
@@ -113,6 +119,7 @@ def create_modification_proposal(
         raise EmptyModificationError("No changes provided")
     ensure_references_exist(changed_fields)
     _ensure_modification_coherent(establishment, changed_fields)
+    _ensure_modified_head_title_coherent(establishment, changed_fields)
     return _open_submission(
         user, establishment, SubmissionType.MODIFICATION, changed_fields
     )
@@ -352,6 +359,31 @@ def _fees_on_new_levels(
         )
     )
     return [fee for fee in fees if fee["id_level"] not in published_level_ids]
+
+
+# Le titre du chef d'établissement se choisit parmi ceux du type d'école : un
+# titre libre rendrait les fiches impossibles à comparer d'un coup d'œil.
+def _ensure_head_title_coherent(head_title: str | None, type_label: str) -> None:
+    if not head_title:
+        return
+    violation = get_head_title_violation(head_title, type_label)
+    if violation is not None:
+        raise IncoherentHeadTitleError(f"Incoherent head title: {violation}")
+
+
+# Un titre déjà publié reste accepté tel quel, même hors liste (« Founding
+# Director ») : la liste est arrivée après les fiches, et l'assistant renvoie
+# le titre actuel avec le reste.
+def _ensure_modified_head_title_coherent(
+    establishment: Establishment, changed_fields: dict[str, Any]
+) -> None:
+    head_title = changed_fields.get("director_title")
+    if head_title == establishment.director_title:
+        return
+    type_label = _resolve_label(
+        EstablishmentType, changed_fields.get("id_type"), establishment.type
+    )
+    _ensure_head_title_coherent(head_title, type_label)
 
 
 def _resolve_label(

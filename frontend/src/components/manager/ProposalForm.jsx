@@ -13,6 +13,7 @@ import { useFileUpload } from './proposal-form/useFileUpload'
 import { useProposalDraft } from './proposal-form/useProposalDraft'
 import { useToast } from '../workspace/toastContext'
 import { typeSupportsPrograms } from '../../utils/establishmentType'
+import { pickHeadTitleForType } from '../../utils/headTitle'
 
 const PERCENT = 100
 const ICON_TONE_CLASSES = {
@@ -144,10 +145,7 @@ function ProposalForm({ mode, meta, school = null, submitting, serverError, onSu
   // Les erreurs ne s'affichent qu'après un essai d'avancer : rouge partout dès
   // l'ouverture, le formulaire accuserait le responsable avant qu'il ait saisi.
   const [hasTriedStep, setHasTriedStep] = useState(false)
-  const { draft, setField, setValue, setList, replaceDraft } = useProposalDraft(
-    school,
-    meta.programs ?? [],
-  )
+  const { draft, setField, setValue, setList, replaceDraft } = useProposalDraft(school, meta)
   const upload = useFileUpload()
   const showToast = useToast()
 
@@ -169,10 +167,20 @@ function ProposalForm({ mode, meta, school = null, submitting, serverError, onSu
     hasTriedStep && stepErrors[fieldPath] ? t(`form.errors.${stepErrors[fieldPath]}`) : undefined
   // Le type et la section commandent la suite du formulaire : en changer
   // retire les classes, les examens et les filières qui ne conviennent plus,
-  // et je le dis, pour que rien ne disparaisse en silence.
+  // et je le dis, pour que rien ne disparaisse en silence. Le titre du chef
+  // d'établissement suit le type lui aussi.
   const setSchoolProfileField = (fieldName, fieldValue) => {
-    const nextFields = { ...draft.fields, [fieldName]: fieldValue }
-    const nextChoices = findOfferedChoices(meta, school, nextFields)
+    const changedFields = { ...draft.fields, [fieldName]: fieldValue }
+    const nextChoices = findOfferedChoices(meta, school, changedFields)
+    const headTitlesByType = meta.coherence_rules?.head_titles ?? {}
+    const nextFields = {
+      ...changedFields,
+      director_title: pickHeadTitleForType(
+        draft.fields.director_title,
+        headTitlesByType[offeredChoices.typeName],
+        headTitlesByType[nextChoices.typeName],
+      ),
+    }
     const cleanup = cleanDraftForSchoolProfile(
       { ...draft, fields: nextFields },
       {

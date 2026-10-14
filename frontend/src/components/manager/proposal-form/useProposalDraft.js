@@ -5,10 +5,11 @@ import { buildInitialFields, createExamResultRow, findProgramIds } from './propo
 
 // État du formulaire de proposition. En modification il part de la fiche
 // actuelle ; en création (pas de fiche) tout part de vide.
-export function useProposalDraft(school, programs) {
+export function useProposalDraft(school, meta) {
+  const programs = meta.programs ?? []
   const detail = school?.detail
   const [draft, setDraft] = useState(() => ({
-    fields: buildInitialFields(school),
+    fields: buildInitialFields(school, meta.coherence_rules?.head_titles),
     // Tous les frais publiés, regroupés par montant. L'année affichée se
     // choisit à l'étape Frais ; vide, c'est la première année ouverte.
     feeGroups: groupFees(detail?.fees ?? []),

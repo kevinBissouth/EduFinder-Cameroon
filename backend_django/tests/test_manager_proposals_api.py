@@ -452,6 +452,74 @@ def test_creation_rejects_a_fee_for_a_class_the_school_cannot_teach(
     assert not Establishment.objects.filter(name="New Hope Academy").exists()
 
 
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    ("head_title", "expected_status"),
+    [("Headmistress", 201), ("Proviseur", 422), ("Fondateur", 422)],
+)
+def test_creation_accepts_only_the_head_titles_of_the_school_type(
+    client, log_in_as, manager, creation_payload, head_title, expected_status
+):
+    # L'école proposée est une primaire : son chef est directeur ou directrice.
+    log_in_as(manager)
+
+    response = post_json(
+        client, CREATION_URL, {**creation_payload, "director_title": head_title}
+    )
+
+    assert response.status_code == expected_status
+    if expected_status == 422:
+        assert response.json()["detail"] == (
+            f"Incoherent head title: '{head_title}' is not a head title of the type "
+            "'Primary' (allowed: Headmaster, Headmistress)"
+        )
+        assert Submission.objects.count() == 0
+
+
+@pytest.mark.django_db
+def test_modification_keeps_a_published_free_title_but_refuses_a_new_one(
+    client, log_in_as, manager, managed_establishment, references
+):
+    log_in_as(manager)
+    managed_establishment.type = references.primary_type
+    managed_establishment.director_title = "Founding Director"
+    managed_establishment.save(update_fields=["type", "director_title"])
+    url = modification_url(managed_establishment)
+
+    unchanged_response = post_json(
+        client, url, {"director_title": "Founding Director", "phone": "+237690112233"}
+    )
+    list_title_response = post_json(client, url, {"director_title": "Headmaster"})
+    free_title_response = post_json(client, url, {"director_title": "Chief"})
+
+    assert unchanged_response.status_code == 201
+    assert list_title_response.status_code == 201
+    assert free_title_response.status_code == 422
+    assert "Incoherent head title" in free_title_response.json()["detail"]
+
+
+@pytest.mark.django_db
+def test_modification_checks_the_head_title_against_the_proposed_type(
+    client, log_in_as, manager, managed_establishment, references
+):
+    log_in_as(manager)
+    secondary_type = EstablishmentType.objects.create(label="Secondary general")
+
+    accepted_response = post_json(
+        client,
+        modification_url(managed_establishment),
+        {"id_type": secondary_type.pk, "director_title": "Principale"},
+    )
+    rejected_response = post_json(
+        client,
+        modification_url(managed_establishment),
+        {"id_type": references.primary_type.pk, "director_title": "Principale"},
+    )
+
+    assert accepted_response.status_code == 201
+    assert rejected_response.status_code == 422
+
+
 # Le jour de référence des tests est en octobre 2025 : 2024-2025 est passée,
 # 2027-2028 est trop lointaine.
 @pytest.mark.django_db
@@ -606,6 +674,27 @@ def test_an_anglophone_technical_school_has_the_classes_and_exams_of_a_francopho
     response = post_json(client, CREATION_URL, payload)
 
     assert response.status_code == 201
+
+
+@pytest.mark.django_db
+def test_a_technical_school_does_not_sit_the_bepc(
+    client, log_in_as, manager, creation_payload, technical_references
+):
+    log_in_as(manager)
+    payload = build_secondary_payload(
+        creation_payload,
+        id_type=technical_references.technical_type.pk,
+        exam_results=[build_exam_result("BEPC")],
+    )
+
+    response = post_json(client, CREATION_URL, payload)
+
+    assert response.status_code == 422
+    assert response.json()["detail"] == (
+        "Incoherent exam result: 'BEPC' is reserved for the types: Secondary general "
+        "(received: 'Secondary technical')"
+    )
+    assert Submission.objects.count() == 0
 
 
 @pytest.mark.django_db

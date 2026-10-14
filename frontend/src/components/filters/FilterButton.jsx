@@ -26,6 +26,7 @@ function FilterButton({
   isSingleLine = false,
   describedBy,
   clearLabel: givenClearLabel,
+  className = '',
   onOpen,
   onClear,
 }) {
@@ -34,7 +35,7 @@ function FilterButton({
   const lineClasses = isSingleLine ? 'truncate' : ''
 
   return (
-    <div className="relative">
+    <div className={`relative ${className}`}>
       <button
         type="button"
         aria-haspopup="dialog"

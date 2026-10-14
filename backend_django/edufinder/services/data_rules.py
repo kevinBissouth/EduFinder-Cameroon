@@ -1,16 +1,18 @@
 """Règles de cohérence des données saisies pour un établissement."""
 from django.db.models import Q, QuerySet
 
+from edufinder.services.head_titles import describe_head_titles
 from edufinder.services.school_calendar import list_open_school_years
 
 TECHNICAL_TYPE_LABEL = "Secondary technical"
 
 # Le secondaire technique suit la même organisation dans les deux sections :
-# il présente le CAP, le BEPC, le Probatoire et le Baccalauréat, jamais le GCE.
+# il présente le CAP, le Probatoire et le Baccalauréat, jamais le GCE. Le BEPC
+# est l'examen du collège général : au technique, le premier cycle mène au CAP.
 EXAM_ALLOWED_TYPE_LABELS = {
     "CEP": {"Primary"},
     "FSLC": {"Primary"},
-    "BEPC": {"Secondary general", TECHNICAL_TYPE_LABEL},
+    "BEPC": {"Secondary general"},
     "GCE O-Level": {"Secondary general"},
     "Probatoire": {"Secondary general", TECHNICAL_TYPE_LABEL},
     "Baccalaureate": {"Secondary general", TECHNICAL_TYPE_LABEL},
@@ -188,4 +190,5 @@ def describe_coherence_rules() -> dict:
         "section_families": _sorted_lists(ALLOWED_LANGUAGE_FAMILIES_BY_SECTION),
         "section_free_exam_types": sorted(SECTION_FREE_EXAM_TYPE_LABELS),
         "open_school_years": list_open_school_years(),
+        "head_titles": describe_head_titles(),
     }
