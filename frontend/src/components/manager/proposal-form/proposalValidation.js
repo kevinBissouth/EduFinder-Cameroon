@@ -143,14 +143,14 @@ const EXAM_RESULT_ROWS_RULE = {
     pass_rate: checkPassRate,
   },
   identify: (examResultRow) => `${examResultRow.id_exam}|${examResultRow.session.trim()}`,
-  duplicateField: 'session',
+  // La session se choisit pour toute la liste : seul l'examen peut corriger
+  // un doublon, l'erreur se montre donc sous lui.
+  duplicateField: 'id_exam',
   duplicateError: 'duplicateResult',
-}
-
-// Une ligne ajoutée puis laissée vide n'est pas envoyée : ce n'est pas une
-// erreur. Une ligne commencée doit être complète.
-function isBlankRow(row, rule) {
-  return Object.keys(rule.checks).every((fieldName) => String(row[fieldName]).trim() === '')
+  // Une session s'ouvre avec une ligne par examen, examen et session déjà
+  // remplis : c'est le taux qui dit si la ligne a été saisie. Un examen que
+  // l'école n'a pas présenté cette année reste sans taux et n'est pas envoyé.
+  isBlank: (examResultRow) => String(examResultRow.pass_rate).trim() === '',
 }
 
 function validateRow(row, rule, context) {
@@ -178,7 +178,7 @@ function findDuplicateRows(rows, rule) {
 }
 
 function validateRows(rows, rule, context) {
-  const filledRows = rows.filter((row) => !isBlankRow(row, rule))
+  const filledRows = rows.filter((row) => !rule.isBlank(row))
   const rowErrors = Object.assign({}, ...filledRows.map((row) => validateRow(row, rule, context)))
   const correctRows = filledRows.filter(
     (row) => Object.keys(validateRow(row, rule, context)).length === 0,

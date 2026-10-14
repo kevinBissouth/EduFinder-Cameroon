@@ -2,7 +2,10 @@
 from django.db.models import Q, QuerySet
 
 from edufinder.services.head_titles import describe_head_titles
-from edufinder.services.school_calendar import list_open_school_years
+from edufinder.services.school_calendar import (
+    find_latest_exam_session,
+    list_open_school_years,
+)
 
 TECHNICAL_TYPE_LABEL = "Secondary technical"
 
@@ -116,6 +119,16 @@ def get_school_year_violation(school_year: str) -> str | None:
     )
 
 
+def get_exam_session_violation(session: str) -> str | None:
+    """Raison si cette session d'examen n'a pas encore eu lieu."""
+    latest_session = find_latest_exam_session()
+    # Une session est une année sur quatre chiffres (validée par le
+    # sérialiseur) : comparer les textes revient à comparer les années.
+    if session <= latest_session:
+        return None
+    return f"session '{session}' has not taken place yet (latest: {latest_session})"
+
+
 def get_stage_type_violation(stage_label: str, type_label: str) -> str | None:
     """Raison si ce type d'établissement n'enseigne pas ce cycle."""
     return _get_type_violation(stage_label, type_label, STAGE_ALLOWED_TYPE_LABELS)
@@ -190,5 +203,6 @@ def describe_coherence_rules() -> dict:
         "section_families": _sorted_lists(ALLOWED_LANGUAGE_FAMILIES_BY_SECTION),
         "section_free_exam_types": sorted(SECTION_FREE_EXAM_TYPE_LABELS),
         "open_school_years": list_open_school_years(),
+        "latest_exam_session": find_latest_exam_session(),
         "head_titles": describe_head_titles(),
     }

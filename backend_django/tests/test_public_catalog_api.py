@@ -146,6 +146,7 @@ def test_filters_meta_tells_which_stages_fit_each_type_and_section(client):
     # Le formulaire ne propose que ces années : le jour de référence des tests
     # est en octobre 2025.
     assert coherence_rules["open_school_years"] == ["2025-2026", "2026-2027"]
+    assert coherence_rules["latest_exam_session"] == "2025"
     assert coherence_rules["stage_families"]["Primaire"] == "francophone"
     assert coherence_rules["stage_families"]["Primary"] == "anglophone"
     assert "Higher" not in coherence_rules["stage_families"]
