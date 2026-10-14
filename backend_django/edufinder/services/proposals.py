@@ -322,7 +322,7 @@ def _fees_on_new_lines(
     establishment: Establishment, fees: list[dict[str, Any]]
 ) -> list[dict[str, Any]]:
     published_lines = set(
-        SchoolFee.objects.filter(establishment=establishment).values_list(
+        SchoolFee.objects.active().filter(establishment=establishment).values_list(
             "level_id", "school_year"
         )
     )
@@ -364,7 +364,7 @@ def _fees_on_new_levels(
     establishment: Establishment, fees: list[dict[str, Any]]
 ) -> list[dict[str, Any]]:
     published_level_ids = set(
-        SchoolFee.objects.filter(establishment=establishment).values_list(
+        SchoolFee.objects.active().filter(establishment=establishment).values_list(
             "level_id", flat=True
         )
     )

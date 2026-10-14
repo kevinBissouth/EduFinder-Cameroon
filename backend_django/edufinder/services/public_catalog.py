@@ -35,10 +35,10 @@ def collect_platform_stats() -> dict:
         "cities": published_establishments.values("city").distinct().count(),
         # Régions réellement couvertes, pas les dix régions de référence.
         "regions": published_establishments.values("city__region").distinct().count(),
-        "fee_plans": SchoolFee.objects.filter(
+        "fee_plans": SchoolFee.objects.active().filter(
             establishment__in=published_establishments
         ).count(),
-        "exam_results": ExamResult.objects.filter(
+        "exam_results": ExamResult.objects.active().filter(
             establishment__in=published_establishments
         ).count(),
     }

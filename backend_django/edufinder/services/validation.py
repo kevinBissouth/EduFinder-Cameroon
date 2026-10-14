@@ -216,14 +216,18 @@ def _apply_establishment_fields(
 # Incrémental, pas de remplacement : une proposition ne touche que les lignes
 # (classe, année scolaire) qu'elle porte. Les frais des autres classes et des
 # autres années restent intacts — la règle 4 du cahier des besoins impose de
-# conserver l'historique des montants.
+# conserver l'historique des montants. Une ligne retirée puis proposée de
+# nouveau est remise en service : la contrainte d'unicité l'a gardée.
 def _apply_fees(establishment: Establishment, proposed_fees: list[dict]) -> None:
     for proposed_fee in proposed_fees:
         school_fee, _ = SchoolFee.objects.update_or_create(
             establishment=establishment,
             level_id=proposed_fee["id_level"],
             school_year=proposed_fee["school_year"],
-            defaults={"amount": Decimal(proposed_fee["amount"])},
+            defaults={
+                "amount": Decimal(proposed_fee["amount"]),
+                "deleted_at": None,
+            },
         )
         # Modalités absentes (ou vides de sens : null) = inchangées.
         if proposed_fee.get("payment_methods") is not None:
@@ -244,8 +248,8 @@ def _replace_payment_methods(school_fee: SchoolFee, payment_labels: list[str]) -
     )
 
 
-# Incrémental aussi : une ligne (examen, session) envoyée est créée ou mise à
-# jour, les autres résultats restent en place.
+# Incrémental aussi : une ligne (examen, session) envoyée est créée, mise à
+# jour ou remise en service, les autres résultats restent en place.
 def _apply_exam_results(
     establishment: Establishment, proposed_exam_results: list[dict]
 ) -> None:
@@ -254,7 +258,10 @@ def _apply_exam_results(
             establishment=establishment,
             exam_id=proposed_result["id_exam"],
             session=proposed_result["session"],
-            defaults={"pass_rate": Decimal(proposed_result["pass_rate"])},
+            defaults={
+                "pass_rate": Decimal(proposed_result["pass_rate"]),
+                "deleted_at": None,
+            },
         )
 
 
