@@ -148,7 +148,9 @@ export function ClassificationStep({ form }) {
 
   return (
     <>
-      <div className="grid gap-4 sm:grid-cols-2">
+      {/* grid-cols-1 borne la colonne : sans lui, le texte d'une tuile tenu
+          sur une ligne l'élargirait au-delà de la carte sur un petit téléphone. */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         {referenceChoices.map((referenceChoice) => (
           <ChoiceField
             key={referenceChoice.fieldName}
