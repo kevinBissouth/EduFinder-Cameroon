@@ -6,6 +6,7 @@ modification applique son contenu sans changer le statut, pour qu'une fiche
 dont la création n'est pas encore validée (ou qui est suspendue) ne devienne
 jamais publique par une approbation de routine.
 """
+from datetime import datetime
 from decimal import Decimal
 from typing import Any
 
@@ -37,6 +38,8 @@ from edufinder.services.proposals import (
     DIRECTOR_PHOTO_KEY,
     MEDIA_ADDITIONS_KEY,
     MEDIA_REMOVALS_KEY,
+    REMOVABLE_ROWS,
+    RemovableRows,
     UnknownReferenceError,
     ensure_references_exist,
 )
@@ -188,6 +191,7 @@ def _apply_content(establishment: Establishment, content: dict[str, Any]) -> set
     replaced_file_urls = _apply_establishment_fields(establishment, content)
     _apply_fees(establishment, content.get("fees") or [])
     _apply_exam_results(establishment, content.get("exam_results") or [])
+    _remove_rows(establishment, content)
     if "services" in content:
         _replace_services(establishment, content["services"] or [])
     if "program_ids" in content:
@@ -263,6 +267,27 @@ def _apply_exam_results(
                 "deleted_at": None,
             },
         )
+
+
+# Le retrait d'un frais ou d'un résultat est logique : la ligne reçoit sa date
+# de retrait et reste en base. Une ligne déjà retirée par une autre soumission
+# approuvée entre-temps n'est plus active : elle garde sa première date.
+def _remove_rows(establishment: Establishment, content: dict[str, Any]) -> None:
+    removed_at = timezone.now()
+    for removable_rows in REMOVABLE_ROWS:
+        removals = content.get(removable_rows.content_key) or []
+        _mark_rows_removed(removable_rows, establishment, removals, removed_at)
+
+
+def _mark_rows_removed(
+    removable_rows: RemovableRows,
+    establishment: Establishment,
+    removals: list[dict[str, Any]],
+    removed_at: datetime,
+) -> None:
+    for removal in removals:
+        matching_rows = removable_rows.active_rows_matching(establishment, removal)
+        matching_rows.update(deleted_at=removed_at)
 
 
 # Remplacement exact : la liste soumise devient la liste de l'établissement.
