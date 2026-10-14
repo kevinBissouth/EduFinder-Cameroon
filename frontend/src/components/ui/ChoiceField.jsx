@@ -3,8 +3,13 @@ import { useTranslation } from 'react-i18next'
 
 import ChoiceDialog from '../filters/ChoiceDialog'
 import FilterButton from '../filters/FilterButton'
+import { fieldLayoutClasses } from './fieldLayout'
 
 const NO_CHOICE = ''
+// Le libellé est dans la tuile : alignée avec des champs texte, elle couvre
+// leurs rangées « libellé » et « saisie », calée en bas sur leurs champs, et
+// son erreur va dans la troisième.
+const GRID_ALIGNED_TILE_CLASSES = 'row-span-2 self-end'
 
 // Champ de formulaire à choix unique : la tuile et la fenêtre de choix des
 // critères de recherche, à la place d'une liste déroulante du navigateur
@@ -19,6 +24,7 @@ function ChoiceField({
   value,
   error,
   isClearable = true,
+  isGridAligned = false,
   className = '',
   onChange,
 }) {
@@ -28,8 +34,9 @@ function ChoiceField({
   const selectedOption = options.find((option) => String(option.id) === String(value))
 
   return (
-    <div className={`flex w-full flex-col gap-1.5 ${className}`}>
+    <div className={`w-full ${fieldLayoutClasses(isGridAligned)} ${className}`}>
       <FilterButton
+        className={isGridAligned ? GRID_ALIGNED_TILE_CLASSES : ''}
         icon={icon}
         label={label}
         value={selectedOption?.name ?? placeholder}
