@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { ArrowLeft, ArrowRight, Check, Send } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
@@ -8,6 +8,7 @@ import { cleanDraftForSchoolProfile } from './proposal-form/draftCleanup'
 import { findOfferedChoices } from './proposal-form/offeredChoices'
 import { buildProposalContent, buildPublishedRecord } from './proposal-form/proposalDraft'
 import { validateStep } from './proposal-form/proposalValidation'
+import { revealFirstError } from './proposal-form/revealFirstError'
 import { STEPS } from './proposal-form/steps'
 import { useFileUpload } from './proposal-form/useFileUpload'
 import { useProposalDraft } from './proposal-form/useProposalDraft'
@@ -146,6 +147,10 @@ function ProposalForm({ mode, meta, school = null, submitting, serverError, onSu
   // l'ouverture, le formulaire accuserait le responsable avant qu'il ait saisi.
   const [hasTriedStep, setHasTriedStep] = useState(false)
   const [hasTriedSending, setHasTriedSending] = useState(false)
+  // Chaque essai refusé incrémente ce compteur : l'effet ci-dessous montre la
+  // première erreur une fois qu'elle est affichée.
+  const [errorRevealCount, setErrorRevealCount] = useState(0)
+  const stepSectionRef = useRef(null)
   const { draft, setField, setValue, replaceDraft } = useProposalDraft(school, meta)
   const upload = useFileUpload()
   const showToast = useToast()
@@ -211,9 +216,16 @@ function ProposalForm({ mode, meta, school = null, submitting, serverError, onSu
     fieldError,
   }
 
+  useEffect(() => {
+    if (errorRevealCount > 0) revealFirstError(stepSectionRef.current)
+  }, [errorRevealCount])
+
+  // La carte de l'étape reste la même d'une étape à l'autre : je ramène son
+  // haut à l'écran, la suivante se lit depuis son titre.
   const goToStep = (stepIndex) => {
     setHasTriedStep(false)
     setCurrentStepIndex(stepIndex)
+    stepSectionRef.current?.scrollIntoView({ block: 'start' })
   }
 
   // Ce qui part est ce qui diffère de la fiche publiée : une modification sans
@@ -227,6 +239,7 @@ function ProposalForm({ mode, meta, school = null, submitting, serverError, onSu
     if (isBusy) return
     if (hasStepErrors) {
       setHasTriedStep(true)
+      setErrorRevealCount((count) => count + 1)
       return
     }
     if (!isLastStep) {
@@ -260,7 +273,10 @@ function ProposalForm({ mode, meta, school = null, submitting, serverError, onSu
           onSelectStep={goToStep}
         />
 
-        <section className="min-w-0 rounded-panel border border-line bg-surface p-5 shadow-soft sm:p-8">
+        <section
+          ref={stepSectionRef}
+          className="min-w-0 scroll-mt-28 rounded-panel border border-line bg-surface p-5 shadow-soft sm:p-8"
+        >
           <StepHeader step={currentStep} />
           <div className="mt-6 space-y-4">
             <currentStep.Component form={form} />
