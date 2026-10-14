@@ -50,6 +50,10 @@
     "rejected": "rejected",
     "suspended": "suspended"
   },
+  "languageNames": {
+    "en": "English",
+    "fr": "French"
+  },
   "submissionType": {
     "creation": "creation",
     "modification": "modification"
