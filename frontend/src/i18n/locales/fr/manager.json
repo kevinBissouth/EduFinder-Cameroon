@@ -284,6 +284,22 @@
     "translationTarget": {
       "en": "anglais",
       "fr": "français"
+    },
+    "errors": {
+      "stepHasErrors": "Corrigez les champs signalés en rouge pour continuer.",
+      "required": "Ce champ est obligatoire.",
+      "nameTooShort": "Le nom doit compter au moins 2 caractères.",
+      "invalidPhone": "Saisissez un numéro camerounais à 9 chiffres, par exemple +237 6 90 11 22 33.",
+      "invalidEmail": "Saisissez une adresse e-mail valide, par exemple contact@ecole.cm.",
+      "invalidWebsite": "Saisissez une adresse web sans espace, par exemple https://ecole.cm.",
+      "amountPositive": "Saisissez un montant supérieur à 0.",
+      "schoolYearFormat": "Écrivez l'année scolaire sous la forme 2026-2027.",
+      "sessionFormat": "Écrivez l'année de la session en 4 chiffres, par exemple 2026.",
+      "passRateRange": "Saisissez un taux entre 0 et 100.",
+      "duplicateFee": "Cette classe a déjà une ligne pour cette année scolaire.",
+      "duplicateResult": "Cet examen a déjà une ligne pour cette session.",
+      "levelNotOffered": "Cette classe ne correspond pas au type ou à la section de l'établissement.",
+      "examNotOffered": "Cet examen ne correspond pas au type ou à la section de l'établissement."
     }
   }
 }

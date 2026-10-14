@@ -201,7 +201,7 @@ function ComparePage({ schoolIds }) {
             )}
           </Container>
         </section>
-        <ComparisonBody comparison={comparison} examAllowedTypes={meta.exam_allowed_types} />
+        <ComparisonBody comparison={comparison} examAllowedTypes={meta.coherence_rules?.exam_allowed_types} />
       </main>
       <Footer />
     </div>

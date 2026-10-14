@@ -25,6 +25,7 @@ from edufinder.models import (
     Media,
     PaymentMethod,
     Program,
+    SchoolFee,
     Sector,
     StudyLevel,
     Submission,
@@ -36,6 +37,8 @@ from edufinder.models import (
 from edufinder.services.data_rules import (
     get_exam_section_violation,
     get_exam_type_violation,
+    get_stage_section_violation,
+    get_stage_type_violation,
 )
 from edufinder.services.media_files import StoredFile
 from edufinder.services.notifications import notify_submission_received
@@ -50,6 +53,10 @@ class UnknownReferenceError(ProposalError):
 
 
 class IncoherentExamResultError(ProposalError):
+    pass
+
+
+class IncoherentFeeError(ProposalError):
     pass
 
 
@@ -74,13 +81,14 @@ _SINGLE_REFERENCE_MODELS = {
 @transaction.atomic
 def create_creation_proposal(user: User, content: dict[str, Any]) -> Submission:
     ensure_references_exist(content)
-    _ensure_exam_results_coherent(
-        content["exam_results"],
-        type_label=EstablishmentType.objects.get(pk=content["id_type"]).label,
-        section_label=LinguisticSection.objects.get(
+    school_labels = {
+        "type_label": EstablishmentType.objects.get(pk=content["id_type"]).label,
+        "section_label": LinguisticSection.objects.get(
             pk=content["id_linguistic_section"]
         ).label,
-    )
+    }
+    _ensure_exam_results_coherent(content["exam_results"], **school_labels)
+    _ensure_fees_coherent(content["fees"], **school_labels)
     # La fiche naît en attente, donc invisible du public, avec le strict
     # minimum : le reste du contenu ne sera appliqué qu'à l'approbation.
     establishment = Establishment.objects.create(
@@ -102,7 +110,7 @@ def create_modification_proposal(
     if not changed_fields:
         raise EmptyModificationError("No changes provided")
     ensure_references_exist(changed_fields)
-    _ensure_modified_exam_results_coherent(establishment, changed_fields)
+    _ensure_modification_coherent(establishment, changed_fields)
     return _open_submission(
         user, establishment, SubmissionType.MODIFICATION, changed_fields
     )
@@ -238,7 +246,7 @@ def _missing_payment_methods(fees: list[dict[str, Any]]) -> list[str]:
     ]
 
 
-# --- Cohérence des résultats d'examen -----------------------------------------
+# --- Cohérence avec le type et la section ------------------------------------
 
 
 # Je refuse toute proposition dont un résultat d'examen contredirait le type
@@ -261,25 +269,61 @@ def _ensure_exam_results_coherent(
             raise IncoherentExamResultError(f"Incoherent exam result: {violation}")
 
 
-def _ensure_modified_exam_results_coherent(
+# Même garde-fou pour les frais : pas de 4e dans une école primaire, pas de
+# CM1 dans une école anglophone. C'est le cycle de la classe qui porte la règle.
+def _ensure_fees_coherent(
+    fees: list[dict[str, Any]], *, type_label: str, section_label: str
+) -> None:
+    stage_labels = dict(
+        StudyLevel.objects.filter(
+            pk__in={fee["id_level"] for fee in fees}
+        ).values_list("pk", "stage__label")
+    )
+    for fee in fees:
+        stage_label = stage_labels[fee["id_level"]]
+        violation = get_stage_type_violation(
+            stage_label, type_label
+        ) or get_stage_section_violation(stage_label, section_label)
+        if violation is not None:
+            raise IncoherentFeeError(f"Incoherent fee: {violation}")
+
+
+def _ensure_modification_coherent(
     establishment: Establishment, changed_fields: dict[str, Any]
 ) -> None:
-    exam_results = changed_fields.get("exam_results")
-    if not exam_results:
+    exam_results = changed_fields.get("exam_results") or []
+    fees = changed_fields.get("fees") or []
+    if not exam_results and not fees:
         return
     # Si la proposition change aussi le type ou la section, c'est la nouvelle
     # valeur qui compte : c'est elle que l'approbation appliquera.
-    _ensure_exam_results_coherent(
-        exam_results,
-        type_label=_resolve_label(
+    school_labels = {
+        "type_label": _resolve_label(
             EstablishmentType, changed_fields.get("id_type"), establishment.type
         ),
-        section_label=_resolve_label(
+        "section_label": _resolve_label(
             LinguisticSection,
             changed_fields.get("id_linguistic_section"),
             establishment.linguistic_section,
         ),
+    }
+    _ensure_exam_results_coherent(exam_results, **school_labels)
+    _ensure_fees_coherent(_fees_on_new_levels(establishment, fees), **school_labels)
+
+
+# La règle des cycles est arrivée après les données : une classe déjà publiée
+# sur la fiche reste modifiable même si elle la contredit (un complexe scolaire
+# typé « secondaire » qui affiche son primaire). Seules les classes nouvelles
+# pour l'établissement sont contrôlées.
+def _fees_on_new_levels(
+    establishment: Establishment, fees: list[dict[str, Any]]
+) -> list[dict[str, Any]]:
+    published_level_ids = set(
+        SchoolFee.objects.filter(establishment=establishment).values_list(
+            "level_id", flat=True
+        )
     )
+    return [fee for fee in fees if fee["id_level"] not in published_level_ids]
 
 
 def _resolve_label(

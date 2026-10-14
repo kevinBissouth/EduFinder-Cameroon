@@ -37,39 +37,121 @@ ANGLOPHONE_EXAMS = {"FSLC", "GCE O-Level", "GCE A-Level"}
 FRANCOPHONE_FAMILY = "francophone"
 ANGLOPHONE_FAMILY = "anglophone"
 
-ALLOWED_EXAM_FAMILIES_BY_SECTION = {
+ALLOWED_LANGUAGE_FAMILIES_BY_SECTION = {
     "Francophone": {FRANCOPHONE_FAMILY},
     "Anglophone": {ANGLOPHONE_FAMILY},
     "Bilingual": {FRANCOPHONE_FAMILY, ANGLOPHONE_FAMILY},
 }
 
+# Cycles d'étude (les « stages » qui regroupent les classes) : quels types
+# d'établissement les enseignent. Règle souple voulue pour la maternelle : une
+# école primaire a très souvent la sienne, elle peut donc en publier les frais.
+_NURSERY_TYPES = {"Nursery", "Primary"}
+_PRIMARY_TYPES = {"Primary"}
+_SECONDARY_TYPES = {"Secondary general", "Secondary technical"}
+_HIGHER_TYPES = {"University", "Higher institute"}
+
+STAGE_ALLOWED_TYPE_LABELS = {
+    "Maternelle": _NURSERY_TYPES,
+    "Nursery": _NURSERY_TYPES,
+    "Primaire": _PRIMARY_TYPES,
+    "Primary": _PRIMARY_TYPES,
+    "Collège": _SECONDARY_TYPES,
+    "Lycée": _SECONDARY_TYPES,
+    "Lower secondary": _SECONDARY_TYPES,
+    "Upper secondary": _SECONDARY_TYPES,
+    "Higher": _HIGHER_TYPES,
+}
+
+# Le supérieur (« Higher ») est commun aux deux systèmes : il n'est dans
+# aucune des deux familles, donc ouvert à toutes les sections.
+FRANCOPHONE_STAGES = {"Maternelle", "Primaire", "Collège", "Lycée"}
+ANGLOPHONE_STAGES = {"Nursery", "Primary", "Lower secondary", "Upper secondary"}
+
 
 def get_exam_type_violation(exam_label: str, type_label: str) -> str | None:
     """Raison si ce couple examen/type est interdit, None s'il est cohérent."""
-    allowed_type_labels = EXAM_ALLOWED_TYPE_LABELS.get(exam_label)
-    if allowed_type_labels is None or type_label in allowed_type_labels:
-        return None
-    return (
-        f"'{exam_label}' is reserved for the types: "
-        f"{', '.join(sorted(allowed_type_labels))} (received: '{type_label}')"
-    )
+    return _get_type_violation(exam_label, type_label, EXAM_ALLOWED_TYPE_LABELS)
 
 
 def get_exam_section_violation(exam_label: str, section_label: str) -> str | None:
     """Raison si la section linguistique ne peut pas présenter cet examen."""
-    allowed_families = ALLOWED_EXAM_FAMILIES_BY_SECTION.get(section_label)
-    exam_family = _get_exam_language_family(exam_label)
-    # Section ou examen hors cartographie : revue humaine, pas de refus automatique.
-    if allowed_families is None or exam_family is None:
-        return None
-    if exam_family in allowed_families:
+    exam_family = _get_language_family(exam_label, FRANCOPHONE_EXAMS, ANGLOPHONE_EXAMS)
+    if _is_family_allowed(exam_family, section_label):
         return None
     return f"'{exam_label}' is a {exam_family} exam (received section: '{section_label}')"
 
 
-def _get_exam_language_family(exam_label: str) -> str | None:
-    if exam_label in FRANCOPHONE_EXAMS:
+def get_stage_type_violation(stage_label: str, type_label: str) -> str | None:
+    """Raison si ce type d'établissement n'enseigne pas ce cycle."""
+    return _get_type_violation(stage_label, type_label, STAGE_ALLOWED_TYPE_LABELS)
+
+
+def get_stage_section_violation(stage_label: str, section_label: str) -> str | None:
+    """Raison si ce cycle appartient à l'autre système scolaire."""
+    stage_family = _get_language_family(
+        stage_label, FRANCOPHONE_STAGES, ANGLOPHONE_STAGES
+    )
+    if _is_family_allowed(stage_family, section_label):
+        return None
+    return (
+        f"'{stage_label}' belongs to the {stage_family} system "
+        f"(received section: '{section_label}')"
+    )
+
+
+# Un libellé absent de la cartographie relève d'une revue humaine : je ne le
+# refuse pas automatiquement.
+def _get_type_violation(
+    label: str, type_label: str, allowed_type_labels_by_label: dict[str, set[str]]
+) -> str | None:
+    allowed_type_labels = allowed_type_labels_by_label.get(label)
+    if allowed_type_labels is None or type_label in allowed_type_labels:
+        return None
+    return (
+        f"'{label}' is reserved for the types: "
+        f"{', '.join(sorted(allowed_type_labels))} (received: '{type_label}')"
+    )
+
+
+def _is_family_allowed(language_family: str | None, section_label: str) -> bool:
+    allowed_families = ALLOWED_LANGUAGE_FAMILIES_BY_SECTION.get(section_label)
+    # Section ou libellé hors cartographie : revue humaine, pas de refus automatique.
+    if allowed_families is None or language_family is None:
+        return True
+    return language_family in allowed_families
+
+
+def _get_language_family(
+    label: str, francophone_labels: set[str], anglophone_labels: set[str]
+) -> str | None:
+    if label in francophone_labels:
         return FRANCOPHONE_FAMILY
-    if exam_label in ANGLOPHONE_EXAMS:
+    if label in anglophone_labels:
         return ANGLOPHONE_FAMILY
     return None
+
+
+def _labels_by_family(
+    francophone_labels: set[str], anglophone_labels: set[str]
+) -> dict[str, str]:
+    return {
+        **dict.fromkeys(sorted(francophone_labels), FRANCOPHONE_FAMILY),
+        **dict.fromkeys(sorted(anglophone_labels), ANGLOPHONE_FAMILY),
+    }
+
+
+def _sorted_lists(labels_by_key: dict[str, set[str]]) -> dict[str, list[str]]:
+    return {key: sorted(labels) for key, labels in labels_by_key.items()}
+
+
+# Les mêmes règles, sous une forme que le formulaire du responsable peut lire :
+# il ne propose alors que les classes et les examens que le serveur acceptera.
+def describe_coherence_rules() -> dict:
+    return {
+        "exam_allowed_types": _sorted_lists(EXAM_ALLOWED_TYPE_LABELS),
+        "stage_allowed_types": _sorted_lists(STAGE_ALLOWED_TYPE_LABELS),
+        "exam_families": _labels_by_family(FRANCOPHONE_EXAMS, ANGLOPHONE_EXAMS),
+        "stage_families": _labels_by_family(FRANCOPHONE_STAGES, ANGLOPHONE_STAGES),
+        "section_families": _sorted_lists(ALLOWED_LANGUAGE_FAMILIES_BY_SECTION),
+    }

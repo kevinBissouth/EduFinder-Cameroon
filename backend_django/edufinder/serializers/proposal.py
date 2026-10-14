@@ -29,6 +29,11 @@ _UPLOADED_VIDEO_URL_PATTERN = r"^/media/[A-Za-z0-9_-]+\.(mp4|webm)\Z"
 _SCHOOL_YEAR_PATTERN = r"^\d{4}-\d{4}\Z"
 _EXAM_SESSION_PATTERN = r"^\d{4}\Z"
 
+# Numéro camerounais : neuf chiffres, précédés ou non de l'indicatif.
+_CAMEROON_PHONE_PATTERN = re.compile(r"^(\+237)?\d{9}\Z")
+_SPACE_PATTERN = re.compile(r" ")
+PHONE_INPUT_MAX_LENGTH = 20
+
 _URL_SCHEME_PATTERN = re.compile(r"^([a-zA-Z][a-zA-Z0-9+.-]*):")
 _WHITESPACE_OR_CONTROL_PATTERN = re.compile(r"[\s\x00-\x1f\x7f]")
 SAFE_WEBSITE_SCHEMES = {"http", "https"}
@@ -44,6 +49,19 @@ def validate_public_website(website: str) -> None:
     matched_scheme = _URL_SCHEME_PATTERN.match(website)
     if matched_scheme and matched_scheme[1].lower() not in SAFE_WEBSITE_SCHEMES:
         raise serializers.ValidationError("Website must be an http or https address.")
+
+
+# Le responsable peut aérer son numéro avec des espaces : je les retire avant
+# de vérifier, et c'est la forme compacte qui est gardée (« +237690112233 »),
+# la même pour toutes les fiches et directement utilisable dans un lien tel:.
+class CameroonPhoneField(serializers.CharField):
+    def to_internal_value(self, data: Any) -> str:
+        compact_phone = _SPACE_PATTERN.sub("", super().to_internal_value(data))
+        if not _CAMEROON_PHONE_PATTERN.match(compact_phone):
+            raise serializers.ValidationError(
+                "Phone must be a Cameroonian number: 9 digits, with or without +237."
+            )
+        return compact_phone
 
 
 def uploaded_image_url_field() -> serializers.RegexField:
@@ -102,7 +120,9 @@ class EstablishmentContentSerializer(serializers.Serializer):
     id_type = serializers.IntegerField(required=False, allow_null=True)
     id_sector = serializers.IntegerField(required=False, allow_null=True)
     id_linguistic_section = serializers.IntegerField(required=False, allow_null=True)
-    phone = serializers.CharField(required=False, allow_null=True, max_length=20)
+    phone = CameroonPhoneField(
+        required=False, allow_null=True, max_length=PHONE_INPUT_MAX_LENGTH
+    )
     # Coordonnées géographiques : nécessaires à la carte du profil (aucune
     # géolocalisation automatique côté serveur, le responsable les saisit).
     latitude = serializers.FloatField(

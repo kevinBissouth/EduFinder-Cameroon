@@ -21,7 +21,7 @@ from edufinder.models import (
     StudyLevel,
 )
 
-from edufinder.services.data_rules import EXAM_ALLOWED_TYPE_LABELS
+from edufinder.services.data_rules import describe_coherence_rules
 
 FEATURED_TYPE_COUNT = 4
 
@@ -57,13 +57,11 @@ def collect_filters_meta() -> dict:
             "label", flat=True
         ),
         "featured_type_ids": _list_featured_type_ids(),
-        # Quels types d'établissement présentent quel examen : la comparaison
-        # s'en sert pour dire « sans objet » plutôt que « non communiqué »
-        # quand un examen ne concerne pas un établissement.
-        "exam_allowed_types": {
-            exam_label: sorted(allowed_type_labels)
-            for exam_label, allowed_type_labels in EXAM_ALLOWED_TYPE_LABELS.items()
-        },
+        # Quels types et quelles sections vont avec quels examens et quels
+        # cycles. La comparaison s'en sert pour dire « sans objet » plutôt que
+        # « non communiqué » quand un examen ne concerne pas un établissement,
+        # et le formulaire du responsable pour ne proposer que ce qui convient.
+        "coherence_rules": describe_coherence_rules(),
     }
 
 
