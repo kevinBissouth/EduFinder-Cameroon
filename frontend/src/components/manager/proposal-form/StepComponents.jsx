@@ -191,7 +191,7 @@ export function ProgrammesStep({ form }) {
       options={programOptions}
       selectedValues={form.draft.programIds}
       onToggle={(programId) =>
-        form.setList('programIds', 'program_ids', toggleValue(form.draft.programIds, programId))
+        form.setValue('programIds', toggleValue(form.draft.programIds, programId))
       }
     />
   )
@@ -230,7 +230,7 @@ export function ServicesStep({ form }) {
       options={toChipOptions(availableNames)}
       selectedValues={serviceNames}
       onToggle={(serviceName) =>
-        form.setList('serviceNames', 'services', toggleValue(serviceNames, serviceName))
+        form.setValue('serviceNames', toggleValue(serviceNames, serviceName))
       }
     />
   )
@@ -249,9 +249,7 @@ export function ResultsStep({ form }) {
       errorFor={(rowId, fieldName) =>
         form.fieldError(rowErrorPath('examResultRows', rowId, fieldName))
       }
-      onChangeRows={(examResultRows) =>
-        form.setList('examResultRows', 'exam_results', examResultRows)
-      }
+      onChangeRows={(examResultRows) => form.setValue('examResultRows', examResultRows)}
       onChangeSession={(examSession) => form.setValue('examSession', examSession)}
     />
   )
@@ -332,7 +330,7 @@ export function MediaStep({ form }) {
       <VideoUploads
         videoUrls={form.draft.videoUrls}
         upload={form.upload}
-        onChange={(videoUrls) => form.setList('videoUrls', 'videos', videoUrls)}
+        onChange={(videoUrls) => form.setValue('videoUrls', videoUrls)}
       />
       <UploadStatus upload={form.upload} />
     </>

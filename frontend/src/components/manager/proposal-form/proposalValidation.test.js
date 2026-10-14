@@ -53,6 +53,18 @@ test('a modification with untouched empty fields has no error', () => {
   assert.deepEqual(validateStep('classification', buildDraft(), buildContext(false)), {})
 })
 
+// Un numéro publié avant la règle camerounaise ne bloque pas le responsable
+// qui n'y touche pas : il ne repart pas avec la proposition.
+test('a published value is not checked again, a changed one is', () => {
+  const publishedFields = { ...EMPTY_FIELDS, phone: '6571713726', website: 'javascript:alert(1)' }
+  const untouchedDraft = buildDraft({ fields: publishedFields })
+  const changedDraft = buildDraft({ fields: { ...publishedFields, phone: '6571713' } })
+  const context = { ...buildContext(false), publishedFields }
+
+  assert.deepEqual(validateStep('general', untouchedDraft, context), {})
+  assert.deepEqual(validateStep('general', changedDraft, context), { phone: 'invalidPhone' })
+})
+
 test('a creation requires the name and the four classification fields', () => {
   assert.deepEqual(validateStep('general', buildDraft(), buildContext(true)), { name: 'required' })
   assert.deepEqual(Object.values(validateStep('classification', buildDraft(), buildContext(true))), [

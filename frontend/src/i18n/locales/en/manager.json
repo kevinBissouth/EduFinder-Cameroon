@@ -185,7 +185,7 @@
     "step": "Step {{current}} of {{total}}",
     "newSchool": "A new school",
     "creationLead": "A super administrator reviews the proposal before the school becomes public.",
-    "modificationLead": "Fill in only what you want to change. Everything else on the page stays as it is.",
+    "modificationLead": "The form starts from your current page: change only what is different, only those changes will be sent.",
     "sending": "Sending…",
     "next": "Next",
     "back": "Back",
@@ -313,6 +313,7 @@
       "otherSessionErrors": "Other sessions have results to correct.",
       "showSession": "Show the {{session}} session",
       "addExam": "Add an exam"
-    }
+    },
+    "nothingToSend": "Nothing to send: the profile is the same as the published one."
   }
 }

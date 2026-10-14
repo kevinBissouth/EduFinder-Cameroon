@@ -59,13 +59,29 @@ function keepErrors(errorsByPath) {
   return Object.fromEntries(Object.entries(errorsByPath).filter(([, errorKey]) => errorKey))
 }
 
-function validateGeneral(draft, { isCreation }) {
+const CONTACT_FIELD_CHECKS = {
+  phone: checkPhone,
+  contact_email: checkEmail,
+  website: checkWebsite,
+}
+
+// Une valeur déjà publiée n'est pas recontrôlée : la règle a pu arriver après
+// elle (un ancien numéro à dix chiffres), et elle ne repart pas avec la
+// proposition, qui n'envoie que ce qui change.
+function checkChangedContactFields(fields, publishedFields) {
+  return Object.fromEntries(
+    Object.entries(CONTACT_FIELD_CHECKS).map(([fieldName, check]) => [
+      fieldName,
+      fields[fieldName] === publishedFields[fieldName] ? null : check(fields[fieldName]),
+    ]),
+  )
+}
+
+function validateGeneral(draft, { isCreation, publishedFields = {} }) {
   const { fields } = draft
   return keepErrors({
     name: checkName(fields.name, isCreation),
-    phone: checkPhone(fields.phone),
-    contact_email: checkEmail(fields.contact_email),
-    website: checkWebsite(fields.website),
+    ...checkChangedContactFields(fields, publishedFields),
   })
 }
 
