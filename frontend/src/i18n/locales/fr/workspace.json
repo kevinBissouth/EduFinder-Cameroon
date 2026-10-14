@@ -101,7 +101,9 @@
     "content_language": "Langue des textes",
     "description_translation": "Description, autre langue",
     "director_title_translation": "Titre du chef d'établissement, autre langue",
-    "director_bio_translation": "Biographie du chef d'établissement, autre langue"
+    "director_bio_translation": "Biographie du chef d'établissement, autre langue",
+    "fee_removals": "Frais à retirer",
+    "exam_result_removals": "Résultats à retirer"
   },
   "charts": {
     "visits": "Visites",

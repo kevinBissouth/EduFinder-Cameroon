@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 
 import ClampedText from '../workspace/ClampedText'
 import FileButton from '../workspace/FileButton'
+import { useHeadTitle } from '../../hooks/useHeadTitle'
 import { useReviewRequest } from '../../hooks/useModificationProposal'
 import { toMediaUrl } from '../../utils/media'
 
@@ -48,6 +49,7 @@ function SchoolLeadership({ detail, onProposalSubmitted }) {
   const { t } = useTranslation('manager')
   const reviewRequest = useReviewRequest(onProposalSubmitted)
   const hasDirectorDetails = detail.director_name || detail.director_title || detail.director_bio
+  const directorTitle = useHeadTitle()(detail).text
 
   const proposePhoto = (file) => {
     const formData = new FormData()
@@ -74,9 +76,9 @@ function SchoolLeadership({ detail, onProposalSubmitted }) {
           <p className="font-display text-2xl leading-display text-navy">
             {detail.director_name || t('detail.headOfSchool')}
           </p>
-          {detail.director_title && (
+          {directorTitle && (
             <p className="mt-2 inline-block rounded-full bg-violet-soft px-3 py-1 text-xs font-semibold text-violet-deep">
-              {detail.director_title}
+              {directorTitle}
             </p>
           )}
         </div>

@@ -36,6 +36,12 @@ class ManagerEstablishmentDetailSerializer(InstitutionDetailSerializer):
     recommended = serializers.BooleanField()
     views_count = serializers.IntegerField()
     inquiries_count = serializers.IntegerField()
+    # L'assistant de modification part de la fiche : il choisit ces valeurs
+    # par identifiant, alors que la fiche publique n'en donne que les noms.
+    id_city = serializers.IntegerField(source="city_id")
+    id_type = serializers.IntegerField(source="type_id")
+    id_sector = serializers.IntegerField(source="sector_id")
+    id_linguistic_section = serializers.IntegerField(source="linguistic_section_id")
     # Pourquoi la fiche a quitté le site public : le responsable doit pouvoir
     # le lire sur sa fiche, pas seulement dans une notification.
     suspension_reason = serializers.SerializerMethodField()

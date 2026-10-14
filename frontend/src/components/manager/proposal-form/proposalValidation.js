@@ -2,9 +2,9 @@
 // règles du sérialiseur (backend_django/edufinder/serializers/proposal.py) :
 // le serveur reste seul juge, ces contrôles servent à montrer l'erreur sur
 // l'étape où elle se trouve plutôt qu'à l'envoi, six étapes plus loin.
+import { isBlankFeeGroup } from './feeGroups.js'
 import { REQUIRED_CLASSIFICATION_FIELDS } from './proposalDraft.js'
 
-const SCHOOL_YEAR_PATTERN = /^\d{4}-\d{4}$/
 const EXAM_SESSION_PATTERN = /^\d{4}$/
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const WHITESPACE_PATTERN = /\s/
@@ -23,8 +23,6 @@ export const FIELD_MAX_LENGTHS = {
   website: 255,
   address: 255,
   director_name: 120,
-  director_title: 80,
-  director_title_translation: 80,
 }
 
 export function rowErrorPath(listName, rowId, fieldName) {
@@ -61,13 +59,29 @@ function keepErrors(errorsByPath) {
   return Object.fromEntries(Object.entries(errorsByPath).filter(([, errorKey]) => errorKey))
 }
 
-function validateGeneral(draft, { isCreation }) {
+const CONTACT_FIELD_CHECKS = {
+  phone: checkPhone,
+  contact_email: checkEmail,
+  website: checkWebsite,
+}
+
+// Une valeur déjà publiée n'est pas recontrôlée : la règle a pu arriver après
+// elle (un ancien numéro à dix chiffres), et elle ne repart pas avec la
+// proposition, qui n'envoie que ce qui change.
+function checkChangedContactFields(fields, publishedFields) {
+  return Object.fromEntries(
+    Object.entries(CONTACT_FIELD_CHECKS).map(([fieldName, check]) => [
+      fieldName,
+      fields[fieldName] === publishedFields[fieldName] ? null : check(fields[fieldName]),
+    ]),
+  )
+}
+
+function validateGeneral(draft, { isCreation, publishedFields = {} }) {
   const { fields } = draft
   return keepErrors({
     name: checkName(fields.name, isCreation),
-    phone: checkPhone(fields.phone),
-    contact_email: checkEmail(fields.contact_email),
-    website: checkWebsite(fields.website),
+    ...checkChangedContactFields(fields, publishedFields),
   })
 }
 
@@ -82,11 +96,6 @@ function validateClassification(draft, { isCreation }) {
       ]),
     ),
   )
-}
-
-function checkSchoolYear(schoolYear) {
-  if (!schoolYear.trim()) return 'required'
-  return SCHOOL_YEAR_PATTERN.test(schoolYear.trim()) ? null : 'schoolYearFormat'
 }
 
 function checkAmount(amount) {
@@ -112,17 +121,34 @@ function checkChoice(choiceId, allowedIds, notOfferedError) {
   return allowedIds.has(choiceId) ? null : notOfferedError
 }
 
-const FEE_ROWS_RULE = {
-  listName: 'feeRows',
-  checks: {
-    id_level: (levelId, { allowedLevelIds }) =>
-      checkChoice(levelId, allowedLevelIds, 'levelNotOffered'),
-    amount: checkAmount,
-    school_year: checkSchoolYear,
-  },
-  identify: (feeRow) => `${feeRow.id_level}|${feeRow.school_year.trim()}`,
-  duplicateField: 'school_year',
-  duplicateError: 'duplicateFee',
+const FEE_GROUPS_LIST_NAME = 'feeGroups'
+
+// Un montant doit avoir au moins une classe, et seulement des classes que
+// l'établissement peut proposer (le type ou la section ont pu changer depuis).
+function checkGroupLevels(levelIds, allowedLevelIds) {
+  if (levelIds.length === 0) return 'classesRequired'
+  return levelIds.every((levelId) => allowedLevelIds.has(levelId)) ? null : 'levelNotOffered'
+}
+
+function validateFeeGroup(feeGroup, { allowedLevelIds }) {
+  return keepErrors({
+    [rowErrorPath(FEE_GROUPS_LIST_NAME, feeGroup.groupId, 'amount')]: checkAmount(feeGroup.amount),
+    [rowErrorPath(FEE_GROUPS_LIST_NAME, feeGroup.groupId, 'levelIds')]: checkGroupLevels(
+      feeGroup.levelIds,
+      allowedLevelIds,
+    ),
+  })
+}
+
+// Seules les années ouvertes se saisissent : les montants des années passées
+// restent dans le brouillon pour mémoire, sans être contrôlés ni envoyés. Un
+// montant ajouté puis laissé vide n'est pas une erreur.
+function validateFeeGroups(draft, context) {
+  const editedGroups = draft.feeGroups.filter(
+    (feeGroup) =>
+      context.openSchoolYears.includes(feeGroup.school_year) && !isBlankFeeGroup(feeGroup),
+  )
+  return Object.assign({}, ...editedGroups.map((feeGroup) => validateFeeGroup(feeGroup, context)))
 }
 
 const EXAM_RESULT_ROWS_RULE = {
@@ -133,14 +159,14 @@ const EXAM_RESULT_ROWS_RULE = {
     pass_rate: checkPassRate,
   },
   identify: (examResultRow) => `${examResultRow.id_exam}|${examResultRow.session.trim()}`,
-  duplicateField: 'session',
+  // La session se choisit pour toute la liste : seul l'examen peut corriger
+  // un doublon, l'erreur se montre donc sous lui.
+  duplicateField: 'id_exam',
   duplicateError: 'duplicateResult',
-}
-
-// Une ligne ajoutée puis laissée vide n'est pas envoyée : ce n'est pas une
-// erreur. Une ligne commencée doit être complète.
-function isBlankRow(row, rule) {
-  return Object.keys(rule.checks).every((fieldName) => String(row[fieldName]).trim() === '')
+  // Une session s'ouvre avec une ligne par examen, examen et session déjà
+  // remplis : c'est le taux qui dit si la ligne a été saisie. Un examen que
+  // l'école n'a pas présenté cette année reste sans taux et n'est pas envoyé.
+  isBlank: (examResultRow) => String(examResultRow.pass_rate).trim() === '',
 }
 
 function validateRow(row, rule, context) {
@@ -168,7 +194,7 @@ function findDuplicateRows(rows, rule) {
 }
 
 function validateRows(rows, rule, context) {
-  const filledRows = rows.filter((row) => !isBlankRow(row, rule))
+  const filledRows = rows.filter((row) => !rule.isBlank(row))
   const rowErrors = Object.assign({}, ...filledRows.map((row) => validateRow(row, rule, context)))
   const correctRows = filledRows.filter(
     (row) => Object.keys(validateRow(row, rule, context)).length === 0,
@@ -185,11 +211,11 @@ function validateRows(rows, rule, context) {
 const STEP_VALIDATORS = {
   general: validateGeneral,
   classification: validateClassification,
-  fees: (draft, context) => validateRows(draft.feeRows, FEE_ROWS_RULE, context),
+  fees: validateFeeGroups,
   results: (draft, context) => validateRows(draft.examResultRows, EXAM_RESULT_ROWS_RULE, context),
 }
 
-// context = { isCreation, allowedLevelIds, allowedExamIds }. Renvoie
+// context = { isCreation, allowedLevelIds, allowedExamIds, openSchoolYears }. Renvoie
 // { chemin du champ: clé du message d'erreur } ; un objet vide veut dire que
 // l'étape peut être validée.
 export function validateStep(stepId, draft, context) {

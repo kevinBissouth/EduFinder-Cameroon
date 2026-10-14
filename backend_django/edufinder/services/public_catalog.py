@@ -22,6 +22,8 @@ from edufinder.models import (
 )
 
 from edufinder.services.data_rules import describe_coherence_rules
+from edufinder.services.head_titles import collect_head_title_labels
+from edufinder.services.school_nomenclature import sort_by_school_path
 
 FEATURED_TYPE_COUNT = 4
 
@@ -33,10 +35,10 @@ def collect_platform_stats() -> dict:
         "cities": published_establishments.values("city").distinct().count(),
         # Régions réellement couvertes, pas les dix régions de référence.
         "regions": published_establishments.values("city__region").distinct().count(),
-        "fee_plans": SchoolFee.objects.filter(
+        "fee_plans": SchoolFee.objects.active().filter(
             establishment__in=published_establishments
         ).count(),
-        "exam_results": ExamResult.objects.filter(
+        "exam_results": ExamResult.objects.active().filter(
             establishment__in=published_establishments
         ).count(),
     }
@@ -51,7 +53,7 @@ def collect_filters_meta() -> dict:
         "cities": City.objects.order_by("id_city"),
         "types": EstablishmentType.objects.order_by("id_type"),
         "languages": LinguisticSection.objects.order_by("id_linguistic_section"),
-        "levels": StudyLevel.objects.select_related("stage").order_by("stage", "label"),
+        "levels": sort_by_school_path(StudyLevel.objects.select_related("stage")),
         "programs": Program.objects.order_by("name"),
         "payment_methods": PaymentMethod.objects.order_by("label").values_list(
             "label", flat=True
@@ -79,10 +81,15 @@ TRANSLATED_REFERENCES = (
 )
 
 
+# Les titres de chef d'établissement ne sont pas une table : ils viennent des
+# règles, mais se traduisent comme les autres listes.
 def collect_reference_labels() -> dict:
     return {
-        reference_kind: _map_labels_by_key(reference_model, key_column)
-        for reference_kind, reference_model, key_column in TRANSLATED_REFERENCES
+        **{
+            reference_kind: _map_labels_by_key(reference_model, key_column)
+            for reference_kind, reference_model, key_column in TRANSLATED_REFERENCES
+        },
+        "head_titles": collect_head_title_labels(),
     }
 
 

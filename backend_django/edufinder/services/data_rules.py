@@ -1,16 +1,27 @@
 """Règles de cohérence des données saisies pour un établissement."""
 from django.db.models import Q, QuerySet
 
+from edufinder.services.head_titles import describe_head_titles
+from edufinder.services.school_calendar import (
+    find_latest_exam_session,
+    list_open_school_years,
+)
+
+TECHNICAL_TYPE_LABEL = "Secondary technical"
+
+# Le secondaire technique suit la même organisation dans les deux sections :
+# il présente le CAP, le Probatoire et le Baccalauréat, jamais le GCE. Le BEPC
+# est l'examen du collège général : au technique, le premier cycle mène au CAP.
 EXAM_ALLOWED_TYPE_LABELS = {
     "CEP": {"Primary"},
     "FSLC": {"Primary"},
-    "BEPC": {"Secondary general", "Secondary technical"},
-    "GCE O-Level": {"Secondary general", "Secondary technical"},
-    "Probatoire": {"Secondary general", "Secondary technical"},
-    "Baccalaureate": {"Secondary general", "Secondary technical"},
-    "CAP": {"Secondary technical"},
+    "BEPC": {"Secondary general"},
+    "GCE O-Level": {"Secondary general"},
+    "Probatoire": {"Secondary general", TECHNICAL_TYPE_LABEL},
+    "Baccalaureate": {"Secondary general", TECHNICAL_TYPE_LABEL},
+    "CAP": {TECHNICAL_TYPE_LABEL},
     "BTS": {"Higher institute"},
-    "GCE A-Level": {"Secondary general", "Secondary technical"},
+    "GCE A-Level": {"Secondary general"},
 }
 
 # Types qui présentent au moins un examen officiel : eux seuls ont des
@@ -43,12 +54,18 @@ ALLOWED_LANGUAGE_FAMILIES_BY_SECTION = {
     "Bilingual": {FRANCOPHONE_FAMILY, ANGLOPHONE_FAMILY},
 }
 
+# Types dont les examens ne dépendent pas de la section : une école technique
+# anglophone présente les mêmes examens qu'une francophone, seule la langue
+# d'enseignement change.
+SECTION_FREE_EXAM_TYPE_LABELS = {TECHNICAL_TYPE_LABEL}
+
 # Cycles d'étude (les « stages » qui regroupent les classes) : quels types
 # d'établissement les enseignent. Règle souple voulue pour la maternelle : une
 # école primaire a très souvent la sienne, elle peut donc en publier les frais.
 _NURSERY_TYPES = {"Nursery", "Primary"}
 _PRIMARY_TYPES = {"Primary"}
-_SECONDARY_TYPES = {"Secondary general", "Secondary technical"}
+_GENERAL_SECONDARY_TYPES = {"Secondary general"}
+_TECHNICAL_SECONDARY_TYPES = {TECHNICAL_TYPE_LABEL}
 _HIGHER_TYPES = {"University", "Higher institute"}
 
 STAGE_ALLOWED_TYPE_LABELS = {
@@ -56,15 +73,20 @@ STAGE_ALLOWED_TYPE_LABELS = {
     "Nursery": _NURSERY_TYPES,
     "Primaire": _PRIMARY_TYPES,
     "Primary": _PRIMARY_TYPES,
-    "Collège": _SECONDARY_TYPES,
-    "Lycée": _SECONDARY_TYPES,
-    "Lower secondary": _SECONDARY_TYPES,
-    "Upper secondary": _SECONDARY_TYPES,
+    "Collège": _GENERAL_SECONDARY_TYPES,
+    "Lycée": _GENERAL_SECONDARY_TYPES,
+    "Lower secondary": _GENERAL_SECONDARY_TYPES,
+    "Upper secondary": _GENERAL_SECONDARY_TYPES,
+    # Le technique compte en années (« 1ère année » à « 4e année ») avant la
+    # seconde : ses classes sont à part de celles du général.
+    "Technical lower secondary": _TECHNICAL_SECONDARY_TYPES,
+    "Technical upper secondary": _TECHNICAL_SECONDARY_TYPES,
     "Higher": _HIGHER_TYPES,
 }
 
-# Le supérieur (« Higher ») est commun aux deux systèmes : il n'est dans
-# aucune des deux familles, donc ouvert à toutes les sections.
+# Le supérieur (« Higher ») et les deux cycles techniques sont communs aux
+# deux systèmes : ils ne sont dans aucune des deux familles, donc ouverts à
+# toutes les sections.
 FRANCOPHONE_STAGES = {"Maternelle", "Primaire", "Collège", "Lycée"}
 ANGLOPHONE_STAGES = {"Nursery", "Primary", "Lower secondary", "Upper secondary"}
 
@@ -74,12 +96,37 @@ def get_exam_type_violation(exam_label: str, type_label: str) -> str | None:
     return _get_type_violation(exam_label, type_label, EXAM_ALLOWED_TYPE_LABELS)
 
 
-def get_exam_section_violation(exam_label: str, section_label: str) -> str | None:
+def get_exam_section_violation(
+    exam_label: str, section_label: str, type_label: str
+) -> str | None:
     """Raison si la section linguistique ne peut pas présenter cet examen."""
+    if type_label in SECTION_FREE_EXAM_TYPE_LABELS:
+        return None
     exam_family = _get_language_family(exam_label, FRANCOPHONE_EXAMS, ANGLOPHONE_EXAMS)
     if _is_family_allowed(exam_family, section_label):
         return None
     return f"'{exam_label}' is a {exam_family} exam (received section: '{section_label}')"
+
+
+def get_school_year_violation(school_year: str) -> str | None:
+    """Raison si cette année scolaire n'accepte plus de nouveaux frais."""
+    open_school_years = list_open_school_years()
+    if school_year in open_school_years:
+        return None
+    return (
+        f"school year '{school_year}' is closed "
+        f"(open: {', '.join(open_school_years)})"
+    )
+
+
+def get_exam_session_violation(session: str) -> str | None:
+    """Raison si cette session d'examen n'a pas encore eu lieu."""
+    latest_session = find_latest_exam_session()
+    # Une session est une année sur quatre chiffres (validée par le
+    # sérialiseur) : comparer les textes revient à comparer les années.
+    if session <= latest_session:
+        return None
+    return f"session '{session}' has not taken place yet (latest: {latest_session})"
 
 
 def get_stage_type_violation(stage_label: str, type_label: str) -> str | None:
@@ -154,4 +201,8 @@ def describe_coherence_rules() -> dict:
         "exam_families": _labels_by_family(FRANCOPHONE_EXAMS, ANGLOPHONE_EXAMS),
         "stage_families": _labels_by_family(FRANCOPHONE_STAGES, ANGLOPHONE_STAGES),
         "section_families": _sorted_lists(ALLOWED_LANGUAGE_FAMILIES_BY_SECTION),
+        "section_free_exam_types": sorted(SECTION_FREE_EXAM_TYPE_LABELS),
+        "open_school_years": list_open_school_years(),
+        "latest_exam_session": find_latest_exam_session(),
+        "head_titles": describe_head_titles(),
     }

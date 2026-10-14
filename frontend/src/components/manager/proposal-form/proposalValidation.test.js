@@ -14,19 +14,34 @@ const EMPTY_FIELDS = {
   id_linguistic_section: '',
 }
 
-function buildDraft({ fields = {}, feeRows = [], examResultRows = [] } = {}) {
-  return { fields: { ...EMPTY_FIELDS, ...fields }, feeRows, examResultRows }
+function buildDraft({ fields = {}, feeGroups = [], examResultRows = [] } = {}) {
+  return { fields: { ...EMPTY_FIELDS, ...fields }, feeGroups, examResultRows }
 }
 
 const ALLOWED_LEVEL_IDS = new Set(['3'])
 const ALLOWED_EXAM_IDS = new Set(['2'])
 
+const OPEN_YEAR = '2026-2027'
+const PAST_YEAR = '2025-2026'
+
 function buildContext(isCreation) {
-  return { isCreation, allowedLevelIds: ALLOWED_LEVEL_IDS, allowedExamIds: ALLOWED_EXAM_IDS }
+  return {
+    isCreation,
+    allowedLevelIds: ALLOWED_LEVEL_IDS,
+    allowedExamIds: ALLOWED_EXAM_IDS,
+    openSchoolYears: [OPEN_YEAR, '2027-2028'],
+  }
 }
 
-function feeRow(rowId, values) {
-  return { rowId, id_level: '', amount: '', school_year: '', payment_methods: [], ...values }
+function feeGroup(groupId, values) {
+  return {
+    groupId,
+    school_year: OPEN_YEAR,
+    amount: '',
+    payment_methods: [],
+    levelIds: [],
+    ...values,
+  }
 }
 
 function examResultRow(rowId, values) {
@@ -36,6 +51,18 @@ function examResultRow(rowId, values) {
 test('a modification with untouched empty fields has no error', () => {
   assert.deepEqual(validateStep('general', buildDraft(), buildContext(false)), {})
   assert.deepEqual(validateStep('classification', buildDraft(), buildContext(false)), {})
+})
+
+// Un numéro publié avant la règle camerounaise ne bloque pas le responsable
+// qui n'y touche pas : il ne repart pas avec la proposition.
+test('a published value is not checked again, a changed one is', () => {
+  const publishedFields = { ...EMPTY_FIELDS, phone: '6571713726', website: 'javascript:alert(1)' }
+  const untouchedDraft = buildDraft({ fields: publishedFields })
+  const changedDraft = buildDraft({ fields: { ...publishedFields, phone: '6571713' } })
+  const context = { ...buildContext(false), publishedFields }
+
+  assert.deepEqual(validateStep('general', untouchedDraft, context), {})
+  assert.deepEqual(validateStep('general', changedDraft, context), { phone: 'invalidPhone' })
 })
 
 test('a creation requires the name and the four classification fields', () => {
@@ -78,36 +105,34 @@ test('a website without a scheme or with https is accepted, one with a space is 
   })
 })
 
-test('a blank fee row is ignored, a started one must be complete and well formed', () => {
+test('a blank amount is ignored, a started one needs an amount above zero and a class', () => {
   const draft = buildDraft({
-    feeRows: [
-      feeRow('blank'),
-      feeRow('started', { id_level: '3', amount: '0', school_year: '2026/2027' }),
+    feeGroups: [
+      feeGroup('blank'),
+      feeGroup('no-class', { amount: '50000' }),
+      feeGroup('no-amount', { levelIds: ['3'] }),
+      feeGroup('zero', { amount: '0', levelIds: ['3'] }),
     ],
   })
   assert.deepEqual(validateStep('fees', draft, buildContext(false)), {
-    [rowErrorPath('feeRows', 'started', 'amount')]: 'amountPositive',
-    [rowErrorPath('feeRows', 'started', 'school_year')]: 'schoolYearFormat',
+    [rowErrorPath('feeGroups', 'no-class', 'levelIds')]: 'classesRequired',
+    [rowErrorPath('feeGroups', 'no-amount', 'amount')]: 'required',
+    [rowErrorPath('feeGroups', 'zero', 'amount')]: 'amountPositive',
   })
 })
 
-test('the second fee for the same level and year is reported as a duplicate', () => {
-  const sameFee = { id_level: '3', amount: '70000', school_year: '2026-2027' }
-  const draft = buildDraft({ feeRows: [feeRow('first', sameFee), feeRow('second', sameFee)] })
-  assert.deepEqual(validateStep('fees', draft, buildContext(false)), {
-    [rowErrorPath('feeRows', 'second', 'school_year')]: 'duplicateFee',
-  })
+test('an amount with its classes is valid', () => {
+  const draft = buildDraft({ feeGroups: [feeGroup('complete', { amount: '50000', levelIds: ['3'] })] })
+
+  assert.deepEqual(validateStep('fees', draft, buildContext(true)), {})
 })
 
-test('incomplete rows are not reported as duplicates of each other', () => {
+test('the amounts of a past school year are neither checked nor blocking', () => {
   const draft = buildDraft({
-    feeRows: [
-      feeRow('first', { school_year: '2026-2027' }),
-      feeRow('second', { school_year: '2026-2027' }),
-    ],
+    feeGroups: [feeGroup('history', { school_year: PAST_YEAR, amount: '0', levelIds: ['9'] })],
   })
-  const errors = validateStep('fees', draft, buildContext(false))
-  assert.ok(!Object.values(errors).includes('duplicateFee'))
+
+  assert.deepEqual(validateStep('fees', draft, buildContext(false)), {})
 })
 
 test('an exam result needs a four-digit session and a rate between 0 and 100', () => {
@@ -123,13 +148,46 @@ test('an exam result needs a four-digit session and a rate between 0 and 100', (
   })
 })
 
+// Une session s'ouvre avec une ligne par examen : celui que l'école n'a pas
+// présenté cette année reste sans taux, sans bloquer l'étape.
+test('an exam result without a rate is left out, not an error', () => {
+  const draft = buildDraft({
+    examResultRows: [examResultRow('not-sat', { id_exam: '2', session: '2026', pass_rate: '' })],
+  })
+  assert.deepEqual(validateStep('results', draft, buildContext(false)), {})
+})
+
+test('a rate without an exam is an error', () => {
+  const draft = buildDraft({
+    examResultRows: [examResultRow('no-exam', { session: '2026', pass_rate: '70' })],
+  })
+  assert.deepEqual(validateStep('results', draft, buildContext(false)), {
+    [rowErrorPath('examResultRows', 'no-exam', 'id_exam')]: 'required',
+  })
+})
+
+// La session se choisit pour toute la liste : le doublon se signale sous
+// l'examen, le seul champ de la ligne qui peut le corriger.
+test('the same exam twice in a session is reported on the second exam', () => {
+  const draft = buildDraft({
+    examResultRows: [
+      examResultRow('first', { id_exam: '2', session: '2026', pass_rate: '70' }),
+      examResultRow('second', { id_exam: '2', session: '2026', pass_rate: '75' }),
+      examResultRow('other-session', { id_exam: '2', session: '2025', pass_rate: '60' }),
+    ],
+  })
+  assert.deepEqual(validateStep('results', draft, buildContext(false)), {
+    [rowErrorPath('examResultRows', 'second', 'id_exam')]: 'duplicateResult',
+  })
+})
+
 test('a class or an exam the school cannot offer is reported', () => {
   const draft = buildDraft({
-    feeRows: [feeRow('fee', { id_level: '9', amount: '70000', school_year: '2026-2027' })],
+    feeGroups: [feeGroup('fee', { amount: '70000', levelIds: ['3', '9'] })],
     examResultRows: [examResultRow('result', { id_exam: '8', session: '2026', pass_rate: '80' })],
   })
   assert.deepEqual(validateStep('fees', draft, buildContext(true)), {
-    [rowErrorPath('feeRows', 'fee', 'id_level')]: 'levelNotOffered',
+    [rowErrorPath('feeGroups', 'fee', 'levelIds')]: 'levelNotOffered',
   })
   assert.deepEqual(validateStep('results', draft, buildContext(true)), {
     [rowErrorPath('examResultRows', 'result', 'id_exam')]: 'examNotOffered',

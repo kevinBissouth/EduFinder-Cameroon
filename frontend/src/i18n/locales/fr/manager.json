@@ -50,6 +50,7 @@
     "schoolErrorTitle": "Cet établissement n'a pas pu être chargé",
     "awaitingReview": "Modifications en attente de validation",
     "school": "Établissement",
+    "schoolChoice": "Établissement affiché : {{school}}. Changer d'établissement",
     "suspended": "Cet établissement est suspendu : il n'apparaît plus sur le site public.",
     "suspensionReason": "Motif indiqué : {{reason}}"
   },
@@ -195,12 +196,13 @@
     "step": "Étape {{current}} sur {{total}}",
     "newSchool": "Un nouvel établissement",
     "creationLead": "Un super administrateur examine la proposition avant que l'établissement devienne public.",
-    "modificationLead": "Remplissez seulement ce que vous voulez changer. Tout le reste de la page reste tel quel.",
+    "modificationLead": "Le formulaire reprend votre page actuelle : modifiez seulement ce qui change, seuls ces changements seront envoyés.",
     "sending": "Envoi…",
     "next": "Suivant",
     "back": "Retour",
     "required": " (obligatoire)",
     "choose": "Choisir…",
+    "cleanedAfterProfileChange": "Votre choix a changé : les classes, examens et filières qui ne correspondent plus à l'établissement ont été retirés.",
     "uploading": "Envoi du fichier…",
     "steps": {
       "general": {
@@ -217,7 +219,7 @@
       },
       "fees": {
         "title": "Frais",
-        "lead": "Un montant annuel par niveau et par année scolaire. Les frais que vous n'indiquez pas restent tels quels."
+        "lead": "Écrivez un montant, puis cochez toutes les classes qui le paient. Les frais que vous ne touchez pas restent tels quels."
       },
       "services": {
         "title": "Services",
@@ -249,7 +251,6 @@
       "directorName": "Nom",
       "directorNamePlaceholder": "Dr Marie Ngono",
       "directorTitle": "Titre",
-      "directorTitlePlaceholder": "Proviseur",
       "biography": "Biographie",
       "portrait": "Portrait",
       "coverPhoto": "Photo de couverture",
@@ -259,18 +260,13 @@
       "translationOf": "{{field}} en {{language}} (facultatif)"
     },
     "rows": {
-      "removeFee": "Retirer ces frais",
-      "level": "Niveau",
-      "chooseLevel": "Choisir un niveau",
       "yearlyAmount": "Montant annuel (FCFA)",
       "schoolYear": "Année scolaire",
-      "addFee": "Ajouter des frais",
       "removeResult": "Retirer ce résultat",
       "exam": "Examen",
       "chooseExam": "Choisir un examen",
       "session": "Session",
-      "passRate": "Taux de réussite (%)",
-      "addResult": "Ajouter un résultat"
+      "passRate": "Taux de réussite (%)"
     },
     "files": {
       "preview": "Aperçu : {{title}}",
@@ -293,13 +289,44 @@
       "invalidEmail": "Saisissez une adresse e-mail valide, par exemple contact@ecole.cm.",
       "invalidWebsite": "Saisissez une adresse web sans espace, par exemple https://ecole.cm.",
       "amountPositive": "Saisissez un montant supérieur à 0.",
-      "schoolYearFormat": "Écrivez l'année scolaire sous la forme 2026-2027.",
       "sessionFormat": "Écrivez l'année de la session en 4 chiffres, par exemple 2026.",
       "passRateRange": "Saisissez un taux entre 0 et 100.",
-      "duplicateFee": "Cette classe a déjà une ligne pour cette année scolaire.",
       "duplicateResult": "Cet examen a déjà une ligne pour cette session.",
       "levelNotOffered": "Cette classe ne correspond pas au type ou à la section de l'établissement.",
-      "examNotOffered": "Cet examen ne correspond pas au type ou à la section de l'établissement."
-    }
+      "examNotOffered": "Cet examen ne correspond pas au type ou à la section de l'établissement.",
+      "classesRequired": "Cochez au moins une classe pour ce montant."
+    },
+    "feeGroups": {
+      "classes": "Classes",
+      "chooseClasses": "Choisir les classes",
+      "classesHint": "Cochez toutes les classes qui paient ce montant. Une classe qui a déjà un montant cette année n'est plus proposée.",
+      "allClassesTaken": "Toutes les classes ont déjà un montant pour cette année.",
+      "add": "Ajouter un montant",
+      "remove": "Retirer ce montant",
+      "copy": "Reprendre les frais de {{year}}",
+      "copyHint": "Aucun montant saisi pour {{year}}. Vous pouvez repartir de ceux de {{previousYear}}, puis les ajuster.",
+      "title": "Montant {{number}}",
+      "classCount_one": "{{count}} classe",
+      "classCount_many": "{{count}} classes",
+      "classCount_other": "{{count}} classes",
+      "selectedClasses": "Classes cochées",
+      "confirmRemoval": "Ce montant est publié sur votre page. Le retirer envoie une demande de retrait au super administrateur : il reste affiché jusqu'à sa validation. Continuer ?"
+    },
+    "examSessions": {
+      "sessionOption_one": "{{session}} · {{count}} résultat",
+      "sessionOption_many": "{{session}} · {{count}} résultats",
+      "sessionOption_other": "{{session}} · {{count}} résultats",
+      "emptySessionOption": "{{session}} · aucun résultat",
+      "prefillHint": "Aucun résultat pour la session {{session}}. Ajoutez les examens de {{previousSession}}, puis saisissez leurs taux.",
+      "prefill": "Ajouter les examens de {{previousSession}}",
+      "prefillHintWithoutHistory": "Aucun résultat pour la session {{session}}. Ajoutez les examens que présente l'établissement, puis saisissez leurs taux.",
+      "prefillWithoutHistory": "Ajouter les examens",
+      "blankRateHint": "Un examen laissé sans taux n'est pas envoyé : laissez vide celui que l'établissement n'a pas présenté.",
+      "otherSessionErrors": "D'autres sessions ont des résultats à corriger.",
+      "showSession": "Voir la session {{session}}",
+      "addExam": "Ajouter un examen",
+      "confirmRemoval": "Ce résultat est publié sur votre page. Le retirer envoie une demande de retrait au super administrateur : il reste affiché jusqu'à sa validation. Continuer ?"
+    },
+    "nothingToSend": "Aucune modification à envoyer : la fiche est identique à celle publiée."
   }
 }

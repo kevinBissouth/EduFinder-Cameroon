@@ -1,7 +1,7 @@
 import { useId } from 'react'
-import { ChevronDown } from 'lucide-react'
 
 import { formatAmount } from '../../utils/format'
+import { fieldLayoutClasses } from './fieldLayout'
 
 const CONTROL_BASE_CLASSES =
   'h-11 w-full rounded-control border bg-surface px-3 text-sm font-medium text-navy transition-colors placeholder:font-normal placeholder:text-ink-soft'
@@ -31,11 +31,11 @@ function FieldLabel({ children }) {
   return <span className="text-sm font-semibold text-navy">{children}</span>
 }
 
-export function TextField({ label, error, className = '', ...inputProps }) {
+export function TextField({ label, error, isGridAligned = false, className = '', ...inputProps }) {
   const { controlProps, errorMessage } = useFieldError(error)
 
   return (
-    <label className={`flex w-full flex-col gap-1.5 ${className}`}>
+    <label className={`w-full ${fieldLayoutClasses(isGridAligned)} ${className}`}>
       <FieldLabel>{label}</FieldLabel>
       <input {...inputProps} {...controlProps} className={controlClasses(error)} />
       {errorMessage}
@@ -78,35 +78,6 @@ export function PhoneField({ onChange, ...fieldProps }) {
       inputMode="tel"
       onChange={(event) => onChange(keepPhoneCharacters(event.target.value))}
     />
-  )
-}
-
-export function SelectField({ label, placeholder, options, error, className = '', ...selectProps }) {
-  const { controlProps, errorMessage } = useFieldError(error)
-
-  return (
-    <label className={`flex w-full flex-col gap-1.5 ${className}`}>
-      <FieldLabel>{label}</FieldLabel>
-      <span className="relative">
-        <select
-          {...selectProps}
-          {...controlProps}
-          className={`${controlClasses(error)} appearance-none pr-9`}
-        >
-          <option value="">{placeholder}</option>
-          {options.map((option) => (
-            <option key={option.id} value={option.id}>
-              {option.name}
-            </option>
-          ))}
-        </select>
-        <ChevronDown
-          aria-hidden="true"
-          className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-ink-soft"
-        />
-      </span>
-      {errorMessage}
-    </label>
   )
 }
 

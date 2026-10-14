@@ -1,6 +1,9 @@
 // Brouillon d'une proposition : ce que le formulaire fait saisir, et sa
 // traduction en contenu envoyé à l'API.
 
+import { expandFeeGroups, listChangedFees } from './feeGroups.js'
+import { createUniqueId } from '../../../utils/uniqueId.js'
+
 const REFERENCE_FIELD_PREFIX = 'id_'
 export const REQUIRED_CLASSIFICATION_FIELDS = [
   'id_city',
@@ -9,21 +12,29 @@ export const REQUIRED_CLASSIFICATION_FIELDS = [
   'id_linguistic_section',
 ]
 
-export function buildInitialFields(school) {
+// Un choix de référence se garde en texte dans le formulaire, comme la valeur
+// d'une tuile de choix.
+function toChoiceValue(referenceId) {
+  return referenceId == null ? '' : String(referenceId)
+}
+
+// headTitlesByType vient des règles du serveur : une fiche sans titre part
+// avec celui de son type (« Proviseur » pour un lycée).
+export function buildInitialFields(school, headTitlesByType = {}) {
   const detail = school?.detail
   return {
     name: school?.name ?? '',
-    phone: '',
-    id_city: '',
-    id_type: '',
-    id_sector: '',
-    id_linguistic_section: '',
+    phone: detail?.phone ?? '',
+    id_city: toChoiceValue(detail?.id_city),
+    id_type: toChoiceValue(detail?.id_type),
+    id_sector: toChoiceValue(detail?.id_sector),
+    id_linguistic_section: toChoiceValue(detail?.id_linguistic_section),
     contact_email: detail?.contact_email ?? '',
     website: detail?.website ?? '',
     address: detail?.address ?? '',
     description: detail?.description ?? '',
     director_name: detail?.director_name ?? '',
-    director_title: detail?.director_title ?? '',
+    director_title: detail?.director_title || headTitlesByType[detail?.type]?.[0] || '',
     director_bio: detail?.director_bio ?? '',
     content_language: detail?.content_language ?? '',
     description_translation: detail?.description_translation ?? '',
@@ -32,30 +43,38 @@ export function buildInitialFields(school) {
   }
 }
 
-export function createFeeRow(fee) {
-  return {
-    rowId: crypto.randomUUID(),
-    id_level: fee ? String(fee.id_level) : '',
-    amount: fee ? String(Number(fee.amount)) : '',
-    school_year: fee?.school_year ?? '',
-    payment_methods: fee?.payment_methods ?? [],
-  }
-}
-
+// Une ligne reprise de la fiche est marquée publiée : la jeter à la corbeille
+// demande son retrait au super admin, ce que le formulaire fait confirmer.
 export function createExamResultRow(examResult) {
   return {
-    rowId: crypto.randomUUID(),
+    rowId: createUniqueId(),
     id_exam: examResult ? String(examResult.id_exam) : '',
     session: examResult?.session ?? '',
     pass_rate: examResult ? String(Number(examResult.pass_rate)) : '',
+    isPublished: Boolean(examResult),
   }
 }
 
 // La fiche donne les programmes par nom, l'API les attend par identifiant.
-export function findProgramIds(programNames, programs) {
+function findProgramIds(programNames, programs) {
   return programNames
     .map((programName) => programs.find((program) => program.name === programName)?.id)
     .filter((programId) => programId !== undefined)
+}
+
+// La fiche publiée, dans la forme du brouillon : l'assistant part d'elle, et
+// une proposition n'envoie que ce qui en diffère. Sans fiche (création), tout
+// est vide : tout ce qui est rempli part. Le titre suggéré d'après le type
+// n'en fait pas partie, il n'est pas publié.
+export function buildPublishedRecord(school, programs = []) {
+  const detail = school?.detail
+  return {
+    fields: buildInitialFields(school),
+    fees: detail?.fees ?? [],
+    examResults: detail?.exam_results ?? [],
+    serviceNames: (detail?.services ?? []).map((service) => service.name),
+    programIds: findProgramIds(detail?.programs ?? [], programs),
+  }
 }
 
 export function replaceRow(rows, rowId, changes) {
@@ -66,29 +85,68 @@ export function removeRow(rows, rowId) {
   return rows.filter((row) => row.rowId !== rowId)
 }
 
-function buildFieldsContent(fields) {
-  const filledEntries = Object.entries(fields).filter(([, fieldValue]) => fieldValue !== '')
+// Un champ vidé n'est pas envoyé : l'API ne sait pas encore effacer un champ.
+function buildFieldsContent(fields, publishedFields) {
+  const changedEntries = Object.entries(fields).filter(
+    ([fieldName, fieldValue]) => fieldValue !== '' && fieldValue !== publishedFields[fieldName],
+  )
   return Object.fromEntries(
-    filledEntries.map(([fieldName, fieldValue]) => [
+    changedEntries.map(([fieldName, fieldValue]) => [
       fieldName,
       fieldName.startsWith(REFERENCE_FIELD_PREFIX) ? Number(fieldValue) : fieldValue,
     ]),
   )
 }
 
-// Une ligne incomplète n'est pas envoyée : elle serait refusée par l'API.
-function listCompleteFees(feeRows) {
-  return feeRows
-    .filter((feeRow) => feeRow.id_level && feeRow.amount && feeRow.school_year.trim())
-    .map((feeRow) => ({
-      id_level: Number(feeRow.id_level),
-      amount: feeRow.amount,
-      school_year: feeRow.school_year.trim(),
-      payment_methods: feeRow.payment_methods,
-    }))
+// Les frais des années ouvertes, une ligne par classe. Les années passées ne
+// se modifient pas ici.
+function listOpenFeeLines(draft, schoolRecord) {
+  const openFeeGroups = draft.feeGroups.filter((feeGroup) =>
+    schoolRecord.openSchoolYears.includes(feeGroup.school_year),
+  )
+  return expandFeeGroups(openFeeGroups)
 }
 
-function listCompleteExamResults(examResultRows) {
+function identifyFeeLine(fee) {
+  return `${fee.id_level}|${fee.school_year}`
+}
+
+function identifyExamResultLine(examResult) {
+  return `${examResult.id_exam}|${String(examResult.session).trim()}`
+}
+
+// Une ligne publiée d'une année ouverte qui n'est plus dans le brouillon a été
+// jetée à la corbeille, ou sa classe décochée : j'en demande le retrait.
+function listFeeRemovals(feeLines, schoolRecord) {
+  const keptLines = new Set(feeLines.map(identifyFeeLine))
+  return schoolRecord.fees
+    .filter((fee) => schoolRecord.openSchoolYears.includes(fee.school_year))
+    .filter((fee) => !keptLines.has(identifyFeeLine(fee)))
+    .map((fee) => ({ id_level: Number(fee.id_level), school_year: fee.school_year }))
+}
+
+// Seule la corbeille retire un résultat : une ligne dont le taux est effacé
+// reste dans le brouillon, elle n'est donc ni envoyée ni retirée.
+function listExamResultRemovals(examResultRows, publishedExamResults) {
+  const keptLines = new Set(examResultRows.map(identifyExamResultLine))
+  return publishedExamResults
+    .filter((examResult) => !keptLines.has(identifyExamResultLine(examResult)))
+    .map((examResult) => ({ id_exam: Number(examResult.id_exam), session: examResult.session }))
+}
+
+function keepFilledLists(lists) {
+  return Object.fromEntries(Object.entries(lists).filter(([, list]) => list.length > 0))
+}
+
+function describeExamResult(examResult) {
+  return `${examResult.id_exam}|${examResult.session}|${Number(examResult.pass_rate)}`
+}
+
+// Une ligne incomplète n'est pas envoyée : elle serait refusée par l'API. Le
+// serveur applique les résultats un par un, ceux qui n'ont pas changé n'ont
+// donc pas à repartir.
+function listExamResultsToSend(examResultRows, publishedExamResults) {
+  const publishedResults = new Set(publishedExamResults.map(describeExamResult))
   return examResultRows
     .filter((row) => row.id_exam && row.session.trim() && row.pass_rate !== '')
     .map((row) => ({
@@ -96,29 +154,52 @@ function listCompleteExamResults(examResultRows) {
       session: row.session.trim(),
       pass_rate: Number(row.pass_rate),
     }))
+    .filter((examResult) => !publishedResults.has(describeExamResult(examResult)))
 }
 
-// En création, une liste vide n'a rien à dire : je ne l'envoie pas. En
-// modification, je n'envoie que les listes que le responsable a touchées :
-// une liste absente laisse la fiche telle quelle, alors qu'une liste de
-// services ou de programmes envoyée vide les retire tous.
-export function buildProposalContent(draft, isCreation) {
-  const lists = {
-    fees: listCompleteFees(draft.feeRows),
-    exam_results: listCompleteExamResults(draft.examResultRows),
-    services: [...draft.serviceNames].sort(),
-    program_ids: draft.programIds,
-    videos: draft.videoUrls,
+// L'ordre d'une liste de services ou de filières ne compte pas.
+function haveSameMembers(firstList, secondList) {
+  const sortedFirst = [...firstList].map(String).sort()
+  const sortedSecond = [...secondList].map(String).sort()
+  return sortedFirst.join('|') === sortedSecond.join('|')
+}
+
+// Les services et les filières remplacent ceux de la fiche : une liste envoyée
+// vide les retire tous, une liste absente les laisse tels quels.
+function listReplacedLists(draft, schoolRecord) {
+  const replacedLists = [
+    ['services', [...draft.serviceNames].sort(), schoolRecord.serviceNames],
+    ['program_ids', draft.programIds, schoolRecord.programIds],
+  ]
+  return replacedLists
+    .filter(([, draftList, publishedList]) => !haveSameMembers(draftList, publishedList))
+    .map(([listName, draftList]) => [listName, draftList])
+}
+
+// Seul ce qui diffère de la fiche publiée part : le super admin ne lit que les
+// vrais changements, et une proposition qui attend sa validation ne remet pas
+// en place les anciennes valeurs d'une autre qui l'a précédée. Une ligne
+// publiée qui a disparu du brouillon part en demande de retrait. Les vidéos et
+// les photos ne sont que des ajouts.
+// schoolRecord = buildPublishedRecord(…) et les années ouvertes aux frais.
+export function buildProposalContent(draft, schoolRecord) {
+  const openFeeLines = listOpenFeeLines(draft, schoolRecord)
+  const changedRows = {
+    fees: listChangedFees(openFeeLines, schoolRecord.fees),
+    exam_results: listExamResultsToSend(draft.examResultRows, schoolRecord.examResults),
+    fee_removals: listFeeRemovals(openFeeLines, schoolRecord),
+    exam_result_removals: listExamResultRemovals(draft.examResultRows, schoolRecord.examResults),
   }
-  const sentLists = Object.entries(lists).filter(([listName, list]) =>
-    isCreation ? list.length > 0 : draft.touchedLists.includes(listName),
-  )
-  const photos = { cover_photo: draft.coverPhotoUrl, director_photo: draft.directorPhotoUrl }
-  const sentPhotos = Object.entries(photos).filter(([, photoUrl]) => photoUrl)
+  const additions = {
+    cover_photo: draft.coverPhotoUrl,
+    director_photo: draft.directorPhotoUrl,
+    videos: draft.videoUrls.length > 0 ? draft.videoUrls : '',
+  }
 
   return {
-    ...buildFieldsContent(draft.fields),
-    ...Object.fromEntries(sentLists),
-    ...Object.fromEntries(sentPhotos),
+    ...buildFieldsContent(draft.fields, schoolRecord.fields),
+    ...keepFilledLists(changedRows),
+    ...Object.fromEntries(listReplacedLists(draft, schoolRecord)),
+    ...Object.fromEntries(Object.entries(additions).filter(([, addition]) => addition)),
   }
 }

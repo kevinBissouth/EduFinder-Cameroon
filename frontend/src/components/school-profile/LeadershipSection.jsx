@@ -6,6 +6,7 @@ import Container from '../ui/Container'
 import { Emphasis, Eyebrow } from '../ui/SectionHeading'
 import { splitLastWord } from './helpers'
 import WrittenInNotice from './WrittenInNotice'
+import { useHeadTitle } from '../../hooks/useHeadTitle'
 import { useSchoolText } from '../../hooks/useSchoolText'
 import { API_URL } from '../../constants'
 
@@ -73,9 +74,10 @@ function PortraitFrame({ name, photoUrl }) {
 function LeadershipSection({ institution }) {
   const { t } = useTranslation('profile')
   const readSchoolText = useSchoolText(institution)
+  const readHeadTitle = useHeadTitle()
   if (!institution.director_name) return null
   const { leadingWords, lastWord } = splitLastWord(institution.director_name)
-  const directorTitle = readSchoolText('director_title')
+  const directorTitle = readHeadTitle(institution)
   const biography = readSchoolText('director_bio')
 
   return (

@@ -63,13 +63,14 @@ def with_profile_completeness(establishments: QuerySet) -> QuerySet:
 
 def coherent_exam_results_of_outer_establishment() -> QuerySet:
     return exclude_results_contradicting_establishment_type(
-        ExamResult.objects.filter(establishment=OuterRef("pk"))
+        ExamResult.objects.active().filter(establishment=OuterRef("pk"))
     )
 
 
 def _minimum_fee_of_outer_establishment() -> QuerySet:
     return (
-        SchoolFee.objects.filter(establishment=OuterRef("pk"))
+        SchoolFee.objects.active()
+        .filter(establishment=OuterRef("pk"))
         .values("establishment")
         .annotate(minimum_amount=Min("amount"))
         .values("minimum_amount")

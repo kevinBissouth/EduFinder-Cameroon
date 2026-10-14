@@ -110,6 +110,38 @@ class ExamResultInputSerializer(serializers.Serializer):
     )
 
 
+# Une ligne à retirer se désigne par sa clé naturelle, comme à l'ajout : la
+# fiche publique ne donne pas les identifiants des lignes.
+class FeeRemovalSerializer(serializers.Serializer):
+    id_level = serializers.IntegerField()
+    school_year = serializers.RegexField(_SCHOOL_YEAR_PATTERN)
+
+
+class ExamResultRemovalSerializer(serializers.Serializer):
+    id_exam = serializers.IntegerField()
+    session = serializers.RegexField(_EXAM_SESSION_PATTERN)
+
+
+def _identify_fee_line(fee: dict) -> tuple:
+    return (fee["id_level"], fee["school_year"])
+
+
+def _identify_exam_result_line(exam_result: dict) -> tuple:
+    return (exam_result["id_exam"], exam_result["session"])
+
+
+def _ensure_not_changed_and_removed(
+    changed_lines: list[dict], removed_lines: list[dict], identify, line_name: str
+) -> None:
+    removed_identities = {identify(removed_line) for removed_line in removed_lines}
+    for changed_line in changed_lines:
+        if identify(changed_line) in removed_identities:
+            raise serializers.ValidationError(
+                f"A {line_name} cannot be both changed and removed: "
+                f"{identify(changed_line)}"
+            )
+
+
 # Tous les champs sont facultatifs ici : c'est la forme d'une modification, où
 # seul ce qui est envoyé change. La création redéclare ses champs obligatoires.
 class EstablishmentContentSerializer(serializers.Serializer):
@@ -180,16 +212,14 @@ class EstablishmentContentSerializer(serializers.Serializer):
 
     def validate_fees(self, fees: list[dict] | None) -> list[dict] | None:
         ensure_no_duplicates(
-            fees or [],
-            lambda fee: (fee["id_level"], fee["school_year"]),
-            "fee (id_level, school_year)",
+            fees or [], _identify_fee_line, "fee (id_level, school_year)"
         )
         return fees
 
     def validate_exam_results(self, exam_results: list[dict] | None) -> list[dict] | None:
         ensure_no_duplicates(
             exam_results or [],
-            lambda exam_result: (exam_result["id_exam"], exam_result["session"]),
+            _identify_exam_result_line,
             "exam result (id_exam, session)",
         )
         return exam_results
@@ -205,10 +235,51 @@ class EstablishmentContentSerializer(serializers.Serializer):
 
 
 class ModificationProposalSerializer(EstablishmentContentSerializer):
+    # Seule une modification retire des lignes : une création n'en a pas encore.
+    fee_removals = FeeRemovalSerializer(
+        many=True, required=False, allow_null=True, max_length=MAX_FEES
+    )
+    exam_result_removals = ExamResultRemovalSerializer(
+        many=True, required=False, allow_null=True, max_length=MAX_EXAM_RESULTS
+    )
+
+    def validate_fee_removals(
+        self, fee_removals: list[dict] | None
+    ) -> list[dict] | None:
+        ensure_no_duplicates(
+            fee_removals or [],
+            _identify_fee_line,
+            "fee removal (id_level, school_year)",
+        )
+        return fee_removals
+
+    def validate_exam_result_removals(
+        self, exam_result_removals: list[dict] | None
+    ) -> list[dict] | None:
+        ensure_no_duplicates(
+            exam_result_removals or [],
+            _identify_exam_result_line,
+            "exam result removal (id_exam, session)",
+        )
+        return exam_result_removals
+
     # Une valeur nulle signifie « pas de changement » : je ne garde que ce qui
     # est réellement modifié, y compris dans les frais.
     def validate(self, content: dict) -> dict:
-        return _without_null_values(content)
+        changed_content = _without_null_values(content)
+        _ensure_not_changed_and_removed(
+            changed_content.get("fees", []),
+            changed_content.get("fee_removals", []),
+            _identify_fee_line,
+            "fee",
+        )
+        _ensure_not_changed_and_removed(
+            changed_content.get("exam_results", []),
+            changed_content.get("exam_result_removals", []),
+            _identify_exam_result_line,
+            "exam result",
+        )
+        return changed_content
 
 
 class CreationProposalSerializer(EstablishmentContentSerializer):

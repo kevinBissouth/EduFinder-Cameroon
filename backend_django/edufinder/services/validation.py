@@ -6,6 +6,7 @@ modification applique son contenu sans changer le statut, pour qu'une fiche
 dont la création n'est pas encore validée (ou qui est suspendue) ne devienne
 jamais publique par une approbation de routine.
 """
+from datetime import datetime
 from decimal import Decimal
 from typing import Any
 
@@ -37,6 +38,8 @@ from edufinder.services.proposals import (
     DIRECTOR_PHOTO_KEY,
     MEDIA_ADDITIONS_KEY,
     MEDIA_REMOVALS_KEY,
+    REMOVABLE_ROWS,
+    RemovableRows,
     UnknownReferenceError,
     ensure_references_exist,
 )
@@ -188,6 +191,7 @@ def _apply_content(establishment: Establishment, content: dict[str, Any]) -> set
     replaced_file_urls = _apply_establishment_fields(establishment, content)
     _apply_fees(establishment, content.get("fees") or [])
     _apply_exam_results(establishment, content.get("exam_results") or [])
+    _remove_rows(establishment, content)
     if "services" in content:
         _replace_services(establishment, content["services"] or [])
     if "program_ids" in content:
@@ -216,14 +220,18 @@ def _apply_establishment_fields(
 # Incrémental, pas de remplacement : une proposition ne touche que les lignes
 # (classe, année scolaire) qu'elle porte. Les frais des autres classes et des
 # autres années restent intacts — la règle 4 du cahier des besoins impose de
-# conserver l'historique des montants.
+# conserver l'historique des montants. Une ligne retirée puis proposée de
+# nouveau est remise en service : la contrainte d'unicité l'a gardée.
 def _apply_fees(establishment: Establishment, proposed_fees: list[dict]) -> None:
     for proposed_fee in proposed_fees:
         school_fee, _ = SchoolFee.objects.update_or_create(
             establishment=establishment,
             level_id=proposed_fee["id_level"],
             school_year=proposed_fee["school_year"],
-            defaults={"amount": Decimal(proposed_fee["amount"])},
+            defaults={
+                "amount": Decimal(proposed_fee["amount"]),
+                "deleted_at": None,
+            },
         )
         # Modalités absentes (ou vides de sens : null) = inchangées.
         if proposed_fee.get("payment_methods") is not None:
@@ -244,8 +252,8 @@ def _replace_payment_methods(school_fee: SchoolFee, payment_labels: list[str]) -
     )
 
 
-# Incrémental aussi : une ligne (examen, session) envoyée est créée ou mise à
-# jour, les autres résultats restent en place.
+# Incrémental aussi : une ligne (examen, session) envoyée est créée, mise à
+# jour ou remise en service, les autres résultats restent en place.
 def _apply_exam_results(
     establishment: Establishment, proposed_exam_results: list[dict]
 ) -> None:
@@ -254,8 +262,32 @@ def _apply_exam_results(
             establishment=establishment,
             exam_id=proposed_result["id_exam"],
             session=proposed_result["session"],
-            defaults={"pass_rate": Decimal(proposed_result["pass_rate"])},
+            defaults={
+                "pass_rate": Decimal(proposed_result["pass_rate"]),
+                "deleted_at": None,
+            },
         )
+
+
+# Le retrait d'un frais ou d'un résultat est logique : la ligne reçoit sa date
+# de retrait et reste en base. Une ligne déjà retirée par une autre soumission
+# approuvée entre-temps n'est plus active : elle garde sa première date.
+def _remove_rows(establishment: Establishment, content: dict[str, Any]) -> None:
+    removed_at = timezone.now()
+    for removable_rows in REMOVABLE_ROWS:
+        removals = content.get(removable_rows.content_key) or []
+        _mark_rows_removed(removable_rows, establishment, removals, removed_at)
+
+
+def _mark_rows_removed(
+    removable_rows: RemovableRows,
+    establishment: Establishment,
+    removals: list[dict[str, Any]],
+    removed_at: datetime,
+) -> None:
+    for removal in removals:
+        matching_rows = removable_rows.active_rows_matching(establishment, removal)
+        matching_rows.update(deleted_at=removed_at)
 
 
 # Remplacement exact : la liste soumise devient la liste de l'établissement.

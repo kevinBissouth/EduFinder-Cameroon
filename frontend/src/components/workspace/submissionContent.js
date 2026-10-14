@@ -12,6 +12,10 @@ const REFERENCE_FIELDS = {
   id_linguistic_section: { metaKey: 'languages', referenceKind: 'sections' },
 }
 
+// Champs dont la valeur est la clé d'une liste de référence : j'affiche son
+// libellé dans la langue du site. Une valeur hors liste s'affiche telle quelle.
+const REFERENCE_KEY_FIELDS = { director_title: 'head_titles' }
+
 const PHOTO_FIELDS = new Set(['cover_photo', 'director_photo'])
 const FILE_LIST_FIELDS = new Set(['videos', 'media_additions', 'media_removals'])
 
@@ -39,14 +43,25 @@ function describeReference(references, referenceId, referenceKind, translateRefe
   return referenceKind ? translateReference(referenceKind, referenceName) : referenceName
 }
 
-function describeFee(fee, meta) {
+// Une ligne de frais ou de résultat se nomme par sa classe et son année, ou
+// par son examen et sa session : c'est aussi ainsi qu'une demande de retrait
+// la désigne.
+function describeFeeLine(fee, meta) {
   const levelName = findReferenceName(meta.levels, fee.id_level) ?? translate('unknown')
-  return `${levelName}, ${fee.school_year}: ${formatFcfa(fee.amount)}`
+  return `${levelName}, ${fee.school_year}`
+}
+
+function describeExamResultLine(examResult, meta, translateReference) {
+  const examName = describeReference(meta.exams, examResult.id_exam, 'exams', translateReference)
+  return `${examName}, ${examResult.session}`
+}
+
+function describeFee(fee, meta) {
+  return `${describeFeeLine(fee, meta)}: ${formatFcfa(fee.amount)}`
 }
 
 function describeExamResult(examResult, meta, translateReference) {
-  const examName = describeReference(meta.exams, examResult.id_exam, 'exams', translateReference)
-  return `${examName}, ${examResult.session}: ${formatPercent(examResult.pass_rate)}`
+  return `${describeExamResultLine(examResult, meta, translateReference)}: ${formatPercent(examResult.pass_rate)}`
 }
 
 const LIST_DESCRIBERS = {
@@ -58,6 +73,11 @@ const LIST_DESCRIBERS = {
   fees: (fees, meta) => fees.map((fee) => describeFee(fee, meta)),
   exam_results: (examResults, meta, translateReference) =>
     examResults.map((examResult) => describeExamResult(examResult, meta, translateReference)),
+  fee_removals: (feeRemovals, meta) => feeRemovals.map((fee) => describeFeeLine(fee, meta)),
+  exam_result_removals: (examResultRemovals, meta, translateReference) =>
+    examResultRemovals.map((examResult) =>
+      describeExamResultLine(examResult, meta, translateReference),
+    ),
 }
 
 function toSentenceCase(text) {
@@ -88,6 +108,9 @@ function describeEntry(key, value, meta, translateReference) {
       label: translate(key),
       text: i18next.t(`workspace:languageNames.${value}`, { defaultValue: value }),
     }
+  }
+  if (key in REFERENCE_KEY_FIELDS) {
+    return { label: translate(key), text: translateReference(REFERENCE_KEY_FIELDS[key], value) }
   }
   if (PHOTO_FIELDS.has(key)) return { label: translate(key), text: translate('newPhoto') }
   if (FILE_LIST_FIELDS.has(key)) {

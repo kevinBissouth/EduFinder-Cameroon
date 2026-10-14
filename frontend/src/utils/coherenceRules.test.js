@@ -8,6 +8,7 @@ const EXAMS = [
   { id: 2, name: 'BTS' },
   { id: 3, name: 'GCE O-Level' },
   { id: 4, name: 'New exam' },
+  { id: 5, name: 'CAP' },
 ]
 const LEVELS = [
   { id: 1, stage: 'Maternelle', label: 'Petite Section' },
@@ -16,20 +17,30 @@ const LEVELS = [
   { id: 4, stage: 'Collège', label: '4e' },
   { id: 5, stage: 'Higher', label: 'Licence 1' },
   { id: 6, stage: 'New stage', label: 'New class' },
+  { id: 7, stage: 'Technical lower secondary', label: '1ère année' },
 ]
-const SECONDARY_TYPES = ['Secondary general', 'Secondary technical']
+const GENERAL_TYPE = ['Secondary general']
+const TECHNICAL_TYPE = ['Secondary technical']
 const RULES = {
   exam_allowed_types: {
-    BEPC: SECONDARY_TYPES,
-    'GCE O-Level': SECONDARY_TYPES,
+    BEPC: [...GENERAL_TYPE, ...TECHNICAL_TYPE],
+    'GCE O-Level': GENERAL_TYPE,
+    CAP: TECHNICAL_TYPE,
     BTS: ['Higher institute'],
   },
-  exam_families: { BEPC: 'francophone', BTS: 'francophone', 'GCE O-Level': 'anglophone' },
+  exam_families: {
+    BEPC: 'francophone',
+    BTS: 'francophone',
+    CAP: 'francophone',
+    'GCE O-Level': 'anglophone',
+  },
+  section_free_exam_types: TECHNICAL_TYPE,
   stage_allowed_types: {
     Maternelle: ['Nursery', 'Primary'],
     Primaire: ['Primary'],
     Primary: ['Primary'],
-    Collège: SECONDARY_TYPES,
+    Collège: GENERAL_TYPE,
+    'Technical lower secondary': TECHNICAL_TYPE,
     Higher: ['Higher institute', 'University'],
   },
   stage_families: { Maternelle: 'francophone', Primaire: 'francophone', Primary: 'anglophone', Collège: 'francophone' },
@@ -102,6 +113,25 @@ test('a general secondary school is offered neither nursery nor primary classes'
   const school = { typeName: 'Secondary general', sectionName: 'Francophone' }
 
   assert.deepEqual(listLabels(listLevelsForSchool(LEVELS, RULES, school)), ['4e', 'New class'])
+})
+
+test('a technical school has the same exams and classes in every section', () => {
+  const sections = ['Francophone', 'Anglophone', 'Bilingual']
+
+  sections.forEach((sectionName) => {
+    const school = { typeName: 'Secondary technical', sectionName }
+    assert.deepEqual(listNames(listExamsForSchool(EXAMS, RULES, school)), ['BEPC', 'New exam', 'CAP'])
+    assert.deepEqual(listLabels(listLevelsForSchool(LEVELS, RULES, school)), [
+      'New class',
+      '1ère année',
+    ])
+  })
+})
+
+test('an anglophone general school keeps the GCE and is not offered the CAP', () => {
+  const school = { typeName: 'Secondary general', sectionName: 'Anglophone' }
+
+  assert.deepEqual(listNames(listExamsForSchool(EXAMS, RULES, school)), ['GCE O-Level', 'New exam'])
 })
 
 test('lists not loaded yet give an empty list instead of failing', () => {

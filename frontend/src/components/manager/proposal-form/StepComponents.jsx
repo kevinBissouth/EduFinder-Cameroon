@@ -1,17 +1,16 @@
+import { BadgeCheck, Landmark, Languages, MapPin, School } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
-import { PhoneField, SelectField, TextAreaField, TextField } from '../../ui/Field'
+import ChoiceField from '../../ui/ChoiceField'
+import { PhoneField, TextAreaField, TextField } from '../../ui/Field'
 import Notice from '../../workspace/Notice'
 import ToggleChipGroup from '../../workspace/ToggleChipGroup'
 import { toChipOptions, toggleValue } from '../../workspace/toggleChips'
 import { PhotoUpload, VideoUploads } from './FileUploads'
 import { FIELD_MAX_LENGTHS, rowErrorPath } from './proposalValidation'
-import { ExamResultRowsEditor, FeeRowsEditor } from './RowEditors'
-import {
-  translateLevelOptions,
-  translateOptionNames,
-  useReferenceLabel,
-} from '../../../hooks/useReferenceLabel'
+import FeeGroupsEditor from './FeeGroupsEditor'
+import { ExamResultsEditor } from './RowEditors'
+import { translateOptionNames, useReferenceLabel } from '../../../hooks/useReferenceLabel'
 import { SUPPORTED_LANGUAGES } from '../../../i18n/languages'
 
 const BIOGRAPHY_ROWS = 4
@@ -93,12 +92,13 @@ export function GeneralStep({ form }) {
         value={fields.description}
         onChange={(event) => form.setField('description', event.target.value)}
       />
-      <SelectField
+      <ChoiceField
+        icon={Languages}
         label={t('form.fields.contentLanguage')}
         placeholder={t('form.fields.contentLanguagePlaceholder')}
         options={CONTENT_LANGUAGE_OPTIONS}
         value={fields.content_language}
-        onChange={(event) => form.setField('content_language', event.target.value)}
+        onChange={(languageCode) => form.setField('content_language', languageCode)}
       />
       <p className="-mt-2 text-sm text-ink-soft">{t('form.fields.contentLanguageHint')}</p>
       {translationLabels && (
@@ -118,20 +118,28 @@ export function ClassificationStep({ form }) {
   const translateReference = useReferenceLabel()
   const { fields } = form.draft
   const requiredSuffix = form.isCreation ? t('form.required') : ''
-  const referenceSelects = [
-    { fieldName: 'id_city', label: t('form.fields.city'), options: form.meta.cities ?? [] },
+  const referenceChoices = [
+    {
+      fieldName: 'id_city',
+      icon: MapPin,
+      label: t('form.fields.city'),
+      options: form.meta.cities ?? [],
+    },
     {
       fieldName: 'id_type',
+      icon: School,
       label: t('form.fields.schoolType'),
       options: translateOptionNames(form.meta.types ?? [], 'types', translateReference),
     },
     {
       fieldName: 'id_sector',
+      icon: Landmark,
       label: t('form.fields.sector'),
       options: translateOptionNames(form.meta.sectors ?? [], 'sectors', translateReference),
     },
     {
       fieldName: 'id_linguistic_section',
+      icon: Languages,
       label: t('form.fields.section'),
       options: translateOptionNames(form.meta.languages ?? [], 'sections', translateReference),
     },
@@ -140,15 +148,18 @@ export function ClassificationStep({ form }) {
   return (
     <>
       <div className="grid gap-4 sm:grid-cols-2">
-        {referenceSelects.map((referenceSelect) => (
-          <SelectField
-            key={referenceSelect.fieldName}
-            label={`${referenceSelect.label}${requiredSuffix}`}
+        {referenceChoices.map((referenceChoice) => (
+          <ChoiceField
+            key={referenceChoice.fieldName}
+            icon={referenceChoice.icon}
+            label={`${referenceChoice.label}${requiredSuffix}`}
             placeholder={t('form.choose')}
-            options={referenceSelect.options}
-            error={form.fieldError(referenceSelect.fieldName)}
-            value={fields[referenceSelect.fieldName]}
-            onChange={(event) => form.setField(referenceSelect.fieldName, event.target.value)}
+            options={referenceChoice.options}
+            error={form.fieldError(referenceChoice.fieldName)}
+            value={fields[referenceChoice.fieldName]}
+            onChange={(referenceId) =>
+              form.setSchoolProfileField(referenceChoice.fieldName, referenceId)
+            }
           />
         ))}
       </div>
@@ -180,23 +191,26 @@ export function ProgrammesStep({ form }) {
       options={programOptions}
       selectedValues={form.draft.programIds}
       onToggle={(programId) =>
-        form.setList('programIds', 'program_ids', toggleValue(form.draft.programIds, programId))
+        form.setValue('programIds', toggleValue(form.draft.programIds, programId))
       }
     />
   )
 }
 
 export function FeesStep({ form }) {
-  const translateReference = useReferenceLabel()
-
   return (
-    <FeeRowsEditor
-      feeRows={form.draft.feeRows}
-      levels={translateLevelOptions(form.meta.levels ?? [], translateReference)}
+    <FeeGroupsEditor
+      feeGroups={form.draft.feeGroups}
+      feeYear={form.draft.feeYear || form.openSchoolYears[0] || ''}
+      openSchoolYears={form.openSchoolYears}
+      levels={form.meta.levels ?? []}
       offeredLevelIds={form.offeredChoices.offeredLevelIds}
       paymentMethods={form.meta.payment_methods ?? []}
-      errorFor={(rowId, fieldName) => form.fieldError(rowErrorPath('feeRows', rowId, fieldName))}
-      onChange={(feeRows) => form.setList('feeRows', 'fees', feeRows)}
+      errorFor={(groupId, fieldName) =>
+        form.fieldError(rowErrorPath('feeGroups', groupId, fieldName))
+      }
+      onChangeGroups={(feeGroups) => form.setValue('feeGroups', feeGroups)}
+      onChangeYear={(feeYear) => form.setValue('feeYear', feeYear)}
     />
   )
 }
@@ -216,7 +230,7 @@ export function ServicesStep({ form }) {
       options={toChipOptions(availableNames)}
       selectedValues={serviceNames}
       onToggle={(serviceName) =>
-        form.setList('serviceNames', 'services', toggleValue(serviceNames, serviceName))
+        form.setValue('serviceNames', toggleValue(serviceNames, serviceName))
       }
     />
   )
@@ -226,14 +240,17 @@ export function ResultsStep({ form }) {
   const translateReference = useReferenceLabel()
 
   return (
-    <ExamResultRowsEditor
+    <ExamResultsEditor
       examResultRows={form.draft.examResultRows}
+      session={form.draft.examSession}
+      latestSession={form.meta.coherence_rules?.latest_exam_session ?? ''}
       exams={translateOptionNames(form.meta.exams ?? [], 'exams', translateReference)}
       offeredExamIds={form.offeredChoices.offeredExamIds}
       errorFor={(rowId, fieldName) =>
         form.fieldError(rowErrorPath('examResultRows', rowId, fieldName))
       }
-      onChange={(examResultRows) => form.setList('examResultRows', 'exam_results', examResultRows)}
+      onChangeRows={(examResultRows) => form.setValue('examResultRows', examResultRows)}
+      onChangeSession={(examSession) => form.setValue('examSession', examSession)}
     />
   )
 }
@@ -242,6 +259,18 @@ export function LeadershipStep({ form }) {
   const { t } = useTranslation('manager')
   const { fields } = form.draft
   const translationLabels = useTranslationLabels(fields.content_language)
+  const translateReference = useReferenceLabel()
+  // Les titres du type de l'établissement, déjà traduits par la liste de
+  // référence. Un titre libre d'une ancienne fiche reste proposé tant qu'il
+  // est celui de la fiche.
+  const typeHeadTitles =
+    form.meta.coherence_rules?.head_titles?.[form.offeredChoices.typeName] ?? []
+  const headTitleOptions = [...new Set([...typeHeadTitles, fields.director_title])]
+    .filter(Boolean)
+    .map((headTitle) => ({
+      id: headTitle,
+      name: translateReference('head_titles', headTitle),
+    }))
 
   return (
     <>
@@ -252,21 +281,14 @@ export function LeadershipStep({ form }) {
         value={fields.director_name}
         onChange={(event) => form.setField('director_name', event.target.value)}
       />
-      <TextField
+      <ChoiceField
+        icon={BadgeCheck}
         label={t('form.fields.directorTitle')}
-        placeholder={t('form.fields.directorTitlePlaceholder')}
-        maxLength={FIELD_MAX_LENGTHS.director_title}
+        placeholder={t('form.choose')}
+        options={headTitleOptions}
         value={fields.director_title}
-        onChange={(event) => form.setField('director_title', event.target.value)}
+        onChange={(headTitle) => form.setField('director_title', headTitle)}
       />
-      {translationLabels && (
-        <TextField
-          label={translationLabels.describe(t('form.fields.directorTitle'))}
-          maxLength={FIELD_MAX_LENGTHS.director_title_translation}
-          value={fields.director_title_translation}
-          onChange={(event) => form.setField('director_title_translation', event.target.value)}
-        />
-      )}
       <TextAreaField
         label={t('form.fields.biography')}
         rows={BIOGRAPHY_ROWS}
@@ -308,7 +330,7 @@ export function MediaStep({ form }) {
       <VideoUploads
         videoUrls={form.draft.videoUrls}
         upload={form.upload}
-        onChange={(videoUrls) => form.setList('videoUrls', 'videos', videoUrls)}
+        onChange={(videoUrls) => form.setValue('videoUrls', videoUrls)}
       />
       <UploadStatus upload={form.upload} />
     </>
