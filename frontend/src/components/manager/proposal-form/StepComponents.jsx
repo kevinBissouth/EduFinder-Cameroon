@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import ChoiceField from '../../ui/ChoiceField'
 import { PhoneField, TextAreaField, TextField } from '../../ui/Field'
 import Notice from '../../workspace/Notice'
+import SubmissionContent from '../../workspace/SubmissionContent'
 import ToggleChipGroup from '../../workspace/ToggleChipGroup'
 import { toChipOptions, toggleValue } from '../../workspace/toggleChips'
 import { PhotoUpload, VideoUploads } from './FileUploads'
@@ -335,4 +336,13 @@ export function MediaStep({ form }) {
       <UploadStatus upload={form.upload} />
     </>
   )
+}
+
+// Ce qui partira, présenté comme le super admin le lira : le responsable le
+// relit avant d'envoyer, et revient à une étape s'il y voit une erreur.
+export function ReviewStep({ form }) {
+  const { t } = useTranslation('manager')
+
+  if (form.hasNothingToSend) return <Notice>{t('form.nothingToSend')}</Notice>
+  return <SubmissionContent content={form.proposalContent} meta={form.meta} />
 }

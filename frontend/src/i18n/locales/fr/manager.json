@@ -236,6 +236,10 @@
       "media": {
         "title": "Photos et vidéos",
         "lead": "Les fichiers sont envoyés maintenant et apparaissent sur la page une fois la proposition approuvée."
+      },
+      "review": {
+        "title": "Vérifier et envoyer",
+        "lead": "Voici exactement ce que le super administrateur va valider. Revenez à une étape pour corriger, puis envoyez."
       }
     },
     "fields": {

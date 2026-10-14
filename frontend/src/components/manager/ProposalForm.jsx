@@ -146,7 +146,6 @@ function ProposalForm({ mode, meta, school = null, submitting, serverError, onSu
   // Les erreurs ne s'affichent qu'après un essai d'avancer : rouge partout dès
   // l'ouverture, le formulaire accuserait le responsable avant qu'il ait saisi.
   const [hasTriedStep, setHasTriedStep] = useState(false)
-  const [hasTriedSending, setHasTriedSending] = useState(false)
   // Chaque essai refusé incrémente ce compteur : l'effet ci-dessous montre la
   // première erreur une fois qu'elle est affichée.
   const [errorRevealCount, setErrorRevealCount] = useState(0)
@@ -203,9 +202,16 @@ function ProposalForm({ mode, meta, school = null, submitting, serverError, onSu
     }
   }
 
+  // Ce qui part est ce qui diffère de la fiche publiée : une modification sans
+  // changement n'a rien à faire valider, l'étape de relecture le dit.
+  const proposalContent = buildProposalContent(draft, { ...publishedRecord, openSchoolYears })
+  const hasNothingToSend = !isCreation && Object.keys(proposalContent).length === 0
+
   const form = {
     draft,
     meta,
+    proposalContent,
+    hasNothingToSend,
     isCreation,
     upload,
     offeredChoices,
@@ -228,11 +234,6 @@ function ProposalForm({ mode, meta, school = null, submitting, serverError, onSu
     stepSectionRef.current?.scrollIntoView({ block: 'start' })
   }
 
-  // Ce qui part est ce qui diffère de la fiche publiée : une modification sans
-  // changement n'a rien à faire valider, je le dis avant l'envoi.
-  const proposalContent = buildProposalContent(draft, { ...publishedRecord, openSchoolYears })
-  const hasNothingToSend = !isCreation && Object.keys(proposalContent).length === 0
-
   const handleSubmit = (event) => {
     event.preventDefault()
     // La touche Entrée soumet le formulaire même quand le bouton est désactivé.
@@ -246,7 +247,6 @@ function ProposalForm({ mode, meta, school = null, submitting, serverError, onSu
       goToStep(currentStepIndex + 1)
       return
     }
-    setHasTriedSending(true)
     if (hasNothingToSend) return
     onSubmit(proposalContent)
   }
@@ -286,10 +286,6 @@ function ProposalForm({ mode, meta, school = null, submitting, serverError, onSu
             <Notice tone="danger" className="mt-6">
               {t('form.errors.stepHasErrors')}
             </Notice>
-          )}
-
-          {hasTriedSending && hasNothingToSend && (
-            <Notice className="mt-6">{t('form.nothingToSend')}</Notice>
           )}
 
           {serverError && (

@@ -1,6 +1,7 @@
 import {
   Building2,
   ChartNoAxesColumn,
+  ClipboardList,
   GraduationCap,
   Images,
   MapPin,
@@ -17,6 +18,7 @@ import {
   MediaStep,
   ProgrammesStep,
   ResultsStep,
+  ReviewStep,
   ServicesStep,
 } from './StepComponents'
 
@@ -70,5 +72,12 @@ export const STEPS = [
     icon: Images,
     tone: 'amber',
     Component: MediaStep,
+  },
+  // Toujours la dernière : on relit ce qui part avant de l'envoyer.
+  {
+    id: 'review',
+    icon: ClipboardList,
+    tone: 'green',
+    Component: ReviewStep,
   },
 ]

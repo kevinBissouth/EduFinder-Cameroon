@@ -227,6 +227,10 @@
       "media": {
         "title": "Photos and videos",
         "lead": "Files are uploaded now and appear on the page once the proposal is approved."
+      },
+      "review": {
+        "title": "Review and send",
+        "lead": "This is exactly what the super administrator will review. Go back to a step to correct it, then send."
       }
     },
     "fields": {
