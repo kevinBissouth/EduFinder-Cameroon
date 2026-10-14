@@ -7,11 +7,12 @@ from edufinder.services.school_calendar import list_open_school_years
 TECHNICAL_TYPE_LABEL = "Secondary technical"
 
 # Le secondaire technique suit la même organisation dans les deux sections :
-# il présente le CAP, le BEPC, le Probatoire et le Baccalauréat, jamais le GCE.
+# il présente le CAP, le Probatoire et le Baccalauréat, jamais le GCE. Le BEPC
+# est l'examen du collège général : au technique, le premier cycle mène au CAP.
 EXAM_ALLOWED_TYPE_LABELS = {
     "CEP": {"Primary"},
     "FSLC": {"Primary"},
-    "BEPC": {"Secondary general", TECHNICAL_TYPE_LABEL},
+    "BEPC": {"Secondary general"},
     "GCE O-Level": {"Secondary general"},
     "Probatoire": {"Secondary general", TECHNICAL_TYPE_LABEL},
     "Baccalaureate": {"Secondary general", TECHNICAL_TYPE_LABEL},

@@ -677,6 +677,27 @@ def test_an_anglophone_technical_school_has_the_classes_and_exams_of_a_francopho
 
 
 @pytest.mark.django_db
+def test_a_technical_school_does_not_sit_the_bepc(
+    client, log_in_as, manager, creation_payload, technical_references
+):
+    log_in_as(manager)
+    payload = build_secondary_payload(
+        creation_payload,
+        id_type=technical_references.technical_type.pk,
+        exam_results=[build_exam_result("BEPC")],
+    )
+
+    response = post_json(client, CREATION_URL, payload)
+
+    assert response.status_code == 422
+    assert response.json()["detail"] == (
+        "Incoherent exam result: 'BEPC' is reserved for the types: Secondary general "
+        "(received: 'Secondary technical')"
+    )
+    assert Submission.objects.count() == 0
+
+
+@pytest.mark.django_db
 def test_a_technical_school_cannot_publish_fees_for_a_general_class(
     client, log_in_as, manager, creation_payload, technical_references
 ):

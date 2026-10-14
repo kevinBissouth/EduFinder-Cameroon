@@ -122,7 +122,7 @@ def test_filters_meta_tells_which_types_sit_each_exam(client):
 
     assert exam_allowed_types["CEP"] == ["Primary"]
     assert exam_allowed_types["BTS"] == ["Higher institute"]
-    assert exam_allowed_types["BEPC"] == ["Secondary general", "Secondary technical"]
+    assert exam_allowed_types["BEPC"] == ["Secondary general"]
     # Le GCE est l'examen du général : le technique présente le CAP.
     assert exam_allowed_types["GCE O-Level"] == ["Secondary general"]
     assert exam_allowed_types["CAP"] == ["Secondary technical"]
