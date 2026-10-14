@@ -2,9 +2,9 @@
 // règles du sérialiseur (backend_django/edufinder/serializers/proposal.py) :
 // le serveur reste seul juge, ces contrôles servent à montrer l'erreur sur
 // l'étape où elle se trouve plutôt qu'à l'envoi, six étapes plus loin.
+import { isBlankFeeGroup } from './feeGroups.js'
 import { REQUIRED_CLASSIFICATION_FIELDS } from './proposalDraft.js'
 
-const SCHOOL_YEAR_PATTERN = /^\d{4}-\d{4}$/
 const EXAM_SESSION_PATTERN = /^\d{4}$/
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const WHITESPACE_PATTERN = /\s/
@@ -84,11 +84,6 @@ function validateClassification(draft, { isCreation }) {
   )
 }
 
-function checkSchoolYear(schoolYear) {
-  if (!schoolYear.trim()) return 'required'
-  return SCHOOL_YEAR_PATTERN.test(schoolYear.trim()) ? null : 'schoolYearFormat'
-}
-
 function checkAmount(amount) {
   if (!amount) return 'required'
   return Number(amount) > 0 ? null : 'amountPositive'
@@ -112,17 +107,34 @@ function checkChoice(choiceId, allowedIds, notOfferedError) {
   return allowedIds.has(choiceId) ? null : notOfferedError
 }
 
-const FEE_ROWS_RULE = {
-  listName: 'feeRows',
-  checks: {
-    id_level: (levelId, { allowedLevelIds }) =>
-      checkChoice(levelId, allowedLevelIds, 'levelNotOffered'),
-    amount: checkAmount,
-    school_year: checkSchoolYear,
-  },
-  identify: (feeRow) => `${feeRow.id_level}|${feeRow.school_year.trim()}`,
-  duplicateField: 'school_year',
-  duplicateError: 'duplicateFee',
+const FEE_GROUPS_LIST_NAME = 'feeGroups'
+
+// Un montant doit avoir au moins une classe, et seulement des classes que
+// l'établissement peut proposer (le type ou la section ont pu changer depuis).
+function checkGroupLevels(levelIds, allowedLevelIds) {
+  if (levelIds.length === 0) return 'classesRequired'
+  return levelIds.every((levelId) => allowedLevelIds.has(levelId)) ? null : 'levelNotOffered'
+}
+
+function validateFeeGroup(feeGroup, { allowedLevelIds }) {
+  return keepErrors({
+    [rowErrorPath(FEE_GROUPS_LIST_NAME, feeGroup.groupId, 'amount')]: checkAmount(feeGroup.amount),
+    [rowErrorPath(FEE_GROUPS_LIST_NAME, feeGroup.groupId, 'levelIds')]: checkGroupLevels(
+      feeGroup.levelIds,
+      allowedLevelIds,
+    ),
+  })
+}
+
+// Seules les années ouvertes se saisissent : les montants des années passées
+// restent dans le brouillon pour mémoire, sans être contrôlés ni envoyés. Un
+// montant ajouté puis laissé vide n'est pas une erreur.
+function validateFeeGroups(draft, context) {
+  const editedGroups = draft.feeGroups.filter(
+    (feeGroup) =>
+      context.openSchoolYears.includes(feeGroup.school_year) && !isBlankFeeGroup(feeGroup),
+  )
+  return Object.assign({}, ...editedGroups.map((feeGroup) => validateFeeGroup(feeGroup, context)))
 }
 
 const EXAM_RESULT_ROWS_RULE = {
@@ -185,11 +197,11 @@ function validateRows(rows, rule, context) {
 const STEP_VALIDATORS = {
   general: validateGeneral,
   classification: validateClassification,
-  fees: (draft, context) => validateRows(draft.feeRows, FEE_ROWS_RULE, context),
+  fees: validateFeeGroups,
   results: (draft, context) => validateRows(draft.examResultRows, EXAM_RESULT_ROWS_RULE, context),
 }
 
-// context = { isCreation, allowedLevelIds, allowedExamIds }. Renvoie
+// context = { isCreation, allowedLevelIds, allowedExamIds, openSchoolYears }. Renvoie
 // { chemin du champ: clé du message d'erreur } ; un objet vide veut dire que
 // l'étape peut être validée.
 export function validateStep(stepId, draft, context) {

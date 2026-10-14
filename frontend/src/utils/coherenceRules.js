@@ -14,16 +14,28 @@ function isFamilyAllowed(languageFamily, allowedFamilies) {
   return !languageFamily || !allowedFamilies || allowedFamilies.includes(languageFamily)
 }
 
+// Pour certains types, la section ne filtre pas : une école technique
+// présente les mêmes examens dans les deux sections.
+function findAllowedFamilies(rules, school, ruleNames) {
+  const sectionFreeTypes = rules[ruleNames.sectionFreeTypes] ?? []
+  if (sectionFreeTypes.includes(school.typeName)) return undefined
+  return rules.section_families?.[school.sectionName]
+}
+
 function createSchoolFilter(rules, school, ruleNames) {
   const allowedTypesByLabel = rules[ruleNames.allowedTypes] ?? {}
   const familiesByLabel = rules[ruleNames.families] ?? {}
-  const allowedFamilies = rules.section_families?.[school.sectionName]
+  const allowedFamilies = findAllowedFamilies(rules, school, ruleNames)
   return (label) =>
     isTypeAllowed(allowedTypesByLabel[label], school.typeName) &&
     isFamilyAllowed(familiesByLabel[label], allowedFamilies)
 }
 
-const EXAM_RULE_NAMES = { allowedTypes: 'exam_allowed_types', families: 'exam_families' }
+const EXAM_RULE_NAMES = {
+  allowedTypes: 'exam_allowed_types',
+  families: 'exam_families',
+  sectionFreeTypes: 'section_free_exam_types',
+}
 const STAGE_RULE_NAMES = { allowedTypes: 'stage_allowed_types', families: 'stage_families' }
 
 // school = { typeName, sectionName } : les clés métier, pas les libellés traduits.

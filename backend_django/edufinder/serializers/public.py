@@ -42,6 +42,8 @@ class CoherenceRulesSerializer(serializers.Serializer):
     section_families = serializers.DictField(
         child=serializers.ListField(child=serializers.CharField())
     )
+    section_free_exam_types = serializers.ListField(child=serializers.CharField())
+    open_school_years = serializers.ListField(child=serializers.CharField())
 
 
 class FiltersMetaSerializer(serializers.Serializer):

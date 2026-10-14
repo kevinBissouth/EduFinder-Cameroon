@@ -1,11 +1,7 @@
 import { useState } from 'react'
 
-import {
-  buildInitialFields,
-  createExamResultRow,
-  createFeeRow,
-  findProgramIds,
-} from './proposalDraft'
+import { groupFees } from './feeGroups'
+import { buildInitialFields, createExamResultRow, findProgramIds } from './proposalDraft'
 
 // État du formulaire de proposition. En modification il part de la fiche
 // actuelle ; en création (pas de fiche) tout part de vide.
@@ -13,7 +9,10 @@ export function useProposalDraft(school, programs) {
   const detail = school?.detail
   const [draft, setDraft] = useState(() => ({
     fields: buildInitialFields(school),
-    feeRows: (detail?.fees ?? []).map(createFeeRow),
+    // Tous les frais publiés, regroupés par montant. L'année affichée se
+    // choisit à l'étape Frais ; vide, c'est la première année ouverte.
+    feeGroups: groupFees(detail?.fees ?? []),
+    feeYear: '',
     examResultRows: (detail?.exam_results ?? []).map(createExamResultRow),
     serviceNames: (detail?.services ?? []).map((service) => service.name),
     programIds: findProgramIds(detail?.programs ?? [], programs),
@@ -41,5 +40,5 @@ export function useProposalDraft(school, programs) {
       touchedLists: [...new Set([...currentDraft.touchedLists, listName])],
     }))
 
-  return { draft, setField, setValue, setList }
+  return { draft, setField, setValue, setList, replaceDraft: setDraft }
 }

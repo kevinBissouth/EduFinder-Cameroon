@@ -1,29 +1,15 @@
-import { ClipboardCheck, GraduationCap, Plus, Trash2 } from 'lucide-react'
+import { ClipboardCheck, Plus, Trash2 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 import Button from '../../ui/Button'
 import ChoiceField from '../../ui/ChoiceField'
-import { AmountField, TextField } from '../../ui/Field'
-import ToggleChipGroup from '../../workspace/ToggleChipGroup'
-import { toggleValue } from '../../workspace/toggleChips'
+import { TextField } from '../../ui/Field'
 import { listRowOptions } from './offeredChoices'
-import { createExamResultRow, createFeeRow, removeRow, replaceRow } from './proposalDraft'
-import { useReferenceLabel } from '../../../hooks/useReferenceLabel'
-import { labelLevelOptions } from '../../../utils/levelLabels'
+import { createExamResultRow, removeRow, replaceRow } from './proposalDraft'
 
-const SEPTEMBER_MONTH_INDEX = 8
 const MAX_PASS_RATE = 100
 // Sans step="any", un champ numérique n'accepte que des entiers : un taux de
 // 72,5 % déjà enregistré bloquerait l'étape, le navigateur refusant d'avancer.
-
-// Au Cameroun l'année scolaire va de septembre à août : avant septembre,
-// l'année en cours a commencé l'année civile précédente.
-function findCurrentSchoolYear() {
-  const today = new Date()
-  const startYear =
-    today.getMonth() >= SEPTEMBER_MONTH_INDEX ? today.getFullYear() : today.getFullYear() - 1
-  return `${startYear}-${startYear + 1}`
-}
 
 // Une ligne tient en peu de hauteur : avec trente résultats d'examens, chaque
 // ligne gagnée évite un long défilement sur téléphone. La suppression est une
@@ -53,89 +39,12 @@ const ROW_GRID_CLASSES =
   'grid grid-cols-2 gap-3 sm:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)_minmax(0,1fr)]'
 const WIDE_FIELD_CLASSES = 'col-span-2 sm:col-span-1'
 
-function AddRowButton({ label, onAdd }) {
+export function AddRowButton({ label, onAdd }) {
   return (
     <Button variant="secondary" onClick={onAdd} className="mt-4">
       <Plus aria-hidden="true" className="size-4" />
       {label}
     </Button>
-  )
-}
-
-export function FeeRowsEditor({
-  feeRows,
-  levels,
-  offeredLevelIds,
-  paymentMethods,
-  errorFor,
-  onChange,
-}) {
-  const { t } = useTranslation('manager')
-  const translateReference = useReferenceLabel()
-  const changeRow = (rowId, changes) => onChange(replaceRow(feeRows, rowId, changes))
-  const translateStage = (stage) => translateReference('stages', stage)
-  // Les homonymes se cherchent parmi les classes proposées sur la ligne, pas
-  // dans toute la nomenclature : le cycle n'apparaît que s'il sert vraiment.
-  const listLevelOptions = (selectedLevelId) =>
-    labelLevelOptions(listRowOptions(levels, offeredLevelIds, selectedLevelId), translateStage)
-
-  return (
-    <>
-      <ul className="space-y-3">
-        {feeRows.map((feeRow) => (
-          <RowFrame
-            key={feeRow.rowId}
-            removeLabel={t('form.rows.removeFee')}
-            onRemove={() => onChange(removeRow(feeRows, feeRow.rowId))}
-          >
-            <div className={ROW_GRID_CLASSES}>
-              <ChoiceField
-                className={WIDE_FIELD_CLASSES}
-                icon={GraduationCap}
-                label={t('form.rows.level')}
-                placeholder={t('form.rows.chooseLevel')}
-                options={listLevelOptions(feeRow.id_level)}
-                error={errorFor(feeRow.rowId, 'id_level')}
-                value={feeRow.id_level}
-                onChange={(levelId) => changeRow(feeRow.rowId, { id_level: levelId })}
-              />
-              <AmountField
-                label={t('form.rows.yearlyAmount')}
-                error={errorFor(feeRow.rowId, 'amount')}
-                value={feeRow.amount}
-                onChange={(amount) => changeRow(feeRow.rowId, { amount })}
-              />
-              <TextField
-                label={t('form.rows.schoolYear')}
-                placeholder={findCurrentSchoolYear()}
-                error={errorFor(feeRow.rowId, 'school_year')}
-                value={feeRow.school_year}
-                onChange={(event) => changeRow(feeRow.rowId, { school_year: event.target.value })}
-              />
-            </div>
-            <div className="mt-3">
-              {/* Un plan déjà enregistré mais absent de la liste de référence reste proposé. */}
-              <ToggleChipGroup
-                label={t('fees.paymentPlans')}
-                options={[...new Set([...paymentMethods, ...feeRow.payment_methods])].map(
-                  (paymentMethod) => ({
-                    value: paymentMethod,
-                    label: translateReference('payment_methods', paymentMethod),
-                  }),
-                )}
-                selectedValues={feeRow.payment_methods}
-                onToggle={(paymentMethod) =>
-                  changeRow(feeRow.rowId, {
-                    payment_methods: toggleValue(feeRow.payment_methods, paymentMethod),
-                  })
-                }
-              />
-            </div>
-          </RowFrame>
-        ))}
-      </ul>
-      <AddRowButton label={t('form.rows.addFee')} onAdd={() => onChange([...feeRows, createFeeRow()])} />
-    </>
   )
 }
 

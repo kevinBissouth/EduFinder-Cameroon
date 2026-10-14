@@ -4,12 +4,14 @@ import { useTranslation } from 'react-i18next'
 
 import Button from '../ui/Button'
 import Notice from '../workspace/Notice'
+import { cleanDraftForSchoolProfile } from './proposal-form/draftCleanup'
 import { findOfferedChoices } from './proposal-form/offeredChoices'
 import { buildProposalContent } from './proposal-form/proposalDraft'
 import { validateStep } from './proposal-form/proposalValidation'
 import { STEPS } from './proposal-form/steps'
 import { useFileUpload } from './proposal-form/useFileUpload'
 import { useProposalDraft } from './proposal-form/useProposalDraft'
+import { useToast } from '../workspace/toastContext'
 import { typeSupportsPrograms } from '../../utils/establishmentType'
 
 const PERCENT = 100
@@ -142,16 +144,22 @@ function ProposalForm({ mode, meta, school = null, submitting, serverError, onSu
   // Les erreurs ne s'affichent qu'après un essai d'avancer : rouge partout dès
   // l'ouverture, le formulaire accuserait le responsable avant qu'il ait saisi.
   const [hasTriedStep, setHasTriedStep] = useState(false)
-  const { draft, setField, setValue, setList } = useProposalDraft(school, meta.programs ?? [])
+  const { draft, setField, setValue, setList, replaceDraft } = useProposalDraft(
+    school,
+    meta.programs ?? [],
+  )
   const upload = useFileUpload()
+  const showToast = useToast()
 
   const offeredChoices = findOfferedChoices(meta, school, draft.fields)
   const visibleSteps = listVisibleSteps(isCreation, offeredChoices, draft)
   const currentStep = visibleSteps[currentStepIndex]
   const isFirstStep = currentStepIndex === 0
   const isLastStep = currentStepIndex === visibleSteps.length - 1
+  const openSchoolYears = meta.coherence_rules?.open_school_years ?? []
   const stepErrors = validateStep(currentStep.id, draft, {
     isCreation,
+    openSchoolYears,
     allowedLevelIds: unionOf(offeredChoices.offeredLevelIds, offeredChoices.publishedLevelIds),
     allowedExamIds: unionOf(offeredChoices.offeredExamIds, offeredChoices.publishedExamIds),
   })
@@ -159,13 +167,35 @@ function ProposalForm({ mode, meta, school = null, submitting, serverError, onSu
   const isBusy = submitting || upload.isUploading
   const fieldError = (fieldPath) =>
     hasTriedStep && stepErrors[fieldPath] ? t(`form.errors.${stepErrors[fieldPath]}`) : undefined
+  // Le type et la section commandent la suite du formulaire : en changer
+  // retire les classes, les examens et les filières qui ne conviennent plus,
+  // et je le dis, pour que rien ne disparaisse en silence.
+  const setSchoolProfileField = (fieldName, fieldValue) => {
+    const nextFields = { ...draft.fields, [fieldName]: fieldValue }
+    const nextChoices = findOfferedChoices(meta, school, nextFields)
+    const cleanup = cleanDraftForSchoolProfile(
+      { ...draft, fields: nextFields },
+      {
+        levelIds: unionOf(nextChoices.offeredLevelIds, nextChoices.publishedLevelIds),
+        examIds: unionOf(nextChoices.offeredExamIds, nextChoices.publishedExamIds),
+        supportsPrograms: typeSupportsPrograms(nextChoices.typeName),
+      },
+    )
+    replaceDraft(cleanup.draft)
+    if (cleanup.hasRemovedSomething) {
+      showToast({ tone: 'success', message: t('form.cleanedAfterProfileChange') })
+    }
+  }
+
   const form = {
     draft,
     meta,
     isCreation,
     upload,
     offeredChoices,
+    openSchoolYears,
     setField,
+    setSchoolProfileField,
     setValue,
     setList,
     fieldError,
@@ -188,7 +218,12 @@ function ProposalForm({ mode, meta, school = null, submitting, serverError, onSu
       goToStep(currentStepIndex + 1)
       return
     }
-    onSubmit(buildProposalContent(draft, isCreation))
+    onSubmit(
+      buildProposalContent(draft, isCreation, {
+        publishedFees: school?.detail?.fees ?? [],
+        openSchoolYears,
+      }),
+    )
   }
 
   return (

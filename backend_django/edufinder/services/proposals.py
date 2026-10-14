@@ -37,6 +37,7 @@ from edufinder.models import (
 from edufinder.services.data_rules import (
     get_exam_section_violation,
     get_exam_type_violation,
+    get_school_year_violation,
     get_stage_section_violation,
     get_stage_type_violation,
 )
@@ -89,6 +90,7 @@ def create_creation_proposal(user: User, content: dict[str, Any]) -> Submission:
     }
     _ensure_exam_results_coherent(content["exam_results"], **school_labels)
     _ensure_fees_coherent(content["fees"], **school_labels)
+    _ensure_fees_in_open_school_years(content["fees"])
     # La fiche naît en attente, donc invisible du public, avec le strict
     # minimum : le reste du contenu ne sera appliqué qu'à l'approbation.
     establishment = Establishment.objects.create(
@@ -264,7 +266,7 @@ def _ensure_exam_results_coherent(
         exam_label = exam_labels[exam_result["id_exam"]]
         violation = get_exam_type_violation(
             exam_label, type_label
-        ) or get_exam_section_violation(exam_label, section_label)
+        ) or get_exam_section_violation(exam_label, section_label, type_label)
         if violation is not None:
             raise IncoherentExamResultError(f"Incoherent exam result: {violation}")
 
@@ -288,6 +290,31 @@ def _ensure_fees_coherent(
             raise IncoherentFeeError(f"Incoherent fee: {violation}")
 
 
+# Une année scolaire passée ne reçoit plus de nouveaux frais : un responsable
+# publie l'année en cours et prépare la suivante, le reste est de l'historique.
+def _ensure_fees_in_open_school_years(fees: list[dict[str, Any]]) -> None:
+    for fee in fees:
+        violation = get_school_year_violation(fee["school_year"])
+        if violation is not None:
+            raise IncoherentFeeError(f"Incoherent fee: {violation}")
+
+
+# Corriger le montant d'une ligne déjà publiée reste permis, même pour une
+# année passée : seules les lignes nouvelles pour l'établissement sont
+# soumises au calendrier.
+def _fees_on_new_lines(
+    establishment: Establishment, fees: list[dict[str, Any]]
+) -> list[dict[str, Any]]:
+    published_lines = set(
+        SchoolFee.objects.filter(establishment=establishment).values_list(
+            "level_id", "school_year"
+        )
+    )
+    return [
+        fee for fee in fees if (fee["id_level"], fee["school_year"]) not in published_lines
+    ]
+
+
 def _ensure_modification_coherent(
     establishment: Establishment, changed_fields: dict[str, Any]
 ) -> None:
@@ -295,6 +322,7 @@ def _ensure_modification_coherent(
     fees = changed_fields.get("fees") or []
     if not exam_results and not fees:
         return
+    _ensure_fees_in_open_school_years(_fees_on_new_lines(establishment, fees))
     # Si la proposition change aussi le type ou la section, c'est la nouvelle
     # valeur qui compte : c'est elle que l'approbation appliquera.
     school_labels = {
