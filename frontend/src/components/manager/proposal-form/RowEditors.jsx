@@ -165,6 +165,14 @@ export function ExamResultsEditor({
   )
 
   const changeRow = (rowId, changes) => onChangeRows(replaceRow(examResultRows, rowId, changes))
+  // Un résultat publié jeté à la corbeille devient une demande de retrait :
+  // je le fais confirmer, comme le retrait d'un fichier de la galerie.
+  const removeExamResultRow = (examResultRow) => {
+    if (examResultRow.isPublished && !window.confirm(t('form.examSessions.confirmRemoval'))) {
+      return
+    }
+    onChangeRows(removeRow(examResultRows, examResultRow.rowId))
+  }
   const examOptionsFor = (examResultRow) => {
     const takenExamIds = listTakenExamIds(examResultRows, examResultRow)
     return listRowOptions(exams, offeredExamIds, examResultRow.id_exam).filter(
@@ -216,7 +224,7 @@ export function ExamResultsEditor({
             examOptions={examOptionsFor(examResultRow)}
             errorFor={errorFor}
             onChange={(changes) => changeRow(examResultRow.rowId, changes)}
-            onRemove={() => onChangeRows(removeRow(examResultRows, examResultRow.rowId))}
+            onRemove={() => removeExamResultRow(examResultRow)}
           />
         ))}
       </ul>

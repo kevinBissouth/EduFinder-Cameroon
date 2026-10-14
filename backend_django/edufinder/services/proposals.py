@@ -9,11 +9,12 @@ un élément déjà visé par une soumission en attente : aucune n'est bloquée,
 c'est le super administrateur qui arbitre en les décidant une par une.
 """
 from collections.abc import Iterable
+from dataclasses import dataclass
 from decimal import Decimal
 from typing import Any
 
 from django.db import transaction
-from django.db.models import Model
+from django.db.models import Model, QuerySet
 
 from edufinder.models import (
     City,
@@ -21,6 +22,7 @@ from edufinder.models import (
     EstablishmentStatus,
     EstablishmentType,
     Exam,
+    ExamResult,
     LinguisticSection,
     Media,
     PaymentMethod,
@@ -71,11 +73,58 @@ class EmptyModificationError(ProposalError):
     pass
 
 
+class UnknownRowRemovalError(ProposalError):
+    pass
+
+
 # Clés du contenu d'une soumission qui portent sur la galerie : l'ajout d'un
 # fichier déjà téléversé, et le retrait d'un média existant (par son id).
 MEDIA_ADDITIONS_KEY = "media_additions"
 MEDIA_REMOVALS_KEY = "media_removals"
 DIRECTOR_PHOTO_KEY = "director_photo"
+
+
+# Les lignes qu'une modification peut demander de retirer : un frais ou un
+# résultat publié. Le contenu les désigne par leur clé naturelle (classe et
+# année, examen et session), qui correspond à deux colonnes du modèle.
+@dataclass(frozen=True)
+class RemovableRows:
+    content_key: str
+    model: type[Model]
+    content_fields: tuple[str, str]
+    model_fields: tuple[str, str]
+    row_name: str
+
+    def identify(self, removal: dict[str, Any]) -> tuple:
+        return tuple(removal[content_field] for content_field in self.content_fields)
+
+    def find_active_rows(self, establishment: Establishment) -> QuerySet:
+        return self.model.objects.active().filter(establishment=establishment)
+
+    def active_rows_matching(
+        self, establishment: Establishment, removal: dict[str, Any]
+    ) -> QuerySet:
+        return self.find_active_rows(establishment).filter(
+            **dict(zip(self.model_fields, self.identify(removal)))
+        )
+
+
+REMOVABLE_ROWS = (
+    RemovableRows(
+        "fee_removals",
+        SchoolFee,
+        ("id_level", "school_year"),
+        ("level_id", "school_year"),
+        "fee",
+    ),
+    RemovableRows(
+        "exam_result_removals",
+        ExamResult,
+        ("id_exam", "session"),
+        ("exam_id", "session"),
+        "exam result",
+    ),
+)
 
 _SINGLE_REFERENCE_MODELS = {
     "id_city": City,
@@ -120,6 +169,7 @@ def create_modification_proposal(
     if not changed_fields:
         raise EmptyModificationError("No changes provided")
     ensure_references_exist(changed_fields)
+    _ensure_removals_target_active_rows(establishment, changed_fields)
     _ensure_modification_coherent(establishment, changed_fields)
     _ensure_modified_head_title_coherent(establishment, changed_fields)
     return _open_submission(
@@ -322,7 +372,7 @@ def _fees_on_new_lines(
     establishment: Establishment, fees: list[dict[str, Any]]
 ) -> list[dict[str, Any]]:
     published_lines = set(
-        SchoolFee.objects.filter(establishment=establishment).values_list(
+        SchoolFee.objects.active().filter(establishment=establishment).values_list(
             "level_id", "school_year"
         )
     )
@@ -364,11 +414,39 @@ def _fees_on_new_levels(
     establishment: Establishment, fees: list[dict[str, Any]]
 ) -> list[dict[str, Any]]:
     published_level_ids = set(
-        SchoolFee.objects.filter(establishment=establishment).values_list(
+        SchoolFee.objects.active().filter(establishment=establishment).values_list(
             "level_id", flat=True
         )
     )
     return [fee for fee in fees if fee["id_level"] not in published_level_ids]
+
+
+# Un retrait vise une ligne encore affichée sur la fiche : sinon le super admin
+# validerait un retrait qui ne retire rien.
+def _ensure_removals_target_active_rows(
+    establishment: Establishment, changed_fields: dict[str, Any]
+) -> None:
+    for removable_rows in REMOVABLE_ROWS:
+        removals = changed_fields.get(removable_rows.content_key, [])
+        _ensure_rows_active(removable_rows, establishment, removals)
+
+
+def _ensure_rows_active(
+    removable_rows: RemovableRows,
+    establishment: Establishment,
+    removals: list[dict[str, Any]],
+) -> None:
+    active_lines = set(
+        removable_rows.find_active_rows(establishment).values_list(
+            *removable_rows.model_fields
+        )
+    )
+    for removal in removals:
+        line = removable_rows.identify(removal)
+        if line not in active_lines:
+            raise UnknownRowRemovalError(
+                f"Unknown {removable_rows.row_name} to remove: {line}"
+            )
 
 
 # Le titre du chef d'établissement se choisit parmi ceux du type d'école : un

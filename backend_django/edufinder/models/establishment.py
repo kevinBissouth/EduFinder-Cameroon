@@ -32,6 +32,15 @@ class EstablishmentQuerySet(models.QuerySet):
         return self.filter(status=EstablishmentStatus.PUBLISHED)
 
 
+# Un frais ou un résultat retiré n'est jamais effacé : la règle 4 du cahier des
+# besoins impose de garder l'historique des montants, et le super admin doit
+# pouvoir relire ce qu'il a fait retirer. La ligne reçoit sa date de retrait et
+# disparaît de toutes les lectures, qui passent par active().
+class RemovableRowQuerySet(models.QuerySet):
+    def active(self) -> "RemovableRowQuerySet":
+        return self.filter(deleted_at__isnull=True)
+
+
 class Establishment(models.Model):
     id_establishment = models.AutoField(primary_key=True)
     # Identifiant public non devinable, exposé dans les URLs et l'API ;
@@ -189,6 +198,9 @@ class SchoolFee(models.Model):
     )
     amount = models.DecimalField(max_digits=12, decimal_places=2)
     school_year = models.CharField(max_length=9)
+    deleted_at = models.DateTimeField(null=True, blank=True)
+
+    objects = RemovableRowQuerySet.as_manager()
 
     class Meta:
         db_table = "school_fee"
@@ -262,6 +274,9 @@ class ExamResult(models.Model):
     )
     session = models.CharField(max_length=20)
     pass_rate = models.DecimalField(max_digits=5, decimal_places=2)
+    deleted_at = models.DateTimeField(null=True, blank=True)
+
+    objects = RemovableRowQuerySet.as_manager()
 
     class Meta:
         db_table = "exam_result"

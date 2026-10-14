@@ -298,7 +298,8 @@
       "classCount_one": "{{count}} class",
       "classCount_many": "{{count}} classes",
       "classCount_other": "{{count}} classes",
-      "selectedClasses": "Ticked classes"
+      "selectedClasses": "Ticked classes",
+      "confirmRemoval": "This amount is published on your page. Removing it sends a removal request to the super administrator: it stays visible until approved. Continue?"
     },
     "examSessions": {
       "sessionOption_one": "{{session}} · {{count}} result",
@@ -312,7 +313,8 @@
       "blankRateHint": "An exam left without a rate is not sent: leave empty the one the school did not sit.",
       "otherSessionErrors": "Other sessions have results to correct.",
       "showSession": "Show the {{session}} session",
-      "addExam": "Add an exam"
+      "addExam": "Add an exam",
+      "confirmRemoval": "This result is published on your page. Removing it sends a removal request to the super administrator: it stays visible until approved. Continue?"
     },
     "nothingToSend": "Nothing to send: the profile is the same as the published one."
   }

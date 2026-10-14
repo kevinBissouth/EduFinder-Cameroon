@@ -48,7 +48,8 @@ def _ordered_fees() -> QuerySet:
         "payment_method"
     ).order_by("payment_method")
     return (
-        SchoolFee.objects.select_related("level__stage")
+        SchoolFee.objects.active()
+        .select_related("level__stage")
         .prefetch_related(Prefetch("payment_methods", queryset=ordered_payment_methods))
         .order_by("id_fee")
     )
@@ -56,7 +57,7 @@ def _ordered_fees() -> QuerySet:
 
 def _ordered_exam_results() -> QuerySet:
     return exclude_results_contradicting_establishment_type(
-        ExamResult.objects.select_related("exam")
+        ExamResult.objects.active().select_related("exam")
     ).order_by("id_result")
 
 

@@ -43,12 +43,15 @@ export function buildInitialFields(school, headTitlesByType = {}) {
   }
 }
 
+// Une ligne reprise de la fiche est marquée publiée : la jeter à la corbeille
+// demande son retrait au super admin, ce que le formulaire fait confirmer.
 export function createExamResultRow(examResult) {
   return {
     rowId: createUniqueId(),
     id_exam: examResult ? String(examResult.id_exam) : '',
     session: examResult?.session ?? '',
     pass_rate: examResult ? String(Number(examResult.pass_rate)) : '',
+    isPublished: Boolean(examResult),
   }
 }
 
@@ -97,11 +100,42 @@ function buildFieldsContent(fields, publishedFields) {
 
 // Les frais des années ouvertes, une ligne par classe. Les années passées ne
 // se modifient pas ici.
-function listFeesToSend(draft, schoolRecord) {
+function listOpenFeeLines(draft, schoolRecord) {
   const openFeeGroups = draft.feeGroups.filter((feeGroup) =>
     schoolRecord.openSchoolYears.includes(feeGroup.school_year),
   )
-  return listChangedFees(expandFeeGroups(openFeeGroups), schoolRecord.fees)
+  return expandFeeGroups(openFeeGroups)
+}
+
+function identifyFeeLine(fee) {
+  return `${fee.id_level}|${fee.school_year}`
+}
+
+function identifyExamResultLine(examResult) {
+  return `${examResult.id_exam}|${String(examResult.session).trim()}`
+}
+
+// Une ligne publiée d'une année ouverte qui n'est plus dans le brouillon a été
+// jetée à la corbeille, ou sa classe décochée : j'en demande le retrait.
+function listFeeRemovals(feeLines, schoolRecord) {
+  const keptLines = new Set(feeLines.map(identifyFeeLine))
+  return schoolRecord.fees
+    .filter((fee) => schoolRecord.openSchoolYears.includes(fee.school_year))
+    .filter((fee) => !keptLines.has(identifyFeeLine(fee)))
+    .map((fee) => ({ id_level: Number(fee.id_level), school_year: fee.school_year }))
+}
+
+// Seule la corbeille retire un résultat : une ligne dont le taux est effacé
+// reste dans le brouillon, elle n'est donc ni envoyée ni retirée.
+function listExamResultRemovals(examResultRows, publishedExamResults) {
+  const keptLines = new Set(examResultRows.map(identifyExamResultLine))
+  return publishedExamResults
+    .filter((examResult) => !keptLines.has(identifyExamResultLine(examResult)))
+    .map((examResult) => ({ id_exam: Number(examResult.id_exam), session: examResult.session }))
+}
+
+function keepFilledLists(lists) {
+  return Object.fromEntries(Object.entries(lists).filter(([, list]) => list.length > 0))
 }
 
 function describeExamResult(examResult) {
@@ -144,12 +178,18 @@ function listReplacedLists(draft, schoolRecord) {
 
 // Seul ce qui diffère de la fiche publiée part : le super admin ne lit que les
 // vrais changements, et une proposition qui attend sa validation ne remet pas
-// en place les anciennes valeurs d'une autre qui l'a précédée. Les vidéos et
+// en place les anciennes valeurs d'une autre qui l'a précédée. Une ligne
+// publiée qui a disparu du brouillon part en demande de retrait. Les vidéos et
 // les photos ne sont que des ajouts.
 // schoolRecord = buildPublishedRecord(…) et les années ouvertes aux frais.
 export function buildProposalContent(draft, schoolRecord) {
-  const fees = listFeesToSend(draft, schoolRecord)
-  const examResults = listExamResultsToSend(draft.examResultRows, schoolRecord.examResults)
+  const openFeeLines = listOpenFeeLines(draft, schoolRecord)
+  const changedRows = {
+    fees: listChangedFees(openFeeLines, schoolRecord.fees),
+    exam_results: listExamResultsToSend(draft.examResultRows, schoolRecord.examResults),
+    fee_removals: listFeeRemovals(openFeeLines, schoolRecord),
+    exam_result_removals: listExamResultRemovals(draft.examResultRows, schoolRecord.examResults),
+  }
   const additions = {
     cover_photo: draft.coverPhotoUrl,
     director_photo: draft.directorPhotoUrl,
@@ -158,8 +198,7 @@ export function buildProposalContent(draft, schoolRecord) {
 
   return {
     ...buildFieldsContent(draft.fields, schoolRecord.fields),
-    ...(fees.length > 0 ? { fees } : {}),
-    ...(examResults.length > 0 ? { exam_results: examResults } : {}),
+    ...keepFilledLists(changedRows),
     ...Object.fromEntries(listReplacedLists(draft, schoolRecord)),
     ...Object.fromEntries(Object.entries(additions).filter(([, addition]) => addition)),
   }

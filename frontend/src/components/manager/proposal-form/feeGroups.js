@@ -10,6 +10,7 @@ export function createFeeGroup(schoolYear, values = {}) {
     amount: '',
     payment_methods: [],
     levelIds: [],
+    isPublished: false,
     ...values,
   }
 }
@@ -25,7 +26,9 @@ function describeFeeTerms(fee) {
 }
 
 // Les frais publiés, regroupés : les classes d'une même année qui paient le
-// même montant avec les mêmes modalités forment un groupe.
+// même montant avec les mêmes modalités forment un groupe. Un groupe publié
+// jeté à la corbeille demande le retrait de ses classes : le formulaire le
+// fait confirmer.
 export function groupFees(fees) {
   const groupsByTerms = new Map()
   fees.forEach((fee) => {
@@ -35,6 +38,7 @@ export function groupFees(fees) {
       createFeeGroup(fee.school_year, {
         amount: String(Number(fee.amount)),
         payment_methods: fee.payment_methods ?? [],
+        isPublished: true,
       })
     groupsByTerms.set(terms, { ...feeGroup, levelIds: [...feeGroup.levelIds, String(fee.id_level)] })
   })

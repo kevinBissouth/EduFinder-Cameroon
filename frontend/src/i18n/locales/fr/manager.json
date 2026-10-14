@@ -307,7 +307,8 @@
       "classCount_one": "{{count}} classe",
       "classCount_many": "{{count}} classes",
       "classCount_other": "{{count}} classes",
-      "selectedClasses": "Classes cochées"
+      "selectedClasses": "Classes cochées",
+      "confirmRemoval": "Ce montant est publié sur votre page. Le retirer envoie une demande de retrait au super administrateur : il reste affiché jusqu'à sa validation. Continuer ?"
     },
     "examSessions": {
       "sessionOption_one": "{{session}} · {{count}} résultat",
@@ -321,7 +322,8 @@
       "blankRateHint": "Un examen laissé sans taux n'est pas envoyé : laissez vide celui que l'établissement n'a pas présenté.",
       "otherSessionErrors": "D'autres sessions ont des résultats à corriger.",
       "showSession": "Voir la session {{session}}",
-      "addExam": "Ajouter un examen"
+      "addExam": "Ajouter un examen",
+      "confirmRemoval": "Ce résultat est publié sur votre page. Le retirer envoie une demande de retrait au super administrateur : il reste affiché jusqu'à sa validation. Continuer ?"
     },
     "nothingToSend": "Aucune modification à envoyer : la fiche est identique à celle publiée."
   }
