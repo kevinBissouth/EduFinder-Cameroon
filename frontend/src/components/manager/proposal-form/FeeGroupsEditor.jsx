@@ -176,8 +176,12 @@ function FeeGroupsEditor({
         feeGroup.groupId === groupId ? { ...feeGroup, ...changes } : feeGroup,
       ),
     )
-  const removeGroup = (groupId) =>
-    onChangeGroups(feeGroups.filter((feeGroup) => feeGroup.groupId !== groupId))
+  // Un montant publié jeté à la corbeille devient une demande de retrait : je
+  // le fais confirmer, comme le retrait d'un fichier de la galerie.
+  const removeGroup = (feeGroup) => {
+    if (feeGroup.isPublished && !window.confirm(t('form.feeGroups.confirmRemoval'))) return
+    onChangeGroups(feeGroups.filter((otherGroup) => otherGroup.groupId !== feeGroup.groupId))
+  }
   // La reprise remplace les montants vides de l'année par ceux de la précédente.
   const copyPreviousYear = () =>
     onChangeGroups([
@@ -222,7 +226,7 @@ function FeeGroupsEditor({
             paymentMethods={paymentMethods}
             errorFor={errorFor}
             onChange={(changes) => changeGroup(feeGroup.groupId, changes)}
-            onRemove={() => removeGroup(feeGroup.groupId)}
+            onRemove={() => removeGroup(feeGroup)}
           />
         ))}
       </ul>

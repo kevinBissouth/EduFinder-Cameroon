@@ -44,14 +44,25 @@ function describeReference(references, referenceId, referenceKind, translateRefe
   return referenceKind ? translateReference(referenceKind, referenceName) : referenceName
 }
 
-function describeFee(fee, meta) {
+// Une ligne de frais ou de résultat se nomme par sa classe et son année, ou
+// par son examen et sa session : c'est aussi ainsi qu'une demande de retrait
+// la désigne.
+function describeFeeLine(fee, meta) {
   const levelName = findReferenceName(meta.levels, fee.id_level) ?? translate('unknown')
-  return `${levelName}, ${fee.school_year}: ${formatFcfa(fee.amount)}`
+  return `${levelName}, ${fee.school_year}`
+}
+
+function describeExamResultLine(examResult, meta, translateReference) {
+  const examName = describeReference(meta.exams, examResult.id_exam, 'exams', translateReference)
+  return `${examName}, ${examResult.session}`
+}
+
+function describeFee(fee, meta) {
+  return `${describeFeeLine(fee, meta)}: ${formatFcfa(fee.amount)}`
 }
 
 function describeExamResult(examResult, meta, translateReference) {
-  const examName = describeReference(meta.exams, examResult.id_exam, 'exams', translateReference)
-  return `${examName}, ${examResult.session}: ${formatPercent(examResult.pass_rate)}`
+  return `${describeExamResultLine(examResult, meta, translateReference)}: ${formatPercent(examResult.pass_rate)}`
 }
 
 const LIST_DESCRIBERS = {
@@ -63,6 +74,11 @@ const LIST_DESCRIBERS = {
   fees: (fees, meta) => fees.map((fee) => describeFee(fee, meta)),
   exam_results: (examResults, meta, translateReference) =>
     examResults.map((examResult) => describeExamResult(examResult, meta, translateReference)),
+  fee_removals: (feeRemovals, meta) => feeRemovals.map((fee) => describeFeeLine(fee, meta)),
+  exam_result_removals: (examResultRemovals, meta, translateReference) =>
+    examResultRemovals.map((examResult) =>
+      describeExamResultLine(examResult, meta, translateReference),
+    ),
 }
 
 function toSentenceCase(text) {

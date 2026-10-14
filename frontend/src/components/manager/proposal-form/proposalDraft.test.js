@@ -137,3 +137,66 @@ test('a creation sends everything that is filled in', () => {
     videos: ['/media/video.mp4'],
   })
 })
+
+const SCHOOL_WITH_A_SHARED_AMOUNT = {
+  ...SCHOOL,
+  detail: {
+    ...SCHOOL.detail,
+    fees: [
+      { id_level: 3, school_year: '2026-2027', amount: '50000.00', payment_methods: ['1 tranche'] },
+      { id_level: 4, school_year: '2026-2027', amount: '50000.00', payment_methods: ['1 tranche'] },
+      // Une année fermée ne se modifie pas ici : elle n'est jamais retirée.
+      { id_level: 3, school_year: '2024-2025', amount: '45000.00', payment_methods: [] },
+    ],
+  },
+}
+
+test('a published amount put in the bin asks to remove each of its classes', () => {
+  const draft = buildUntouchedDraft(SCHOOL_WITH_A_SHARED_AMOUNT)
+  draft.feeGroups = draft.feeGroups.filter((feeGroup) => feeGroup.school_year !== '2026-2027')
+
+  assert.deepEqual(buildContent(draft, SCHOOL_WITH_A_SHARED_AMOUNT), {
+    fee_removals: [
+      { id_level: 3, school_year: '2026-2027' },
+      { id_level: 4, school_year: '2026-2027' },
+    ],
+  })
+})
+
+test('a class unticked from a published amount asks to remove only that class', () => {
+  const draft = buildUntouchedDraft(SCHOOL_WITH_A_SHARED_AMOUNT)
+  draft.feeGroups = draft.feeGroups.map((feeGroup) =>
+    feeGroup.school_year === '2026-2027' ? { ...feeGroup, levelIds: ['4'] } : feeGroup,
+  )
+
+  assert.deepEqual(buildContent(draft, SCHOOL_WITH_A_SHARED_AMOUNT), {
+    fee_removals: [{ id_level: 3, school_year: '2026-2027' }],
+  })
+})
+
+test('a published result put in the bin asks for its removal', () => {
+  const draft = buildUntouchedDraft(SCHOOL)
+  draft.examResultRows = draft.examResultRows.filter((row) => row.session !== '2024')
+
+  assert.deepEqual(buildContent(draft, SCHOOL), {
+    exam_result_removals: [{ id_exam: 1, session: '2024' }],
+  })
+})
+
+// Effacer un taux n'est pas un retrait : seule la corbeille en demande un.
+test('a published result whose rate is cleared is neither sent nor removed', () => {
+  const draft = buildUntouchedDraft(SCHOOL)
+  draft.examResultRows = draft.examResultRows.map((row) =>
+    row.session === '2024' ? { ...row, pass_rate: '' } : row,
+  )
+
+  assert.deepEqual(buildContent(draft, SCHOOL), {})
+})
+
+test('the published rows are flagged, so that their bin can ask for confirmation', () => {
+  const draft = buildUntouchedDraft(SCHOOL)
+
+  assert.ok(draft.examResultRows.every((row) => row.isPublished))
+  assert.ok(draft.feeGroups.every((feeGroup) => feeGroup.isPublished))
+  assert.equal(createExamResultRow().isPublished, false)
+})
