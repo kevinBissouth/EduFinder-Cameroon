@@ -1,6 +1,5 @@
 import i18next from 'i18next'
 
-import { findLanguage } from '../../i18n/languages'
 import { formatFcfa, formatPercent } from '../../utils/format'
 
 // Champs qui portent l'identifiant d'une valeur de référence : j'affiche son
@@ -104,7 +103,12 @@ function describeEntry(key, value, meta, translateReference) {
       text: describeReference(meta[metaKey], value, referenceKind, translateReference),
     }
   }
-  if (key === CONTENT_LANGUAGE_KEY) return { label: translate(key), text: findLanguage(value).name }
+  if (key === CONTENT_LANGUAGE_KEY) {
+    return {
+      label: translate(key),
+      text: i18next.t(`workspace:languageNames.${value}`, { defaultValue: value }),
+    }
+  }
   if (key in REFERENCE_KEY_FIELDS) {
     return { label: translate(key), text: translateReference(REFERENCE_KEY_FIELDS[key], value) }
   }

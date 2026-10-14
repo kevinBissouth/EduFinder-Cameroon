@@ -79,6 +79,7 @@
     "openDetailsSuffix": ", ouvrir les détails"
   },
   "exams": {
+    "passRate": "Taux de réussite",
     "rateLabel": "Taux de réussite {{exam}} pour {{session}} (%)",
     "editRate": "Modifier le taux de réussite {{exam}} {{session}}",
     "sessionsRecorded_one": "session enregistrée",
@@ -135,6 +136,7 @@
     "notProvided": "Non renseigné"
   },
   "gallery": {
+    "empty": "Aucune photo ni vidéo pour l'instant.",
     "confirmRemoval": "Demander le retrait de ce fichier de la page publique ? Un super administrateur examine la demande.",
     "photos": "Photos",
     "photoAlt": "Photo de {{school}}",

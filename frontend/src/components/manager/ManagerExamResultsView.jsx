@@ -82,7 +82,7 @@ function ExamResultCard({ examResult, isLatestSession, isEditing, onEdit, childr
         </span>
       </div>
       <div className="flex flex-1 flex-col p-5">
-        <p className="text-xs font-semibold text-ink-soft">Pass rate</p>
+        <p className="text-xs font-semibold text-ink-soft">{t('exams.passRate')}</p>
         <p className="mt-1 font-display text-4xl leading-display text-navy tabular-nums">
           {formatPercent(examResult.pass_rate)}
         </p>
