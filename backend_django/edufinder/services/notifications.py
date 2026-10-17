@@ -8,7 +8,7 @@ l'événement : si celui-ci échoue, aucune notification ne reste.
 """
 from datetime import timedelta
 
-from django.db.models import Q, QuerySet
+from django.db.models import OuterRef, Q, QuerySet
 from django.utils import timezone
 
 from edufinder.models import (
@@ -21,6 +21,7 @@ from edufinder.models import (
     User,
     UserRole,
 )
+from edufinder.services.summary_aggregates import cover_url_of
 
 NOTIFICATIONS_PAGE_SIZE = 20
 # Une notification lue sert à retrouver une décision récente ; au-delà, la
@@ -115,6 +116,7 @@ def list_notifications_page(
     notifications = (
         _notifications_of(user)
         .select_related("establishment", "submission")
+        .annotate(cover_url=cover_url_of(OuterRef("establishment")))
         .order_by("-created_at", "-id_notification")
     )
     if before_uuid is not None:

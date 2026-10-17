@@ -35,16 +35,16 @@
     "error": "Les notifications n'ont pas pu être chargées.",
     "empty": "Vous n'avez encore aucune notification.",
     "unread": "Non lue",
-    "reason": "Motif : {{reason}}",
-    "kinds": {
-      "submission_received": "Nouvelle soumission à examiner pour {{school}}.",
-      "submission_approved": "Votre soumission pour {{school}} a été approuvée.",
-      "submission_rejected": "Votre soumission pour {{school}} a été refusée.",
-      "establishment_suspended": "{{school}} a été suspendu et retiré du site public.",
-      "establishment_reactivated": "{{school}} est de nouveau public.",
-      "unknown": "Mise à jour concernant {{school}}."
+    "reasonLabel": "Motif :",
+    "verdicts": {
+      "submission_received": "Nouvelle soumission à examiner",
+      "submission_approved": "Soumission approuvée",
+      "submission_rejected": "Soumission refusée",
+      "establishment_suspended": "Établissement suspendu",
+      "establishment_reactivated": "Établissement de nouveau public",
+      "unknown": "Mise à jour"
     },
-    "sections": "Rubriques : {{sections}}",
+    "moreSections": "+{{count}}",
     "loadMore": "Afficher plus",
     "loadingMore": "Chargement…",
     "loadMoreError": "Les notifications plus anciennes n'ont pas pu être chargées."

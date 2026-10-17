@@ -9,6 +9,8 @@ class NotificationSerializer(serializers.Serializer):
     kind = serializers.CharField()
     establishment_uuid = serializers.CharField(source="establishment.uuid")
     establishment_name = serializers.CharField(source="establishment.name")
+    # La photo de l'école, pour la reconnaître avant même de lire son nom.
+    cover_url = serializers.CharField()
     submission_uuid = serializers.SerializerMethodField()
     reason = serializers.CharField()
     created_at = serializers.DateTimeField()

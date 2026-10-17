@@ -1,47 +1,38 @@
-import { Ban, CircleCheck, CircleX, Inbox, RotateCcw } from 'lucide-react'
+import { Ban, CircleCheck, CircleX, Hourglass, Inbox, RotateCcw } from 'lucide-react'
 import i18next from 'i18next'
 
-// Le serveur n'envoie que le type d'événement : la phrase est composée ici,
-// dans la langue affichée.
-const PRESENTATION_BY_KIND = {
-  submission_received: {
-    icon: Inbox,
-    toneClass: 'bg-primary-soft text-primary-deep',
-    messageKey: 'workspace:notifications.kinds.submission_received',
-  },
-  submission_approved: {
-    icon: CircleCheck,
-    toneClass: 'bg-primary-soft text-primary-deep',
-    messageKey: 'workspace:notifications.kinds.submission_approved',
-  },
-  submission_rejected: {
-    icon: CircleX,
-    toneClass: 'bg-danger-soft text-danger-deep',
-    messageKey: 'workspace:notifications.kinds.submission_rejected',
-  },
-  establishment_suspended: {
-    icon: Ban,
-    toneClass: 'bg-warning-soft text-warning',
-    messageKey: 'workspace:notifications.kinds.establishment_suspended',
-  },
-  establishment_reactivated: {
-    icon: RotateCcw,
-    toneClass: 'bg-primary-soft text-primary-deep',
-    messageKey: 'workspace:notifications.kinds.establishment_reactivated',
-  },
+import { findStatusTheme } from './statusTheme'
+
+// Icône de chaque état d'une soumission, partagée par la cloche et par la
+// fenêtre de la soumission.
+export const SUBMISSION_STATUS_ICONS = {
+  pending: Hourglass,
+  approved: CircleCheck,
+  rejected: CircleX,
 }
 
-const UNKNOWN_KIND_PRESENTATION = {
-  icon: Inbox,
-  toneClass: 'bg-muted text-ink',
-  messageKey: 'workspace:notifications.kinds.unknown',
+// Le serveur n'envoie que le type d'événement : le verdict est composé ici,
+// dans la langue affichée. Chaque événement prend la couleur de l'état qu'il
+// annonce, la même que partout ailleurs dans les espaces privés.
+const PRESENTATION_BY_KIND = {
+  submission_received: { icon: Inbox, status: 'pending' },
+  submission_approved: { icon: SUBMISSION_STATUS_ICONS.approved, status: 'approved' },
+  submission_rejected: { icon: SUBMISSION_STATUS_ICONS.rejected, status: 'rejected' },
+  establishment_suspended: { icon: Ban, status: 'suspended' },
+  establishment_reactivated: { icon: RotateCcw, status: 'published' },
 }
+
+const UNKNOWN_KIND = 'unknown'
+const UNKNOWN_KIND_PRESENTATION = { icon: Inbox, status: UNKNOWN_KIND }
 
 export function presentNotification(notification) {
-  const presentation = PRESENTATION_BY_KIND[notification.kind] ?? UNKNOWN_KIND_PRESENTATION
+  const knownKind = notification.kind in PRESENTATION_BY_KIND ? notification.kind : UNKNOWN_KIND
+  const presentation = PRESENTATION_BY_KIND[knownKind] ?? UNKNOWN_KIND_PRESENTATION
+  const theme = findStatusTheme(presentation.status)
   return {
     Icon: presentation.icon,
-    toneClass: presentation.toneClass,
-    message: i18next.t(presentation.messageKey, { school: notification.establishment_name }),
+    markClass: theme.markClass,
+    verdictClass: theme.textClass,
+    verdict: i18next.t(`workspace:notifications.verdicts.${knownKind}`),
   }
 }

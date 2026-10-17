@@ -6,6 +6,8 @@ from django.core.management import call_command
 from django.utils import timezone
 
 from edufinder.models import (
+    Media,
+    MediaType,
     Notification,
     NotificationKind,
     Submission,
@@ -259,6 +261,7 @@ def test_list_returns_only_my_notifications_newest_first_with_the_unread_count(
         "kind": "submission_rejected",
         "establishment_uuid": establishment.uuid,
         "establishment_name": establishment.name,
+        "cover_url": None,
         "submission_uuid": pending_submission.uuid,
         "reason": REJECTION_REASON,
         "created_at": body["notifications"][0]["created_at"],
@@ -267,6 +270,29 @@ def test_list_returns_only_my_notifications_newest_first_with_the_unread_count(
         "changed_fields": ["address"],
     }
     assert body["has_more"] is False
+
+
+# La photo de l'école suit la règle de couverture du site : la première image
+# téléversée, jamais une vidéo.
+@pytest.mark.django_db
+def test_each_notification_carries_the_cover_of_its_school(
+    client, log_in_as, manager, establishment
+):
+    Media.objects.create(
+        establishment=establishment, type=MediaType.VIDEO, url="/media/tour.mp4"
+    )
+    first_image = Media.objects.create(
+        establishment=establishment, type=MediaType.IMAGE, url="/media/front.jpg"
+    )
+    Media.objects.create(
+        establishment=establishment, type=MediaType.IMAGE, url="/media/yard.jpg"
+    )
+    notify(manager, establishment)
+    log_in_as(manager)
+
+    body = client.get("/notifications").json()
+
+    assert body["notifications"][0]["cover_url"] == first_image.url
 
 
 @pytest.mark.django_db

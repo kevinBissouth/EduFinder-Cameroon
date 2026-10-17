@@ -34,16 +34,16 @@
     "error": "Notifications could not be loaded.",
     "empty": "You have no notification yet.",
     "unread": "Unread",
-    "reason": "Reason: {{reason}}",
-    "kinds": {
-      "submission_received": "New submission to review for {{school}}.",
-      "submission_approved": "Your submission for {{school}} was approved.",
-      "submission_rejected": "Your submission for {{school}} was rejected.",
-      "establishment_suspended": "{{school}} was suspended and left the public site.",
-      "establishment_reactivated": "{{school}} is public again.",
-      "unknown": "Update about {{school}}."
+    "reasonLabel": "Reason:",
+    "verdicts": {
+      "submission_received": "New submission to review",
+      "submission_approved": "Submission approved",
+      "submission_rejected": "Submission rejected",
+      "establishment_suspended": "School suspended",
+      "establishment_reactivated": "School public again",
+      "unknown": "Update"
     },
-    "sections": "Sections: {{sections}}",
+    "moreSections": "+{{count}}",
     "loadMore": "Show more",
     "loadingMore": "Loading…",
     "loadMoreError": "Older notifications could not be loaded."

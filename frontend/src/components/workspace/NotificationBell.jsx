@@ -3,58 +3,101 @@ import { Bell } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 import { presentNotification } from './notificationMessages'
+import SchoolThumbnail from './SchoolThumbnail'
 import { listChangedSections } from './submissionContent'
 import { useDismiss } from '../../hooks/useDismiss'
 import { formatRelativeTime } from '../../utils/format'
 
 const MAX_SHOWN_COUNT = 99
+const MAX_SHOWN_SECTIONS = 3
 
 function formatUnreadCount(unreadCount) {
   return unreadCount > MAX_SHOWN_COUNT ? `${MAX_SHOWN_COUNT}+` : String(unreadCount)
 }
 
+// La photo de l'école, et dans son coin l'issue de l'événement : on reconnaît
+// l'école et le verdict avant de lire.
+function NotificationThumbnail({ coverUrl, Icon, markClass }) {
+  return (
+    <span className="relative shrink-0">
+      <SchoolThumbnail coverUrl={coverUrl} />
+      <span
+        className={`absolute -bottom-1 -right-1 flex size-5 items-center justify-center rounded-full ring-2 ring-surface ${markClass}`}
+      >
+        <Icon aria-hidden="true" className="size-3" />
+      </span>
+    </span>
+  )
+}
+
+// Quelques rubriques suffisent à reconnaître la soumission ; la liste entière
+// est dans son détail.
+function SectionChips({ sections }) {
+  const { t } = useTranslation('workspace')
+  const shownSections = sections.slice(0, MAX_SHOWN_SECTIONS)
+  const hiddenCount = sections.length - shownSections.length
+
+  return (
+    <span className="mt-1.5 flex flex-wrap gap-1">
+      {shownSections.map((section) => (
+        <span key={section} className="rounded-full bg-muted px-2 py-0.5 text-xs text-navy">
+          {section}
+        </span>
+      ))}
+      {hiddenCount > 0 && (
+        <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-semibold text-primary-deep">
+          {t('notifications.moreSections', { count: hiddenCount })}
+        </span>
+      )}
+    </span>
+  )
+}
+
+// Une non lue se distingue par un liseré bleu à gauche, un fond teinté et un
+// point près de l'heure.
 function NotificationItem({ notification, onOpen }) {
   const { t } = useTranslation('workspace')
-  const { Icon, toneClass, message } = presentNotification(notification)
+  const { Icon, markClass, verdictClass, verdict } = presentNotification(notification)
   const changedSections = listChangedSections(notification)
+  const unreadClass = notification.is_read
+    ? ''
+    : 'bg-muted/50 shadow-[inset_3px_0_0_var(--color-primary)]'
 
   return (
     <li>
       <button
         type="button"
         onClick={() => onOpen(notification)}
-        className={`flex w-full cursor-pointer items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-muted ${
-          notification.is_read ? '' : 'bg-paper'
-        }`}
+        className={`flex w-full cursor-pointer items-start gap-3 px-4 py-3.5 text-left transition-colors hover:bg-muted ${unreadClass}`}
       >
-        <span className={`flex size-9 shrink-0 items-center justify-center rounded-full ${toneClass}`}>
-          <Icon aria-hidden="true" className="size-4" />
-        </span>
+        <NotificationThumbnail
+          coverUrl={notification.cover_url}
+          Icon={Icon}
+          markClass={markClass}
+        />
         <span className="min-w-0 flex-1">
-          <span
-            className={`block text-sm text-navy text-pretty ${notification.is_read ? '' : 'font-semibold'}`}
-          >
-            {message}
-          </span>
-          {changedSections.length > 0 && (
-            <span className="mt-0.5 block text-sm text-ink">
-              {t('notifications.sections', { sections: changedSections.join(', ') })}
+          <span className="flex items-baseline gap-2">
+            <span className="min-w-0 flex-1 truncate text-sm font-bold text-navy">
+              {notification.establishment_name}
             </span>
-          )}
+            <span className="flex shrink-0 items-center gap-1.5 text-xs text-ink-soft">
+              {formatRelativeTime(notification.created_at)}
+              {!notification.is_read && (
+                <span className="size-2 rounded-full bg-primary">
+                  <span className="sr-only">{t('notifications.unread')}</span>
+                </span>
+              )}
+            </span>
+          </span>
+          <span className={`mt-0.5 block text-sm font-semibold ${verdictClass}`}>{verdict}</span>
+          {changedSections.length > 0 && <SectionChips sections={changedSections} />}
           {notification.reason && (
-            <span className="mt-0.5 block text-sm text-ink">
-              {t('notifications.reason', { reason: notification.reason })}
+            <span className="mt-2 line-clamp-2 border-l-2 border-line pl-2 text-sm text-ink">
+              <span className="sr-only">{t('notifications.reasonLabel')} </span>
+              {notification.reason}
             </span>
           )}
-          <span className="mt-0.5 block text-xs text-ink-soft">
-            {formatRelativeTime(notification.created_at)}
-          </span>
         </span>
-        {!notification.is_read && (
-          <span className="mt-1.5 size-2 shrink-0 rounded-full bg-primary">
-            <span className="sr-only">{t('notifications.unread')}</span>
-          </span>
-        )}
       </button>
     </li>
   )
