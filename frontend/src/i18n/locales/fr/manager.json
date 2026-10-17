@@ -176,7 +176,8 @@
     "rejected_one": "refusée",
     "rejected_many": "refusées",
     "rejected_other": "refusées",
-    "submittedOn": "soumis le {{date}}"
+    "submittedOn": "soumis le {{date}}",
+    "typeAndDate": "Envoyée le {{date}} ({{type}})"
   },
   "services": {
     "newName": "Nouveau nom pour {{name}}",
@@ -339,5 +340,12 @@
       "clear": "Tout effacer",
       "outdated": "Votre page a changé depuis votre dernière saisie : le formulaire repart de la version publiée."
     }
+  },
+  "notificationWindow": {
+    "explanations": {
+      "establishment_suspended": "Votre fiche n'apparaît plus dans la recherche ni sur le site public. Corrigez ce que signale le motif, puis proposez des modifications : le super administrateur pourra la réactiver.",
+      "establishment_reactivated": "Votre fiche apparaît de nouveau dans la recherche et sur le site public : les familles peuvent la consulter."
+    },
+    "suspensionReasonTitle": "Motif de la suspension"
   }
 }

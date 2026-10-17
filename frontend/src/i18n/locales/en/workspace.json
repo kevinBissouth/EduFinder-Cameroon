@@ -68,7 +68,14 @@
     "reason": "Reason: {{reason}}",
     "noDetail": "This submission carries no detail.",
     "changes": "Changes: {{sections}}",
-    "view": "View"
+    "view": "View",
+    "verdicts": {
+      "pending": "Submission awaiting review",
+      "approved": "Submission approved",
+      "rejected": "Submission rejected"
+    },
+    "rejectionReasonTitle": "Reason for rejection",
+    "proposedContent": "What was proposed"
   },
   "content": {
     "name": "School name",

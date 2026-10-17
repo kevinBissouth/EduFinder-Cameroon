@@ -6,7 +6,6 @@ import StateMessage from '../ui/StateMessage'
 import PagedCards from '../workspace/PagedCards'
 import SubmissionCard from '../workspace/SubmissionCard'
 import ViewHero from '../workspace/ViewHero'
-import SubmissionDetailModal from './SubmissionDetailModal'
 import { countSubmissionsByStatus } from './submissionCounts'
 import { formatShortDate } from '../../utils/format'
 
@@ -30,19 +29,10 @@ function buildOutcomeFigures(submissions) {
 
 // Historique des propositions du responsable, les plus récentes d'abord
 // (l'ordre vient de l'API). Chaque carte reprend la photo de l'établissement
-// concerné, retrouvée dans la liste des établissements gérés. La soumission
-// ouverte est choisie par la page : une notification peut y mener directement.
-function SubmissionsList({
-  submissions,
-  establishments,
-  meta,
-  openedSubmissionUuid,
-  onOpenSubmission,
-}) {
+// concerné, retrouvée dans la liste des établissements gérés. La fenêtre de
+// détail appartient à la page : une notification ouvre la même.
+function SubmissionsList({ submissions, establishments, onOpenSubmission }) {
   const { t } = useTranslation('manager')
-  const selectedSubmission = submissions.find(
-    (submission) => submission.submission_uuid === openedSubmissionUuid,
-  )
   const coverUrlBySchool = new Map(
     establishments.map((school) => [school.establishment_uuid, school.cover_url]),
   )
@@ -80,13 +70,6 @@ function SubmissionsList({
           />
         )}
       />
-      {selectedSubmission && (
-        <SubmissionDetailModal
-          submission={selectedSubmission}
-          meta={meta}
-          onClose={() => onOpenSubmission(null)}
-        />
-      )}
     </>
   )
 }

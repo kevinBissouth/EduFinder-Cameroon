@@ -20,8 +20,10 @@ const PHOTO_FIELDS = new Set(['cover_photo', 'director_photo'])
 const FILE_LIST_FIELDS = new Set(['videos', 'media_additions', 'media_removals'])
 
 const MEDIA_ADDITIONS_KEY = 'media_additions'
+const VIDEOS_KEY = 'videos'
 const CONTENT_LANGUAGE_KEY = 'content_language'
 const IMAGE_MEDIA_TYPE = 'image'
+const VIDEO_MEDIA_TYPE = 'video'
 
 const translate = (key, options) => i18next.t(`workspace:content.${key}`, options)
 
@@ -88,11 +90,22 @@ function isEmptyValue(value) {
   return value === null || value === '' || (Array.isArray(value) && value.length === 0)
 }
 
-// Images qu'une entrée apporte, pour que le validateur voie ce qu'il valide.
+function listAddedMediaUrls(key, value, mediaType) {
+  if (key !== MEDIA_ADDITIONS_KEY) return []
+  return value.filter((mediaItem) => mediaItem.type === mediaType).map((mediaItem) => mediaItem.url)
+}
+
+// Images et vidéos qu'une entrée apporte, pour qu'on voie ce qui est proposé
+// au lieu d'un simple nombre de fichiers. Une création envoie ses vidéos en
+// liste d'adresses ; un ajout à la galerie, en médias typés.
 function listImageUrls(key, value) {
   if (PHOTO_FIELDS.has(key)) return [value]
-  if (key !== MEDIA_ADDITIONS_KEY) return []
-  return value.filter((mediaItem) => mediaItem.type === IMAGE_MEDIA_TYPE).map((mediaItem) => mediaItem.url)
+  return listAddedMediaUrls(key, value, IMAGE_MEDIA_TYPE)
+}
+
+function listVideoUrls(key, value) {
+  if (key === VIDEOS_KEY) return value
+  return listAddedMediaUrls(key, value, VIDEO_MEDIA_TYPE)
 }
 
 function describeEntry(key, value, meta, translateReference) {
@@ -132,6 +145,7 @@ export function describeSubmissionContent(content, meta, translateReference) {
     .map(([key, value]) => ({
       key,
       imageUrls: listImageUrls(key, value),
+      videoUrls: listVideoUrls(key, value),
       ...describeEntry(key, value, meta, translateReference),
     }))
 }

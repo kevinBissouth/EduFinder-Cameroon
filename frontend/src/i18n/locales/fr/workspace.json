@@ -69,7 +69,14 @@
     "reason": "Motif : {{reason}}",
     "noDetail": "Cette soumission ne contient aucun détail.",
     "changes": "Modifie : {{sections}}",
-    "view": "Voir"
+    "view": "Voir",
+    "verdicts": {
+      "pending": "Soumission en attente de validation",
+      "approved": "Soumission approuvée",
+      "rejected": "Soumission refusée"
+    },
+    "rejectionReasonTitle": "Motif du refus",
+    "proposedContent": "Ce qui a été proposé"
   },
   "content": {
     "name": "Nom de l'établissement",
