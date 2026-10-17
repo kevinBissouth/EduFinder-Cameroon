@@ -31,7 +31,6 @@ import { readApiErrorMessage } from '../utils/apiError'
 import { findFirstName } from '../utils/format'
 import { authedRequest } from '../utils/auth'
 import '../i18n/privateTexts'
-import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import WorkspaceSkeleton from '../components/workspace/WorkspaceSkeleton'
 
 const NAV_ITEMS = [
@@ -71,11 +70,11 @@ function findViewTitle(viewId, navItems, t) {
 
 function ManagerHomePage({ profile, onSignOut }) {
   const { t } = useTranslation('manager')
-  useDocumentTitle()
   const managerData = useManagerData()
   const [activeView, setActiveView] = useState('overview')
   const [formState, setFormState] = useState(null)
   const [isFormDirty, setIsFormDirty] = useState(false)
+  const [openedSubmissionUuid, setOpenedSubmissionUuid] = useState(null)
   const [submitting, setSubmitting] = useState(false)
   const [serverError, setServerError] = useState('')
   const [preparing, setPreparing] = useState(false)
@@ -274,14 +273,18 @@ function ManagerHomePage({ profile, onSignOut }) {
     )
   }
 
-  // Une décision sur une soumission mène à l'historique des soumissions ; une
-  // suspension ou une réactivation mène à la fiche concernée.
+  // Une décision sur une soumission ouvre cette soumission, pas toute la liste ;
+  // une suspension ou une réactivation mène à la fiche concernée. Je relis les
+  // soumissions : la décision qui vient d'être prise doit apparaître avec son
+  // statut et son motif.
   function openNotification(notification) {
-    if (notification.submission_uuid) {
-      setActiveView('submissions')
+    if (!notification.submission_uuid) {
+      navigateToDetail(notification.establishment_uuid)
       return
     }
-    navigateToDetail(notification.establishment_uuid)
+    managerData.refresh()
+    setOpenedSubmissionUuid(notification.submission_uuid)
+    setActiveView('submissions')
   }
 
   const viewRenderers = {
@@ -307,6 +310,8 @@ function ManagerHomePage({ profile, onSignOut }) {
         submissions={managerData.submissions}
         establishments={managerData.establishments}
         meta={managerData.meta}
+        openedSubmissionUuid={openedSubmissionUuid}
+        onOpenSubmission={setOpenedSubmissionUuid}
       />
     ),
     fees: () => (

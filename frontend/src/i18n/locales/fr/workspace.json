@@ -43,7 +43,11 @@
       "establishment_suspended": "{{school}} a été suspendu et retiré du site public.",
       "establishment_reactivated": "{{school}} est de nouveau public.",
       "unknown": "Mise à jour concernant {{school}}."
-    }
+    },
+    "sections": "Rubriques : {{sections}}",
+    "loadMore": "Afficher plus",
+    "loadingMore": "Chargement…",
+    "loadMoreError": "Les notifications plus anciennes n'ont pas pu être chargées."
   },
   "status": {
     "pending": "en attente",

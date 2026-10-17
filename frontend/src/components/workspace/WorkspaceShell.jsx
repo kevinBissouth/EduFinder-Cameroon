@@ -5,6 +5,7 @@ import NotificationBell from './NotificationBell'
 import Button from '../ui/Button'
 import LanguageSwitch from '../ui/LanguageSwitch'
 import { WorkspaceRail, WorkspaceTabBar } from './WorkspaceNavigation'
+import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { useNotifications } from '../../hooks/useNotifications'
 import { HOME_PATH } from '../../routes'
 import { buildInitials } from '../../utils/format'
@@ -88,6 +89,7 @@ function WorkspaceShell({
   children,
 }) {
   const inbox = useNotifications()
+  useDocumentTitle(undefined, inbox.unreadCount)
   const navigationProps = { navItems, activeView, onSelectView, onSignOut }
 
   return (

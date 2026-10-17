@@ -42,7 +42,11 @@
       "establishment_suspended": "{{school}} was suspended and left the public site.",
       "establishment_reactivated": "{{school}} is public again.",
       "unknown": "Update about {{school}}."
-    }
+    },
+    "sections": "Sections: {{sections}}",
+    "loadMore": "Show more",
+    "loadingMore": "Loading…",
+    "loadMoreError": "Older notifications could not be loaded."
   },
   "status": {
     "pending": "pending",

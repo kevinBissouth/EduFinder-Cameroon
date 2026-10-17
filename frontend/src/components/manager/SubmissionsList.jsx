@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { FileText } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import i18next from 'i18next'
@@ -31,10 +30,19 @@ function buildOutcomeFigures(submissions) {
 
 // Historique des propositions du responsable, les plus récentes d'abord
 // (l'ordre vient de l'API). Chaque carte reprend la photo de l'établissement
-// concerné, retrouvée dans la liste des établissements gérés.
-function SubmissionsList({ submissions, establishments, meta }) {
+// concerné, retrouvée dans la liste des établissements gérés. La soumission
+// ouverte est choisie par la page : une notification peut y mener directement.
+function SubmissionsList({
+  submissions,
+  establishments,
+  meta,
+  openedSubmissionUuid,
+  onOpenSubmission,
+}) {
   const { t } = useTranslation('manager')
-  const [selectedSubmission, setSelectedSubmission] = useState(null)
+  const selectedSubmission = submissions.find(
+    (submission) => submission.submission_uuid === openedSubmissionUuid,
+  )
   const coverUrlBySchool = new Map(
     establishments.map((school) => [school.establishment_uuid, school.cover_url]),
   )
@@ -68,7 +76,7 @@ function SubmissionsList({ submissions, establishments, meta }) {
               school: submission.establishment_name,
               date: formatShortDate(submission.submitted_at),
             })}
-            onAction={setSelectedSubmission}
+            onAction={(submission) => onOpenSubmission(submission.submission_uuid)}
           />
         )}
       />
@@ -76,7 +84,7 @@ function SubmissionsList({ submissions, establishments, meta }) {
         <SubmissionDetailModal
           submission={selectedSubmission}
           meta={meta}
-          onClose={() => setSelectedSubmission(null)}
+          onClose={() => onOpenSubmission(null)}
         />
       )}
     </>
