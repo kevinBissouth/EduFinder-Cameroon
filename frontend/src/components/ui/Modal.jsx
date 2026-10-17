@@ -9,8 +9,21 @@ import { useTranslation } from 'react-i18next'
 // (le haut de la page d'accueil) piégerait sinon son positionnement fixe, et
 // la fenêtre ne couvrirait plus tout l'écran.
 const SIZE_CLASSES = { sm: 'max-w-md', md: 'max-w-xl', lg: 'max-w-4xl' }
+// Une fenêtre qui annonce un état (approuvé, refusé…) colore son icône comme
+// cet état ; les autres gardent le dégradé de la marque.
+const BRAND_ICON_CLASS = 'bg-linear-to-br from-primary to-violet-deep text-white shadow-glow'
 
-function Modal({ icon: Icon, title, description, headerExtra, footer, size = 'md', onClose, children }) {
+function Modal({
+  icon: Icon,
+  iconClassName = BRAND_ICON_CLASS,
+  title,
+  description,
+  headerExtra,
+  footer,
+  size = 'md',
+  onClose,
+  children,
+}) {
   const { t } = useTranslation('common')
   const titleId = useId()
 
@@ -45,7 +58,9 @@ function Modal({ icon: Icon, title, description, headerExtra, footer, size = 'md
         <div className="flex items-start justify-between gap-3 border-b border-line px-5 pb-4 pt-3 sm:pt-5">
           <div className="flex min-w-0 items-start gap-3">
             {Icon && (
-              <span className="flex size-11 shrink-0 items-center justify-center rounded-control bg-linear-to-br from-primary to-violet-deep text-white shadow-glow">
+              <span
+                className={`flex size-11 shrink-0 items-center justify-center rounded-control ${iconClassName}`}
+              >
                 <Icon aria-hidden="true" className="size-5" />
               </span>
             )}

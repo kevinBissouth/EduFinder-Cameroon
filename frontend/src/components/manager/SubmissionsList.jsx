@@ -1,13 +1,15 @@
-import { useState } from 'react'
 import { FileText } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import i18next from 'i18next'
 
 import StateMessage from '../ui/StateMessage'
 import PagedCards from '../workspace/PagedCards'
-import SubmissionCard from '../workspace/SubmissionCard'
+import SubmissionRow from '../workspace/SubmissionRow'
+import {
+  SUBMISSION_ROW_GRID_CLASSES,
+  SUBMISSION_ROW_PAGE_SIZES,
+} from '../workspace/submissionRowLayout'
 import ViewHero from '../workspace/ViewHero'
-import SubmissionDetailModal from './SubmissionDetailModal'
 import { countSubmissionsByStatus } from './submissionCounts'
 import { formatShortDate } from '../../utils/format'
 
@@ -31,10 +33,10 @@ function buildOutcomeFigures(submissions) {
 
 // Historique des propositions du responsable, les plus récentes d'abord
 // (l'ordre vient de l'API). Chaque carte reprend la photo de l'établissement
-// concerné, retrouvée dans la liste des établissements gérés.
-function SubmissionsList({ submissions, establishments, meta }) {
+// concerné, retrouvée dans la liste des établissements gérés. La fenêtre de
+// détail appartient à la page : une notification ouvre la même.
+function SubmissionsList({ submissions, establishments, onOpenSubmission }) {
   const { t } = useTranslation('manager')
-  const [selectedSubmission, setSelectedSubmission] = useState(null)
   const coverUrlBySchool = new Map(
     establishments.map((school) => [school.establishment_uuid, school.cover_url]),
   )
@@ -58,27 +60,22 @@ function SubmissionsList({ submissions, establishments, meta }) {
       />
       <PagedCards
         items={submissions}
+        gridClassName={SUBMISSION_ROW_GRID_CLASSES}
+        pageSizes={SUBMISSION_ROW_PAGE_SIZES}
         renderCard={(submission) => (
-          <SubmissionCard
+          <SubmissionRow
             key={submission.submission_uuid}
             submission={submission}
             coverUrl={coverUrlBySchool.get(submission.establishment_uuid)}
-            actionLabel={t('submissions.view')}
+            actionLabel={t('workspace:submission.view')}
             actionAriaLabel={t('submissions.viewNamed', {
               school: submission.establishment_name,
               date: formatShortDate(submission.submitted_at),
             })}
-            onAction={setSelectedSubmission}
+            onAction={(submission) => onOpenSubmission(submission.submission_uuid)}
           />
         )}
       />
-      {selectedSubmission && (
-        <SubmissionDetailModal
-          submission={selectedSubmission}
-          meta={meta}
-          onClose={() => setSelectedSubmission(null)}
-        />
-      )}
     </>
   )
 }

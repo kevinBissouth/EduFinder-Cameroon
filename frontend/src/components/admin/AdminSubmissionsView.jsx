@@ -2,7 +2,11 @@ import { useTranslation } from 'react-i18next'
 import i18next from 'i18next'
 
 import PagedCards from '../workspace/PagedCards'
-import SubmissionCard from '../workspace/SubmissionCard'
+import SubmissionRow from '../workspace/SubmissionRow'
+import {
+  SUBMISSION_ROW_GRID_CLASSES,
+  SUBMISSION_ROW_PAGE_SIZES,
+} from '../workspace/submissionRowLayout'
 import ViewHero from '../workspace/ViewHero'
 import { formatShortDate } from '../../utils/format'
 
@@ -93,8 +97,10 @@ function AdminSubmissionsView({
         <PagedCards
           key={activeFilter}
           items={shownSubmissions}
+          gridClassName={SUBMISSION_ROW_GRID_CLASSES}
+          pageSizes={SUBMISSION_ROW_PAGE_SIZES}
           renderCard={(submission) => (
-            <SubmissionCard
+            <SubmissionRow
               key={submission.submission_uuid}
               submission={submission}
               coverUrl={coverUrlBySchool.get(submission.establishment_uuid)}

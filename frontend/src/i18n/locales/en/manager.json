@@ -160,7 +160,6 @@
     "emptyTitle": "No submission yet",
     "emptyDescription": "Propose a school or a change to one of your schools. Its review status appears here.",
     "title": "Your submissions",
-    "view": "View what was proposed",
     "viewNamed": "View what was proposed for {{school}} on {{date}}",
     "approved_one": "approved",
     "approved_other": "approved",
@@ -168,7 +167,8 @@
     "awaiting_other": "awaiting review",
     "rejected_one": "rejected",
     "rejected_other": "rejected",
-    "submittedOn": "submitted {{date}}"
+    "submittedOn": "submitted {{date}}",
+    "typeAndDate": "Sent on {{date}} ({{type}})"
   },
   "services": {
     "newName": "New name for {{name}}",
@@ -330,5 +330,12 @@
       "clear": "Clear everything",
       "outdated": "Your page changed since your last input: the form starts again from the published version."
     }
+  },
+  "notificationWindow": {
+    "explanations": {
+      "establishment_suspended": "Your school no longer appears in search or on the public site. Fix what the reason points out, then propose changes: the super administrator can reactivate it.",
+      "establishment_reactivated": "Your school appears again in search and on the public site: families can view it."
+    },
+    "suspensionReasonTitle": "Reason for suspension"
   }
 }

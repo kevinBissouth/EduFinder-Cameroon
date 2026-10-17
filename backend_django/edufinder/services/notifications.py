@@ -6,7 +6,9 @@ décidée, les responsables d'un établissement quand il est suspendu ou
 réactivé. Les fonctions d'émission sont appelées dans la transaction de
 l'événement : si celui-ci échoue, aucune notification ne reste.
 """
-from django.db.models import QuerySet
+from datetime import timedelta
+
+from django.db.models import OuterRef, Q, QuerySet
 from django.utils import timezone
 
 from edufinder.models import (
@@ -19,8 +21,12 @@ from edufinder.models import (
     User,
     UserRole,
 )
+from edufinder.services.summary_aggregates import cover_url_of
 
-LISTED_NOTIFICATIONS_LIMIT = 50
+NOTIFICATIONS_PAGE_SIZE = 20
+# Une notification lue sert à retrouver une décision récente ; au-delà, la
+# soumission et son motif restent consultables, la notification n'apporte rien.
+READ_NOTIFICATION_RETENTION_DAYS = 90
 
 _KIND_BY_DECISION = {
     SubmissionStatus.APPROVED: NotificationKind.SUBMISSION_APPROVED,
@@ -86,12 +92,39 @@ def _notifications_of(user: User) -> QuerySet[Notification]:
     return Notification.objects.filter(recipient=user)
 
 
-def list_recent_notifications(user: User) -> QuerySet[Notification]:
-    return (
+def _find_own_notification(user: User, notification_uuid: str) -> Notification:
+    notification = _notifications_of(user).filter(uuid=notification_uuid).first()
+    if notification is None:
+        raise NotificationNotFoundError(notification_uuid)
+    return notification
+
+
+# Plusieurs notifications peuvent naître au même instant (une décision les
+# envoie toutes ensemble) : l'identifiant départage, pour qu'« Afficher plus »
+# ne saute ni ne répète aucune notification.
+def _older_than(notification: Notification) -> Q:
+    return Q(created_at__lt=notification.created_at) | Q(
+        created_at=notification.created_at,
+        id_notification__lt=notification.id_notification,
+    )
+
+
+def list_notifications_page(
+    user: User, before_uuid: str | None = None
+) -> tuple[list[Notification], bool]:
+    """Une page des notifications, les plus récentes d'abord, et s'il en reste."""
+    notifications = (
         _notifications_of(user)
         .select_related("establishment", "submission")
-        .order_by("-created_at", "-id_notification")[:LISTED_NOTIFICATIONS_LIMIT]
+        .annotate(cover_url=cover_url_of(OuterRef("establishment")))
+        .order_by("-created_at", "-id_notification")
     )
+    if before_uuid is not None:
+        notifications = notifications.filter(
+            _older_than(_find_own_notification(user, before_uuid))
+        )
+    page = list(notifications[: NOTIFICATIONS_PAGE_SIZE + 1])
+    return page[:NOTIFICATIONS_PAGE_SIZE], len(page) > NOTIFICATIONS_PAGE_SIZE
 
 
 def count_unread_notifications(user: User) -> int:
@@ -99,9 +132,7 @@ def count_unread_notifications(user: User) -> int:
 
 
 def mark_notification_read(user: User, notification_uuid: str) -> None:
-    notification = _notifications_of(user).filter(uuid=notification_uuid).first()
-    if notification is None:
-        raise NotificationNotFoundError(notification_uuid)
+    notification = _find_own_notification(user, notification_uuid)
     # Relire une notification déjà lue ne change pas la date de première lecture.
     if notification.read_at is None:
         notification.read_at = timezone.now()
@@ -110,3 +141,13 @@ def mark_notification_read(user: User, notification_uuid: str) -> None:
 
 def mark_all_notifications_read(user: User) -> None:
     _notifications_of(user).filter(read_at__isnull=True).update(read_at=timezone.now())
+
+
+# --- Nettoyage ------------------------------------------------------------------
+
+
+def purge_old_read_notifications() -> int:
+    """Supprime les notifications lues depuis plus longtemps que la conservation."""
+    read_before = timezone.now() - timedelta(days=READ_NOTIFICATION_RETENTION_DAYS)
+    deleted_count, _ = Notification.objects.filter(read_at__lt=read_before).delete()
+    return deleted_count

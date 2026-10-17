@@ -8,12 +8,12 @@ import { toMediaUrl } from '../../utils/media'
 // de couverture, assombrie vers le bas pour porter le nom en blanc, et le
 // badge d'état. Sans photo (ou si elle ne se charge pas), un dégradé de la
 // marque avec un pictogramme la remplace.
-function SchoolCover({ name, coverUrl, status }) {
+function SchoolCover({ name, coverUrl, status, heightClass = 'h-44' }) {
   const [hasPhotoFailed, setHasPhotoFailed] = useState(false)
   const hasPhoto = coverUrl && !hasPhotoFailed
 
   return (
-    <div className="relative h-44 bg-linear-to-br from-primary to-violet-deep">
+    <div className={`relative bg-linear-to-br from-primary to-violet-deep ${heightClass}`}>
       {hasPhoto ? (
         <img
           src={toMediaUrl(coverUrl)}

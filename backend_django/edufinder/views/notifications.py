@@ -11,20 +11,28 @@ from edufinder.serializers.notification import NotificationSerializer
 from edufinder.services.notifications import (
     NotificationNotFoundError,
     count_unread_notifications,
-    list_recent_notifications,
+    list_notifications_page,
     mark_all_notifications_read,
     mark_notification_read,
 )
 from edufinder.views.access import manager_api_view
 
 
+# ?before=<uuid> donne la page suivante : les notifications plus anciennes que
+# celle-là, qui doit être une des miennes.
 @manager_api_view(["GET"])
 def my_notifications(request):
-    recent_notifications = list_recent_notifications(request.user)
+    try:
+        notifications, has_more = list_notifications_page(
+            request.user, request.query_params.get("before")
+        )
+    except NotificationNotFoundError as error:
+        raise NotFound("Notification not found") from error
     return Response(
         {
             "unread_count": count_unread_notifications(request.user),
-            "notifications": NotificationSerializer(recent_notifications, many=True).data,
+            "notifications": NotificationSerializer(notifications, many=True).data,
+            "has_more": has_more,
         }
     )
 

@@ -34,15 +34,19 @@
     "error": "Notifications could not be loaded.",
     "empty": "You have no notification yet.",
     "unread": "Unread",
-    "reason": "Reason: {{reason}}",
-    "kinds": {
-      "submission_received": "New submission to review for {{school}}.",
-      "submission_approved": "Your submission for {{school}} was approved.",
-      "submission_rejected": "Your submission for {{school}} was rejected.",
-      "establishment_suspended": "{{school}} was suspended and left the public site.",
-      "establishment_reactivated": "{{school}} is public again.",
-      "unknown": "Update about {{school}}."
-    }
+    "reasonLabel": "Reason:",
+    "verdicts": {
+      "submission_received": "New submission to review",
+      "submission_approved": "Submission approved",
+      "submission_rejected": "Submission rejected",
+      "establishment_suspended": "School suspended",
+      "establishment_reactivated": "School public again",
+      "unknown": "Update"
+    },
+    "moreSections": "+{{count}}",
+    "loadMore": "Show more",
+    "loadingMore": "Loading…",
+    "loadMoreError": "Older notifications could not be loaded."
   },
   "status": {
     "pending": "pending",
@@ -61,10 +65,15 @@
   },
   "submission": {
     "proposedBy": "Proposed by",
-    "reason": "Reason: {{reason}}",
     "noDetail": "This submission carries no detail.",
-    "changes": "Changes: {{sections}}",
-    "view": "View"
+    "view": "View",
+    "verdicts": {
+      "pending": "Submission awaiting review",
+      "approved": "Submission approved",
+      "rejected": "Submission rejected"
+    },
+    "rejectionReasonTitle": "Reason for rejection",
+    "proposedContent": "What was proposed"
   },
   "content": {
     "name": "School name",
@@ -101,7 +110,13 @@
     "director_title_translation": "Head of school title, other language",
     "director_bio_translation": "Head of school biography, other language",
     "fee_removals": "Fees to remove",
-    "exam_result_removals": "Results to remove"
+    "exam_result_removals": "Results to remove",
+    "levelColumn": "Class",
+    "amountColumn": "Amount",
+    "examColumn": "Exam",
+    "passRateColumn": "Pass rate",
+    "schoolYear": "School year {{year}}",
+    "session": "{{session}} session"
   },
   "charts": {
     "visits": "Visits",

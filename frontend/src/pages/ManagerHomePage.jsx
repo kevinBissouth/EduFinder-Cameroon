@@ -13,6 +13,10 @@ import {
 import ProposalForm from '../components/manager/ProposalForm'
 import { findDraftKey, forgetDraft } from '../components/manager/proposal-form/draftStorage'
 import SubmissionsList from '../components/manager/SubmissionsList'
+import ManagerDetailWindow, {
+  ESTABLISHMENT_EVENT_WINDOW,
+  SUBMISSION_WINDOW,
+} from '../components/manager/ManagerDetailWindow'
 import ManagerDashboard from '../components/manager/ManagerDashboard'
 import ManagerFeesView from '../components/manager/ManagerFeesView'
 import ManagerExamResultsView from '../components/manager/ManagerExamResultsView'
@@ -31,7 +35,6 @@ import { readApiErrorMessage } from '../utils/apiError'
 import { findFirstName } from '../utils/format'
 import { authedRequest } from '../utils/auth'
 import '../i18n/privateTexts'
-import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import WorkspaceSkeleton from '../components/workspace/WorkspaceSkeleton'
 
 const NAV_ITEMS = [
@@ -71,11 +74,11 @@ function findViewTitle(viewId, navItems, t) {
 
 function ManagerHomePage({ profile, onSignOut }) {
   const { t } = useTranslation('manager')
-  useDocumentTitle()
   const managerData = useManagerData()
   const [activeView, setActiveView] = useState('overview')
   const [formState, setFormState] = useState(null)
   const [isFormDirty, setIsFormDirty] = useState(false)
+  const [openedWindow, setOpenedWindow] = useState(null)
   const [submitting, setSubmitting] = useState(false)
   const [serverError, setServerError] = useState('')
   const [preparing, setPreparing] = useState(false)
@@ -274,14 +277,25 @@ function ManagerHomePage({ profile, onSignOut }) {
     )
   }
 
-  // Une décision sur une soumission mène à l'historique des soumissions ; une
-  // suspension ou une réactivation mène à la fiche concernée.
+  function openSubmissionWindow(submissionUuid) {
+    setOpenedWindow({ type: SUBMISSION_WINDOW, submissionUuid })
+  }
+
+  // Une notification ouvre sa fenêtre par-dessus la vue en cours : la
+  // soumission décidée, ou l'école suspendue ou réactivée. Je relis les
+  // données : la décision ou le nouveau statut doit y apparaître.
   function openNotification(notification) {
+    managerData.refresh()
     if (notification.submission_uuid) {
-      setActiveView('submissions')
+      openSubmissionWindow(notification.submission_uuid)
       return
     }
-    navigateToDetail(notification.establishment_uuid)
+    setOpenedWindow({ type: ESTABLISHMENT_EVENT_WINDOW, notification })
+  }
+
+  function openSchoolFromWindow(establishmentUuid) {
+    setOpenedWindow(null)
+    navigateToDetail(establishmentUuid)
   }
 
   const viewRenderers = {
@@ -306,7 +320,7 @@ function ManagerHomePage({ profile, onSignOut }) {
       <SubmissionsList
         submissions={managerData.submissions}
         establishments={managerData.establishments}
-        meta={managerData.meta}
+        onOpenSubmission={openSubmissionWindow}
       />
     ),
     fees: () => (
@@ -402,6 +416,12 @@ function ManagerHomePage({ profile, onSignOut }) {
         <SchoolSelect {...schoolSelectProps} className="mb-6 md:hidden" />
       )}
       {renderContent()}
+      <ManagerDetailWindow
+        openedWindow={openedWindow}
+        managerData={managerData}
+        onOpenSchool={openSchoolFromWindow}
+        onClose={() => setOpenedWindow(null)}
+      />
       {preparing && (
         <div
           role="status"
