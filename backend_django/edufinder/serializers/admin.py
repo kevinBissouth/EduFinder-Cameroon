@@ -2,6 +2,7 @@ from rest_framework import serializers
 
 from edufinder.models import Establishment, Submission, SubmissionStatus
 from edufinder.serializers.submission import SubmissionItemSerializer
+from edufinder.services.submissions import list_changed_fields
 from edufinder.services.suspension import read_current_suspension_reason
 
 REASON_MIN_LENGTH = 3
@@ -22,9 +23,6 @@ class DecisionReasonSerializer(serializers.Serializer):
     )
 
 
-EMPTY_CONTENT_VALUES = (None, "", [])
-
-
 class AdminSubmissionItemSerializer(SubmissionItemSerializer):
     proposer_name = serializers.CharField(source="user.name")
     changed_fields = serializers.SerializerMethodField()
@@ -32,11 +30,7 @@ class AdminSubmissionItemSerializer(SubmissionItemSerializer):
     # La liste ne porte que le nom des rubriques touchées, pour distinguer deux
     # soumissions sans les ouvrir ; leur contenu reste réservé au détail.
     def get_changed_fields(self, submission: Submission) -> list[str]:
-        return [
-            field_name
-            for field_name, value in submission.content.items()
-            if value not in EMPTY_CONTENT_VALUES
-        ]
+        return list_changed_fields(submission.content)
 
 
 class AdminSubmissionDetailSerializer(AdminSubmissionItemSerializer):

@@ -11,3 +11,16 @@ def describe_submissions(submissions: QuerySet) -> QuerySet:
         .annotate(rejection_reason=F("decision__rejection_reason"))
         .order_by("-submitted_at")
     )
+
+
+EMPTY_CONTENT_VALUES = (None, "", [])
+
+
+# Les rubriques qu'une soumission touche : leur nom suffit à distinguer deux
+# soumissions sans en ouvrir le contenu.
+def list_changed_fields(content: dict) -> list[str]:
+    return [
+        field_name
+        for field_name, value in content.items()
+        if value not in EMPTY_CONTENT_VALUES
+    ]
