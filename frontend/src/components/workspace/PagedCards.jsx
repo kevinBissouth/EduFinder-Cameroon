@@ -1,7 +1,7 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
-import { usePagedItems } from '../../hooks/usePagedItems'
+import { CARD_PAGE_SIZES, usePagedItems } from '../../hooks/usePagedItems'
 
 const PAGE_BUTTON_CLASSES =
   'inline-flex min-h-11 cursor-pointer items-center gap-1 rounded-button border border-line bg-surface px-4 text-sm font-semibold text-navy transition-colors hover:border-primary hover:text-primary-deep disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:border-line disabled:hover:text-navy'
@@ -41,8 +41,13 @@ function Pagination({ pageIndex, pageCount, onGoToPage }) {
 // conteneur étroit, l'appelant réduit le nombre de colonnes.
 const DEFAULT_GRID_CLASSES = 'grid-cols-1 sm:grid-cols-2 xl:grid-cols-3'
 
-function PagedCards({ items, renderCard, gridClassName = DEFAULT_GRID_CLASSES }) {
-  const { pageItems, pageIndex, pageCount, goToPage } = usePagedItems(items)
+function PagedCards({
+  items,
+  renderCard,
+  gridClassName = DEFAULT_GRID_CLASSES,
+  pageSizes = CARD_PAGE_SIZES,
+}) {
+  const { pageItems, pageIndex, pageCount, goToPage } = usePagedItems(items, pageSizes)
 
   return (
     <>

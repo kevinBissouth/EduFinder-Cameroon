@@ -12,6 +12,7 @@ import { SessionContext } from './session/sessionContext'
 import { findRedirectPath, findWorkspacePath } from './utils/sessionRoutes'
 import { useScrollOnPageChange } from './hooks/useScrollOnPageChange'
 import { clearAuthToken, fetchAuthenticatedProfile } from './utils/auth'
+import { forgetAllDrafts } from './components/manager/proposal-form/draftStorage'
 
 // Les espaces privés embarquent la bibliothèque de graphiques : ils sont
 // chargés à part, pour ne pas alourdir le site public.
@@ -71,7 +72,10 @@ function App() {
     redirectTo(findWorkspacePath(authProfile))
   }
 
+  // Un brouillon de proposition ne survit pas à la déconnexion : sur un
+  // ordinateur partagé, le suivant ne doit pas le retrouver.
   function handleSignOut() {
+    forgetAllDrafts()
     clearAuthToken()
       .catch(() => {})
       .finally(() => {

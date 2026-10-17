@@ -1,6 +1,7 @@
 import i18next from 'i18next'
 
 import { formatFcfa, formatPercent } from '../../utils/format'
+import { labelLevelOptions } from '../../utils/levelLabels'
 
 // Champs qui portent l'identifiant d'une valeur de référence : j'affiche son
 // nom dans la langue affichée, jamais l'identifiant. Les villes sont des noms
@@ -20,8 +21,10 @@ const PHOTO_FIELDS = new Set(['cover_photo', 'director_photo'])
 const FILE_LIST_FIELDS = new Set(['videos', 'media_additions', 'media_removals'])
 
 const MEDIA_ADDITIONS_KEY = 'media_additions'
+const VIDEOS_KEY = 'videos'
 const CONTENT_LANGUAGE_KEY = 'content_language'
 const IMAGE_MEDIA_TYPE = 'image'
+const VIDEO_MEDIA_TYPE = 'video'
 
 const translate = (key, options) => i18next.t(`workspace:content.${key}`, options)
 
@@ -43,25 +46,82 @@ function describeReference(references, referenceId, referenceKind, translateRefe
   return referenceKind ? translateReference(referenceKind, referenceName) : referenceName
 }
 
-// Une ligne de frais ou de résultat se nomme par sa classe et son année, ou
-// par son examen et sa session : c'est aussi ainsi qu'une demande de retrait
-// la désigne.
-function describeFeeLine(fee, meta) {
-  const levelName = findReferenceName(meta.levels, fee.id_level) ?? translate('unknown')
-  return `${levelName}, ${fee.school_year}`
+// Nom de chaque classe citée par des frais : son nom officiel seul, avec le
+// cycle traduit seulement si deux classes de la soumission portent le même nom
+// (même règle que le formulaire).
+function nameLevelsOf(fees, meta, translateReference) {
+  const levelIds = new Set(fees.map((fee) => fee.id_level))
+  const levels = (meta.levels ?? []).filter((level) => levelIds.has(level.id))
+  const translateStage = (stage) => translateReference('stages', stage)
+  return new Map(labelLevelOptions(levels, translateStage).map((level) => [level.id, level.name]))
 }
 
-function describeExamResultLine(examResult, meta, translateReference) {
-  const examName = describeReference(meta.exams, examResult.id_exam, 'exams', translateReference)
-  return `${examName}, ${examResult.session}`
+// Les lignes se rangent par groupe (année scolaire, session), dans l'ordre
+// où elles ont été saisies.
+function groupRows(entries, findGroupTitle, buildRow) {
+  const rowsByTitle = new Map()
+  entries.forEach((entry) => {
+    const title = findGroupTitle(entry)
+    rowsByTitle.set(title, [...(rowsByTitle.get(title) ?? []), buildRow(entry)])
+  })
+  return [...rowsByTitle].map(([title, rows]) => ({ title, rows }))
 }
 
-function describeFee(fee, meta) {
-  return `${describeFeeLine(fee, meta)}: ${formatFcfa(fee.amount)}`
+function describeFeeTable(fees, meta, translateReference) {
+  const levelNames = nameLevelsOf(fees, meta, translateReference)
+  return {
+    columns: [translate('levelColumn'), translate('amountColumn')],
+    groups: groupRows(
+      fees,
+      (fee) => translate('schoolYear', { year: fee.school_year }),
+      (fee) => ({
+        key: `${fee.id_level}-${fee.school_year}`,
+        label: levelNames.get(fee.id_level) ?? translate('unknown'),
+        detail: (fee.payment_methods ?? [])
+          .map((paymentMethod) => translateReference('payment_methods', paymentMethod))
+          .join(', '),
+        value: formatFcfa(fee.amount),
+      }),
+    ),
+  }
 }
 
-function describeExamResult(examResult, meta, translateReference) {
-  return `${describeExamResultLine(examResult, meta, translateReference)}: ${formatPercent(examResult.pass_rate)}`
+function describeExamResultTable(examResults, meta, translateReference) {
+  return {
+    columns: [translate('examColumn'), translate('passRateColumn')],
+    groups: groupRows(
+      examResults,
+      (examResult) => translate('session', { session: examResult.session }),
+      (examResult) => ({
+        key: `${examResult.id_exam}-${examResult.session}`,
+        label: describeReference(meta.exams, examResult.id_exam, 'exams', translateReference),
+        value: formatPercent(examResult.pass_rate),
+      }),
+    ),
+  }
+}
+
+// Frais et résultats se lisent en tableau : une classe ou un examen par ligne,
+// le montant ou le taux aligné en face.
+const TABLE_DESCRIBERS = {
+  fees: describeFeeTable,
+  exam_results: describeExamResultTable,
+}
+
+// Une demande de retrait désigne sa ligne comme le tableau la nomme : sa
+// classe et son année, ou son examen et sa session.
+function describeFeeRemovals(feeRemovals, meta, translateReference) {
+  const levelNames = nameLevelsOf(feeRemovals, meta, translateReference)
+  return feeRemovals.map(
+    (fee) => `${levelNames.get(fee.id_level) ?? translate('unknown')}, ${fee.school_year}`,
+  )
+}
+
+function describeExamResultRemovals(examResultRemovals, meta, translateReference) {
+  return examResultRemovals.map((examResult) => {
+    const examName = describeReference(meta.exams, examResult.id_exam, 'exams', translateReference)
+    return `${examName}, ${examResult.session}`
+  })
 }
 
 const LIST_DESCRIBERS = {
@@ -70,14 +130,8 @@ const LIST_DESCRIBERS = {
     programIds.map((programId) =>
       describeReference(meta.programs, programId, 'programs', translateReference),
     ),
-  fees: (fees, meta) => fees.map((fee) => describeFee(fee, meta)),
-  exam_results: (examResults, meta, translateReference) =>
-    examResults.map((examResult) => describeExamResult(examResult, meta, translateReference)),
-  fee_removals: (feeRemovals, meta) => feeRemovals.map((fee) => describeFeeLine(fee, meta)),
-  exam_result_removals: (examResultRemovals, meta, translateReference) =>
-    examResultRemovals.map((examResult) =>
-      describeExamResultLine(examResult, meta, translateReference),
-    ),
+  fee_removals: describeFeeRemovals,
+  exam_result_removals: describeExamResultRemovals,
 }
 
 function toSentenceCase(text) {
@@ -88,11 +142,22 @@ function isEmptyValue(value) {
   return value === null || value === '' || (Array.isArray(value) && value.length === 0)
 }
 
-// Images qu'une entrée apporte, pour que le validateur voie ce qu'il valide.
+function listAddedMediaUrls(key, value, mediaType) {
+  if (key !== MEDIA_ADDITIONS_KEY) return []
+  return value.filter((mediaItem) => mediaItem.type === mediaType).map((mediaItem) => mediaItem.url)
+}
+
+// Images et vidéos qu'une entrée apporte, pour qu'on voie ce qui est proposé
+// au lieu d'un simple nombre de fichiers. Une création envoie ses vidéos en
+// liste d'adresses ; un ajout à la galerie, en médias typés.
 function listImageUrls(key, value) {
   if (PHOTO_FIELDS.has(key)) return [value]
-  if (key !== MEDIA_ADDITIONS_KEY) return []
-  return value.filter((mediaItem) => mediaItem.type === IMAGE_MEDIA_TYPE).map((mediaItem) => mediaItem.url)
+  return listAddedMediaUrls(key, value, IMAGE_MEDIA_TYPE)
+}
+
+function listVideoUrls(key, value) {
+  if (key === VIDEOS_KEY) return value
+  return listAddedMediaUrls(key, value, VIDEO_MEDIA_TYPE)
 }
 
 function describeEntry(key, value, meta, translateReference) {
@@ -116,6 +181,9 @@ function describeEntry(key, value, meta, translateReference) {
   if (FILE_LIST_FIELDS.has(key)) {
     return { label: translate(key), text: translate('fileCount', { count: value.length }) }
   }
+  if (key in TABLE_DESCRIBERS) {
+    return { label: translate(key), table: TABLE_DESCRIBERS[key](value, meta, translateReference) }
+  }
   if (key in LIST_DESCRIBERS) {
     return { label: translate(key), items: LIST_DESCRIBERS[key](value, meta, translateReference) }
   }
@@ -125,13 +193,15 @@ function describeEntry(key, value, meta, translateReference) {
 }
 
 // Transforme le contenu brut d'une soumission en lignes lisibles : chaque
-// ligne a un libellé et soit un texte, soit une liste d'éléments.
+// ligne a un libellé et soit un texte, soit une liste d'éléments, soit un
+// tableau rangé par groupes.
 export function describeSubmissionContent(content, meta, translateReference) {
   return Object.entries(content ?? {})
     .filter(([key, value]) => !HIDDEN_KEYS.has(key) && !isEmptyValue(value))
     .map(([key, value]) => ({
       key,
       imageUrls: listImageUrls(key, value),
+      videoUrls: listVideoUrls(key, value),
       ...describeEntry(key, value, meta, translateReference),
     }))
 }

@@ -17,7 +17,6 @@ import { readApiErrorMessage } from '../utils/apiError'
 import { authedRequest } from '../utils/auth'
 import { findFirstName } from '../utils/format'
 import '../i18n/privateTexts'
-import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import WorkspaceSkeleton from '../components/workspace/WorkspaceSkeleton'
 
 const NAV_ITEMS = [
@@ -54,7 +53,6 @@ async function loadAdminData() {
 
 function AdminHomePage({ profile, onSignOut }) {
   const { t } = useTranslation('admin')
-  useDocumentTitle()
   const [activeView, setActiveView] = useState('overview')
   const [submissionFilter, setSubmissionFilter] = useState(DEFAULT_SUBMISSION_FILTER)
   const [adminData, setAdminData] = useState(EMPTY_ADMIN_DATA)

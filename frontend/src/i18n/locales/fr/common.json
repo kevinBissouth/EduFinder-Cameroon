@@ -43,5 +43,6 @@
   "close": "Fermer",
   "clearChoice": "Effacer le choix : {{field}}",
   "done": "Terminé",
-  "choiceCount": "{{field}} · {{count}}"
+  "choiceCount": "{{field}} · {{count}}",
+  "unreadDocumentTitle": "({{count}}) {{title}}"
 }

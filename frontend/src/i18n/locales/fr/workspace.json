@@ -35,15 +35,19 @@
     "error": "Les notifications n'ont pas pu être chargées.",
     "empty": "Vous n'avez encore aucune notification.",
     "unread": "Non lue",
-    "reason": "Motif : {{reason}}",
-    "kinds": {
-      "submission_received": "Nouvelle soumission à examiner pour {{school}}.",
-      "submission_approved": "Votre soumission pour {{school}} a été approuvée.",
-      "submission_rejected": "Votre soumission pour {{school}} a été refusée.",
-      "establishment_suspended": "{{school}} a été suspendu et retiré du site public.",
-      "establishment_reactivated": "{{school}} est de nouveau public.",
-      "unknown": "Mise à jour concernant {{school}}."
-    }
+    "reasonLabel": "Motif :",
+    "verdicts": {
+      "submission_received": "Nouvelle soumission à examiner",
+      "submission_approved": "Soumission approuvée",
+      "submission_rejected": "Soumission refusée",
+      "establishment_suspended": "Établissement suspendu",
+      "establishment_reactivated": "Établissement de nouveau public",
+      "unknown": "Mise à jour"
+    },
+    "moreSections": "+{{count}}",
+    "loadMore": "Afficher plus",
+    "loadingMore": "Chargement…",
+    "loadMoreError": "Les notifications plus anciennes n'ont pas pu être chargées."
   },
   "status": {
     "pending": "en attente",
@@ -62,10 +66,15 @@
   },
   "submission": {
     "proposedBy": "Proposé par",
-    "reason": "Motif : {{reason}}",
     "noDetail": "Cette soumission ne contient aucun détail.",
-    "changes": "Modifie : {{sections}}",
-    "view": "Voir"
+    "view": "Voir",
+    "verdicts": {
+      "pending": "Soumission en attente de validation",
+      "approved": "Soumission approuvée",
+      "rejected": "Soumission refusée"
+    },
+    "rejectionReasonTitle": "Motif du refus",
+    "proposedContent": "Ce qui a été proposé"
   },
   "content": {
     "name": "Nom de l'établissement",
@@ -103,7 +112,13 @@
     "director_title_translation": "Titre du chef d'établissement, autre langue",
     "director_bio_translation": "Biographie du chef d'établissement, autre langue",
     "fee_removals": "Frais à retirer",
-    "exam_result_removals": "Résultats à retirer"
+    "exam_result_removals": "Résultats à retirer",
+    "levelColumn": "Classe",
+    "amountColumn": "Montant",
+    "examColumn": "Examen",
+    "passRateColumn": "Taux de réussite",
+    "schoolYear": "Année scolaire {{year}}",
+    "session": "Session {{session}}"
   },
   "charts": {
     "visits": "Visites",

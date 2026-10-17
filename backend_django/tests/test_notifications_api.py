@@ -1,6 +1,13 @@
+from datetime import timedelta
+from io import StringIO
+
 import pytest
+from django.core.management import call_command
+from django.utils import timezone
 
 from edufinder.models import (
+    Media,
+    MediaType,
     Notification,
     NotificationKind,
     Submission,
@@ -10,7 +17,10 @@ from edufinder.models import (
     UserEstablishment,
     UserRole,
 )
-from edufinder.services.notifications import LISTED_NOTIFICATIONS_LIMIT
+from edufinder.services.notifications import (
+    NOTIFICATIONS_PAGE_SIZE,
+    READ_NOTIFICATION_RETENTION_DAYS,
+)
 
 UNKNOWN_UUID = "00000000-0000-0000-0000-000000000000"
 REJECTION_REASON = "Fees are not documented"
@@ -251,11 +261,38 @@ def test_list_returns_only_my_notifications_newest_first_with_the_unread_count(
         "kind": "submission_rejected",
         "establishment_uuid": establishment.uuid,
         "establishment_name": establishment.name,
+        "cover_url": None,
         "submission_uuid": pending_submission.uuid,
         "reason": REJECTION_REASON,
         "created_at": body["notifications"][0]["created_at"],
         "is_read": False,
+        # Les rubriques de la soumission, pour savoir laquelle a été décidée.
+        "changed_fields": ["address"],
     }
+    assert body["has_more"] is False
+
+
+# La photo de l'école suit la règle de couverture du site : la première image
+# téléversée, jamais une vidéo.
+@pytest.mark.django_db
+def test_each_notification_carries_the_cover_of_its_school(
+    client, log_in_as, manager, establishment
+):
+    Media.objects.create(
+        establishment=establishment, type=MediaType.VIDEO, url="/media/tour.mp4"
+    )
+    first_image = Media.objects.create(
+        establishment=establishment, type=MediaType.IMAGE, url="/media/front.jpg"
+    )
+    Media.objects.create(
+        establishment=establishment, type=MediaType.IMAGE, url="/media/yard.jpg"
+    )
+    notify(manager, establishment)
+    log_in_as(manager)
+
+    body = client.get("/notifications").json()
+
+    assert body["notifications"][0]["cover_url"] == first_image.url
 
 
 @pytest.mark.django_db
@@ -264,22 +301,91 @@ def test_list_of_an_account_without_notification_is_empty(client, log_in_as, man
 
     response = client.get("/notifications")
 
-    assert response.json() == {"unread_count": 0, "notifications": []}
+    assert response.json() == {
+        "unread_count": 0,
+        "notifications": [],
+        "has_more": False,
+    }
 
 
 @pytest.mark.django_db
-def test_list_is_capped_but_the_unread_count_is_not(
+def test_list_is_paged_but_the_unread_count_is_not(
     client, log_in_as, manager, establishment
 ):
-    notification_count = LISTED_NOTIFICATIONS_LIMIT + 3
+    notification_count = NOTIFICATIONS_PAGE_SIZE + 3
     for _ in range(notification_count):
         notify(manager, establishment)
     log_in_as(manager)
 
     body = client.get("/notifications").json()
 
-    assert len(body["notifications"]) == LISTED_NOTIFICATIONS_LIMIT
+    assert len(body["notifications"]) == NOTIFICATIONS_PAGE_SIZE
+    assert body["has_more"] is True
     assert body["unread_count"] == notification_count
+
+
+# « Afficher plus » demande les notifications plus anciennes que la dernière
+# affichée : aucune n'est sautée ni répétée, même si plusieurs ont la même date.
+@pytest.mark.django_db
+def test_the_next_page_starts_after_the_last_shown_notification(
+    client, log_in_as, manager, establishment
+):
+    created_at = timezone.now()
+    notifications = [
+        notify(manager, establishment, created_at=created_at)
+        for _ in range(NOTIFICATIONS_PAGE_SIZE + 3)
+    ]
+    log_in_as(manager)
+
+    first_page = client.get("/notifications").json()
+    last_shown_uuid = first_page["notifications"][-1]["notification_uuid"]
+    next_page = client.get(f"/notifications?before={last_shown_uuid}").json()
+
+    shown_uuids = [
+        item["notification_uuid"]
+        for item in first_page["notifications"] + next_page["notifications"]
+    ]
+    created_uuids = [notification.uuid for notification in notifications]
+    assert sorted(shown_uuids) == sorted(created_uuids)
+    assert len(set(shown_uuids)) == len(notifications)
+    assert next_page["has_more"] is False
+
+
+@pytest.mark.django_db
+def test_paging_after_the_notification_of_another_account_is_404(
+    client, log_in_as, manager, other_manager, establishment
+):
+    foreign_notification = notify(other_manager, establishment)
+    log_in_as(manager)
+
+    responses = [
+        client.get(f"/notifications?before={foreign_notification.uuid}"),
+        client.get(f"/notifications?before={UNKNOWN_UUID}"),
+    ]
+
+    assert [response.status_code for response in responses] == [404, 404]
+
+
+# --- Nettoyage ------------------------------------------------------------------
+
+
+@pytest.mark.django_db
+def test_purge_deletes_only_the_notifications_read_long_ago(manager, establishment):
+    long_ago = timezone.now() - timedelta(days=READ_NOTIFICATION_RETENTION_DAYS + 1)
+    recently = timezone.now() - timedelta(days=READ_NOTIFICATION_RETENTION_DAYS - 1)
+    read_long_ago = notify(manager, establishment, read_at=long_ago)
+    kept = [
+        notify(manager, establishment, read_at=recently),
+        # Une notification jamais lue reste, si vieille soit-elle.
+        notify(manager, establishment, created_at=long_ago),
+    ]
+    output = StringIO()
+
+    call_command("purge_read_notifications", stdout=output)
+
+    assert not Notification.objects.filter(pk=read_long_ago.pk).exists()
+    assert set(Notification.objects.all()) == set(kept)
+    assert "1 read notification" in output.getvalue()
 
 
 @pytest.mark.django_db

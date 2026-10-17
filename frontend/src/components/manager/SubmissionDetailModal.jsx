@@ -1,44 +1,53 @@
 import { useTranslation } from 'react-i18next'
 
-import Button from '../ui/Button'
 import Modal from '../ui/Modal'
-import Notice from '../workspace/Notice'
-import StatusBadge from '../workspace/StatusBadge'
+import SchoolWindowFooter from './SchoolWindowFooter'
+import ReasonQuote from '../workspace/ReasonQuote'
+import SchoolMiniature from '../workspace/SchoolMiniature'
 import SubmissionContent from '../workspace/SubmissionContent'
+import { SUBMISSION_STATUS_ICONS } from '../workspace/notificationMessages'
+import { findStatusTheme } from '../workspace/statusTheme'
 import { formatShortDate } from '../../utils/format'
 
-// Le responsable relit ici exactement ce qu'il a proposé.
-function SubmissionDetailModal({ submission, meta, onClose }) {
+// Le responsable relit ici exactement ce qu'il a proposé, et ce qu'il en est
+// advenu. La même fenêtre s'ouvre depuis la liste des soumissions et depuis
+// une notification. L'école est absente si elle n'est plus dans ses fiches :
+// la fenêtre se passe alors de la miniature et du lien vers la fiche.
+function SubmissionDetailModal({ submission, school, meta, onOpenSchool, onClose }) {
   const { t } = useTranslation('manager')
-  const headerExtra = (
-    <p className="mt-2 flex flex-wrap items-center gap-2 text-sm text-ink-soft">
-      <span className="capitalize">
-        {t(`workspace:submissionType.${submission.submission_type}`, {
-          defaultValue: submission.submission_type,
-        })}
-      </span>
-      <span>{t('submissions.submittedOn', { date: formatShortDate(submission.submitted_at) })}</span>
-      <StatusBadge status={submission.submission_status} />
-    </p>
-  )
+  const status = submission.submission_status
+  const submissionType = t(`workspace:submissionType.${submission.submission_type}`, {
+    defaultValue: submission.submission_type,
+  })
 
   return (
     <Modal
-      title={submission.establishment_name}
-      headerExtra={headerExtra}
+      icon={SUBMISSION_STATUS_ICONS[status]}
+      iconClassName={findStatusTheme(status).markClass}
+      title={t(`workspace:submission.verdicts.${status}`)}
+      description={t('submissions.typeAndDate', {
+        type: submissionType,
+        date: formatShortDate(submission.submitted_at),
+      })}
       onClose={onClose}
-      footer={
-        <Button variant="secondary" onClick={onClose} className="w-full sm:w-auto">
-          {t('actions.close')}
-        </Button>
-      }
+      footer={<SchoolWindowFooter school={school} onOpenSchool={onOpenSchool} onClose={onClose} />}
     >
-      {submission.rejection_reason && (
-        <Notice tone="danger" className="mb-5">
-          {t('workspace:submission.reason', { reason: submission.rejection_reason })}
-        </Notice>
-      )}
-      <SubmissionContent content={submission.content} meta={meta} />
+      <div className="space-y-5">
+        {school && <SchoolMiniature school={school} />}
+        {submission.rejection_reason && (
+          <ReasonQuote
+            title={t('workspace:submission.rejectionReasonTitle')}
+            reason={submission.rejection_reason}
+            status={status}
+          />
+        )}
+        <section>
+          <h3 className="mb-2 text-base font-bold text-navy">
+            {t('workspace:submission.proposedContent')}
+          </h3>
+          <SubmissionContent content={submission.content} meta={meta} />
+        </section>
+      </div>
     </Modal>
   )
 }

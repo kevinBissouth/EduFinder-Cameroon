@@ -33,9 +33,7 @@ def with_tuition_and_pass_rate(establishments: QuerySet) -> QuerySet:
 
 
 def with_cover_url(establishments: QuerySet) -> QuerySet:
-    return establishments.annotate(
-        cover_url=Subquery(_first_image_url_of_outer_establishment())
-    )
+    return establishments.annotate(cover_url=cover_url_of(OuterRef("pk")))
 
 
 # Une fiche est complète quand elle publie une description, au moins un frais
@@ -87,9 +85,11 @@ def _best_pass_rate_of_outer_establishment() -> QuerySet:
 
 
 # La couverture est la toute première image téléversée (plus petit id).
-def _first_image_url_of_outer_establishment() -> QuerySet:
-    return (
-        Media.objects.filter(establishment=OuterRef("pk"), type=MediaType.IMAGE)
+# L'établissement est désigné depuis la requête englobante : par sa clé pour une
+# liste d'établissements, par sa clé étrangère pour ce qui s'y rattache.
+def cover_url_of(establishment_reference: OuterRef) -> Subquery:
+    return Subquery(
+        Media.objects.filter(establishment=establishment_reference, type=MediaType.IMAGE)
         .order_by("id_media")
         .values("url")[:1]
     )

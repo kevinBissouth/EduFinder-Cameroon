@@ -165,7 +165,6 @@
     "emptyTitle": "Aucune soumission pour l'instant",
     "emptyDescription": "Proposez un établissement ou une modification sur l'un des vôtres. L'état de sa validation apparaîtra ici.",
     "title": "Vos soumissions",
-    "view": "Voir ce qui a été proposé",
     "viewNamed": "Voir ce qui a été proposé pour {{school}} le {{date}}",
     "approved_one": "approuvée",
     "approved_many": "approuvées",
@@ -176,7 +175,8 @@
     "rejected_one": "refusée",
     "rejected_many": "refusées",
     "rejected_other": "refusées",
-    "submittedOn": "soumis le {{date}}"
+    "submittedOn": "soumis le {{date}}",
+    "typeAndDate": "Envoyée le {{date}} ({{type}})"
   },
   "services": {
     "newName": "Nouveau nom pour {{name}}",
@@ -236,6 +236,10 @@
       "media": {
         "title": "Photos et vidéos",
         "lead": "Les fichiers sont envoyés maintenant et apparaissent sur la page une fois la proposition approuvée."
+      },
+      "review": {
+        "title": "Vérifier et envoyer",
+        "lead": "Voici exactement ce que le super administrateur va valider. Revenez à une étape pour corriger, puis envoyez."
       }
     },
     "fields": {
@@ -327,6 +331,20 @@
       "addExam": "Ajouter un examen",
       "confirmRemoval": "Ce résultat est publié sur votre page. Le retirer envoie une demande de retrait au super administrateur : il reste affiché jusqu'à sa validation. Continuer ?"
     },
-    "nothingToSend": "Aucune modification à envoyer : la fiche est identique à celle publiée."
+    "nothingToSend": "Aucune modification à envoyer : la fiche est identique à celle publiée.",
+    "confirmLeave": "Vos modifications n'ont pas été envoyées. Les abandonner ?",
+    "savedDraft": {
+      "restored": "Votre saisie précédente a été reprise là où vous l'aviez laissée.",
+      "startOver": "Repartir de la page publiée",
+      "clear": "Tout effacer",
+      "outdated": "Votre page a changé depuis votre dernière saisie : le formulaire repart de la version publiée."
+    }
+  },
+  "notificationWindow": {
+    "explanations": {
+      "establishment_suspended": "Votre fiche n'apparaît plus dans la recherche ni sur le site public. Corrigez ce que signale le motif, puis proposez des modifications : le super administrateur pourra la réactiver.",
+      "establishment_reactivated": "Votre fiche apparaît de nouveau dans la recherche et sur le site public : les familles peuvent la consulter."
+    },
+    "suspensionReasonTitle": "Motif de la suspension"
   }
 }

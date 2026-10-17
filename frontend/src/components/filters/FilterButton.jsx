@@ -40,6 +40,7 @@ function FilterButton({
         type="button"
         aria-haspopup="dialog"
         aria-describedby={describedBy}
+        aria-invalid={hasError || undefined}
         onClick={onOpen}
         className={`flex min-h-18 w-full min-w-0 cursor-pointer items-center gap-3 rounded-control border py-3 pl-3 pr-12 text-left transition-all hover:border-primary hover:shadow-soft active:scale-[0.99] ${findBorderClasses(
           isActive,

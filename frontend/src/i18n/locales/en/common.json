@@ -42,5 +42,6 @@
   "close": "Close",
   "clearChoice": "Clear the choice: {{field}}",
   "done": "Done",
-  "choiceCount": "{{field}} · {{count}}"
+  "choiceCount": "{{field}} · {{count}}",
+  "unreadDocumentTitle": "({{count}}) {{title}}"
 }

@@ -2,7 +2,11 @@ import { useRef, useState } from 'react'
 import { Bell } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
+import MarkedSchoolThumbnail from './MarkedSchoolThumbnail'
 import { presentNotification } from './notificationMessages'
+import ReasonExcerpt from './ReasonExcerpt'
+import SectionChips from './SectionChips'
+import { listChangedSections } from './submissionContent'
 import { useDismiss } from '../../hooks/useDismiss'
 import { formatRelativeTime } from '../../utils/format'
 
@@ -12,42 +16,46 @@ function formatUnreadCount(unreadCount) {
   return unreadCount > MAX_SHOWN_COUNT ? `${MAX_SHOWN_COUNT}+` : String(unreadCount)
 }
 
+// Une non lue se distingue par un liseré bleu à gauche, un fond teinté et un
+// point près de l'heure.
 function NotificationItem({ notification, onOpen }) {
   const { t } = useTranslation('workspace')
-  const { Icon, toneClass, message } = presentNotification(notification)
+  const { Icon, markClass, verdictClass, verdict } = presentNotification(notification)
+  const changedSections = listChangedSections(notification)
+  const unreadClass = notification.is_read
+    ? ''
+    : 'bg-muted/50 shadow-[inset_3px_0_0_var(--color-primary)]'
 
   return (
     <li>
       <button
         type="button"
         onClick={() => onOpen(notification)}
-        className={`flex w-full cursor-pointer items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-muted ${
-          notification.is_read ? '' : 'bg-paper'
-        }`}
+        className={`flex w-full cursor-pointer items-start gap-3 px-4 py-3.5 text-left transition-colors hover:bg-muted ${unreadClass}`}
       >
-        <span className={`flex size-9 shrink-0 items-center justify-center rounded-full ${toneClass}`}>
-          <Icon aria-hidden="true" className="size-4" />
-        </span>
+        <MarkedSchoolThumbnail
+          coverUrl={notification.cover_url}
+          Icon={Icon}
+          markClass={markClass}
+        />
         <span className="min-w-0 flex-1">
-          <span
-            className={`block text-sm text-navy text-pretty ${notification.is_read ? '' : 'font-semibold'}`}
-          >
-            {message}
-          </span>
-          {notification.reason && (
-            <span className="mt-0.5 block text-sm text-ink">
-              {t('notifications.reason', { reason: notification.reason })}
+          <span className="flex items-baseline gap-2">
+            <span className="min-w-0 flex-1 truncate text-sm font-bold text-navy">
+              {notification.establishment_name}
             </span>
-          )}
-          <span className="mt-0.5 block text-xs text-ink-soft">
-            {formatRelativeTime(notification.created_at)}
+            <span className="flex shrink-0 items-center gap-1.5 text-xs text-ink-soft">
+              {formatRelativeTime(notification.created_at)}
+              {!notification.is_read && (
+                <span className="size-2 rounded-full bg-primary">
+                  <span className="sr-only">{t('notifications.unread')}</span>
+                </span>
+              )}
+            </span>
           </span>
+          <span className={`mt-0.5 block text-sm font-semibold ${verdictClass}`}>{verdict}</span>
+          {changedSections.length > 0 && <SectionChips sections={changedSections} />}
+          {notification.reason && <ReasonExcerpt reason={notification.reason} />}
         </span>
-        {!notification.is_read && (
-          <span className="mt-1.5 size-2 shrink-0 rounded-full bg-primary">
-            <span className="sr-only">{t('notifications.unread')}</span>
-          </span>
-        )}
       </button>
     </li>
   )
@@ -76,15 +84,42 @@ function PanelBody({ inbox, onOpen }) {
     return <p className="px-4 py-8 text-center text-sm text-ink-soft">{t('notifications.empty')}</p>
   }
   return (
-    <ul className="max-h-[60vh] divide-y divide-line overflow-y-auto">
-      {inbox.notifications.map((notification) => (
-        <NotificationItem
-          key={notification.notification_uuid}
-          notification={notification}
-          onOpen={onOpen}
-        />
-      ))}
-    </ul>
+    <div className="max-h-[60vh] overflow-y-auto">
+      <ul className="divide-y divide-line">
+        {inbox.notifications.map((notification) => (
+          <NotificationItem
+            key={notification.notification_uuid}
+            notification={notification}
+            onOpen={onOpen}
+          />
+        ))}
+      </ul>
+      {inbox.hasMore && <LoadMoreButton inbox={inbox} />}
+    </div>
+  )
+}
+
+// Au-delà de la première page, les notifications plus anciennes se chargent
+// à la demande, vingt par vingt.
+function LoadMoreButton({ inbox }) {
+  const { t } = useTranslation('workspace')
+
+  return (
+    <div className="border-t border-line px-4 py-3 text-center">
+      {inbox.hasLoadMoreFailed && (
+        <p role="alert" className="mb-2 text-sm text-danger-deep">
+          {t('notifications.loadMoreError')}
+        </p>
+      )}
+      <button
+        type="button"
+        disabled={inbox.isLoadingMore}
+        onClick={inbox.loadMore}
+        className="min-h-11 cursor-pointer rounded-control px-3 text-sm font-semibold text-primary-deep hover:bg-primary-soft disabled:cursor-wait disabled:text-ink-soft"
+      >
+        {inbox.isLoadingMore ? t('notifications.loadingMore') : t('notifications.loadMore')}
+      </button>
+    </div>
   )
 }
 
