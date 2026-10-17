@@ -66,9 +66,7 @@
   },
   "submission": {
     "proposedBy": "Proposé par",
-    "reason": "Motif : {{reason}}",
     "noDetail": "Cette soumission ne contient aucun détail.",
-    "changes": "Modifie : {{sections}}",
     "view": "Voir",
     "verdicts": {
       "pending": "Soumission en attente de validation",
@@ -114,7 +112,13 @@
     "director_title_translation": "Titre du chef d'établissement, autre langue",
     "director_bio_translation": "Biographie du chef d'établissement, autre langue",
     "fee_removals": "Frais à retirer",
-    "exam_result_removals": "Résultats à retirer"
+    "exam_result_removals": "Résultats à retirer",
+    "levelColumn": "Classe",
+    "amountColumn": "Montant",
+    "examColumn": "Examen",
+    "passRateColumn": "Taux de réussite",
+    "schoolYear": "Année scolaire {{year}}",
+    "session": "Session {{session}}"
   },
   "charts": {
     "visits": "Visites",

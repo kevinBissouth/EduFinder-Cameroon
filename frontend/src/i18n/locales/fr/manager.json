@@ -165,7 +165,6 @@
     "emptyTitle": "Aucune soumission pour l'instant",
     "emptyDescription": "Proposez un établissement ou une modification sur l'un des vôtres. L'état de sa validation apparaîtra ici.",
     "title": "Vos soumissions",
-    "view": "Voir ce qui a été proposé",
     "viewNamed": "Voir ce qui a été proposé pour {{school}} le {{date}}",
     "approved_one": "approuvée",
     "approved_many": "approuvées",

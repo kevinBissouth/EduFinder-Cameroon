@@ -65,9 +65,7 @@
   },
   "submission": {
     "proposedBy": "Proposed by",
-    "reason": "Reason: {{reason}}",
     "noDetail": "This submission carries no detail.",
-    "changes": "Changes: {{sections}}",
     "view": "View",
     "verdicts": {
       "pending": "Submission awaiting review",
@@ -112,7 +110,13 @@
     "director_title_translation": "Head of school title, other language",
     "director_bio_translation": "Head of school biography, other language",
     "fee_removals": "Fees to remove",
-    "exam_result_removals": "Results to remove"
+    "exam_result_removals": "Results to remove",
+    "levelColumn": "Class",
+    "amountColumn": "Amount",
+    "examColumn": "Exam",
+    "passRateColumn": "Pass rate",
+    "schoolYear": "School year {{year}}",
+    "session": "{{session}} session"
   },
   "charts": {
     "visits": "Visits",

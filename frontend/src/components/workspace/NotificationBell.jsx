@@ -2,55 +2,18 @@ import { useRef, useState } from 'react'
 import { Bell } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
+import MarkedSchoolThumbnail from './MarkedSchoolThumbnail'
 import { presentNotification } from './notificationMessages'
-import SchoolThumbnail from './SchoolThumbnail'
+import ReasonExcerpt from './ReasonExcerpt'
+import SectionChips from './SectionChips'
 import { listChangedSections } from './submissionContent'
 import { useDismiss } from '../../hooks/useDismiss'
 import { formatRelativeTime } from '../../utils/format'
 
 const MAX_SHOWN_COUNT = 99
-const MAX_SHOWN_SECTIONS = 3
 
 function formatUnreadCount(unreadCount) {
   return unreadCount > MAX_SHOWN_COUNT ? `${MAX_SHOWN_COUNT}+` : String(unreadCount)
-}
-
-// La photo de l'école, et dans son coin l'issue de l'événement : on reconnaît
-// l'école et le verdict avant de lire.
-function NotificationThumbnail({ coverUrl, Icon, markClass }) {
-  return (
-    <span className="relative shrink-0">
-      <SchoolThumbnail coverUrl={coverUrl} />
-      <span
-        className={`absolute -bottom-1 -right-1 flex size-5 items-center justify-center rounded-full ring-2 ring-surface ${markClass}`}
-      >
-        <Icon aria-hidden="true" className="size-3" />
-      </span>
-    </span>
-  )
-}
-
-// Quelques rubriques suffisent à reconnaître la soumission ; la liste entière
-// est dans son détail.
-function SectionChips({ sections }) {
-  const { t } = useTranslation('workspace')
-  const shownSections = sections.slice(0, MAX_SHOWN_SECTIONS)
-  const hiddenCount = sections.length - shownSections.length
-
-  return (
-    <span className="mt-1.5 flex flex-wrap gap-1">
-      {shownSections.map((section) => (
-        <span key={section} className="rounded-full bg-muted px-2 py-0.5 text-xs text-navy">
-          {section}
-        </span>
-      ))}
-      {hiddenCount > 0 && (
-        <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-semibold text-primary-deep">
-          {t('notifications.moreSections', { count: hiddenCount })}
-        </span>
-      )}
-    </span>
-  )
 }
 
 // Une non lue se distingue par un liseré bleu à gauche, un fond teinté et un
@@ -70,7 +33,7 @@ function NotificationItem({ notification, onOpen }) {
         onClick={() => onOpen(notification)}
         className={`flex w-full cursor-pointer items-start gap-3 px-4 py-3.5 text-left transition-colors hover:bg-muted ${unreadClass}`}
       >
-        <NotificationThumbnail
+        <MarkedSchoolThumbnail
           coverUrl={notification.cover_url}
           Icon={Icon}
           markClass={markClass}
@@ -91,12 +54,7 @@ function NotificationItem({ notification, onOpen }) {
           </span>
           <span className={`mt-0.5 block text-sm font-semibold ${verdictClass}`}>{verdict}</span>
           {changedSections.length > 0 && <SectionChips sections={changedSections} />}
-          {notification.reason && (
-            <span className="mt-2 line-clamp-2 border-l-2 border-line pl-2 text-sm text-ink">
-              <span className="sr-only">{t('notifications.reasonLabel')} </span>
-              {notification.reason}
-            </span>
-          )}
+          {notification.reason && <ReasonExcerpt reason={notification.reason} />}
         </span>
       </button>
     </li>

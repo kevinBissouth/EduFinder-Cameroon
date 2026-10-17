@@ -4,7 +4,11 @@ import i18next from 'i18next'
 
 import StateMessage from '../ui/StateMessage'
 import PagedCards from '../workspace/PagedCards'
-import SubmissionCard from '../workspace/SubmissionCard'
+import SubmissionRow from '../workspace/SubmissionRow'
+import {
+  SUBMISSION_ROW_GRID_CLASSES,
+  SUBMISSION_ROW_PAGE_SIZES,
+} from '../workspace/submissionRowLayout'
 import ViewHero from '../workspace/ViewHero'
 import { countSubmissionsByStatus } from './submissionCounts'
 import { formatShortDate } from '../../utils/format'
@@ -56,12 +60,14 @@ function SubmissionsList({ submissions, establishments, onOpenSubmission }) {
       />
       <PagedCards
         items={submissions}
+        gridClassName={SUBMISSION_ROW_GRID_CLASSES}
+        pageSizes={SUBMISSION_ROW_PAGE_SIZES}
         renderCard={(submission) => (
-          <SubmissionCard
+          <SubmissionRow
             key={submission.submission_uuid}
             submission={submission}
             coverUrl={coverUrlBySchool.get(submission.establishment_uuid)}
-            actionLabel={t('submissions.view')}
+            actionLabel={t('workspace:submission.view')}
             actionAriaLabel={t('submissions.viewNamed', {
               school: submission.establishment_name,
               date: formatShortDate(submission.submitted_at),

@@ -49,7 +49,47 @@ function VideoPreviews({ videoUrls }) {
   )
 }
 
+// Un tableau par groupe (année scolaire, session) : le nom en ligne d'en-tête,
+// le montant ou le taux aligné à droite pour se comparer d'un coup d'œil.
+function ContentTable({ table }) {
+  return (
+    <dd className="mt-2 space-y-4">
+      {table.groups.map((group) => (
+        <table key={group.title} className="w-full text-sm">
+          <caption className="mb-1 text-left text-sm font-bold text-primary-deep">
+            {group.title}
+          </caption>
+          <thead>
+            <tr className="text-xs text-ink-soft">
+              <th scope="col" className="pb-1 text-left font-semibold">
+                {table.columns[0]}
+              </th>
+              <th scope="col" className="pb-1 text-right font-semibold">
+                {table.columns[1]}
+              </th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-line border-t border-line">
+            {group.rows.map((row) => (
+              <tr key={row.key}>
+                <th scope="row" className="py-2 pr-3 text-left font-medium text-navy">
+                  {row.label}
+                  {row.detail && (
+                    <span className="block text-xs font-normal text-ink-soft">{row.detail}</span>
+                  )}
+                </th>
+                <td className="py-2 text-right font-semibold tabular-nums text-navy">{row.value}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      ))}
+    </dd>
+  )
+}
+
 function ContentValue({ line }) {
+  if (line.table) return <ContentTable table={line.table} />
   if (!line.items) return <dd className="mt-1 whitespace-pre-line text-sm text-navy">{line.text}</dd>
 
   return (

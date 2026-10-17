@@ -160,7 +160,6 @@
     "emptyTitle": "No submission yet",
     "emptyDescription": "Propose a school or a change to one of your schools. Its review status appears here.",
     "title": "Your submissions",
-    "view": "View what was proposed",
     "viewNamed": "View what was proposed for {{school}} on {{date}}",
     "approved_one": "approved",
     "approved_other": "approved",
